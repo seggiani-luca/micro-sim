@@ -9,7 +9,7 @@ all: $(OUT)
 	@javac -d $(OUT) $(SRC)
 
 assemble:
-	@python $(ASSEMBLER) $(EPROM_SRC) > $(EPROM)
+	@python $(ASSEMBLER) $(EPROM_SRC) $(EPROM) 
 
 run: all
 	@java -cp $(OUT) $(MAIN) -e $(EPROM) $(ARGS)

@@ -1,5 +1,8 @@
-// questa è una prova
-call _subroutine
+_program:
+	call _subprogram
+	mov $0000, %sp
+	add %a, %ip
 
-_subroutine:
-	mov %ax, %bx
+_subprogram:
+	sub %ip, %sp
+	call _program

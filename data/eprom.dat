@@ -1,10 +1,10 @@
-LN 1: // questa è una prova
-
-LN 2: call _subroutine
-
-LN 3: 
-
-LN 4: _subroutine:
-
-LN 5: 	mov %ax, %bx
-
+// _program ($0000)
+90 80 // call _subprogram
+00 05
+80 05 // mov $0000, %sp
+00 00
+40 04 // add %a, %ip
+// _subprogram ($0005)
+40 65 // sub %ip, %sp
+90 80 // call _program
+00 00
