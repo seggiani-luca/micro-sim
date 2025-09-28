@@ -1,0 +1,10 @@
+LN 1: // questa è una prova
+
+LN 2: call _subroutine
+
+LN 3: 
+
+LN 4: _subroutine:
+
+LN 5: 	mov %ax, %bx
+
