@@ -5,15 +5,19 @@ import java.io.*;
 import java.util.*;
 
 public class Main{
+
 	// argument list:
 	// -e: EPROM data path
 	// -s: window scale
 	static String getArgument(String[] args, String tag) {
+		// step through arguments until tag is found
 		for(int i = 0; i < args.length; i++) {
 			if(tag.equals(args[i])) {
+				// is the next argument in bounds?
 				if(i + 1 >= args.length) {
 					return null;
 				} else {
+					// return argument
 					return args[i + 1];
 				}
 			}
@@ -22,11 +26,11 @@ public class Main{
 		return null;
 	}
 
-	static byte[] getEpromData(String path) throws IOException {
+	static byte[] loadEpromData(String path) throws IOException {
 		System.out.println("Reading EPROM from " + path);
 
 		// EPROM constants
-		final int MAX_EPROM_SIZE = 27648;
+		final int MAX_EPROM_SIZE = 27648; // set to EPROM_END - EPROM_BEG
 
 		// initialize EPROM data array
 		byte[] epromData = new byte[MAX_EPROM_SIZE];
@@ -51,9 +55,12 @@ public class Main{
 				byte value = (byte) Integer.parseInt(token, 16);
 				epromData[idx++] = value;
 			
-				System.out.println("Got byte: " + String.format("%02X", value & 0xFF));
+				// System.out.println("Got byte: " + String.format("%02X", value & 0xFF));
 			}
 		}
+
+		// close EPROM data file
+		reader.close();	
 
 		return epromData;
 	}
@@ -64,7 +71,7 @@ public class Main{
 		if(epromDataPath == null) {
 			throw new RuntimeException("Please specify an EPROM data path with argument -e <eprom_data_path>");
 		}
-		byte[] epromData = getEpromData(epromDataPath);
+		byte[] epromData = loadEpromData(epromDataPath);
 
 		// simulation setup
 		// init bus
@@ -102,12 +109,14 @@ public class Main{
 			// step through processor cycles
 			while(cycle < nextFrameCycle) {
 				System.out.println("--- Simulation cycle " + Long.toString(cycle) + " ---");
+	
+				// bus lines take their value
+				bus.step();
 
+				// components read and step
 				proc.step();
 				memory.step();
 				video.step();
-
-				bus.step();
 
 				cycle++;
 			}

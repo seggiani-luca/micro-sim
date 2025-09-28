@@ -3,23 +3,22 @@ package microsim.component;
 public class Bus implements RunnableComponent {
 	// address and data lines
 	public TSLine<Character> addressLine; // 16 bit addressing
-																				// (operations must be aligned when using 16 bit registers)
 	public TSLine<Character> dataLine; // 16 bit data line
 
 	// control lines
-	public TSLineBool readEnable; // high active
-	public TSLineBool writeEnable;
+	public TSLine<Boolean> readEnable; // high active
+	public TSLine<Boolean> writeEnable;
 
-	public TSLineBool targetSpace; // low is memory 
+	public TSLine<Boolean> targetSpace; // low is memory 
 
 	public Bus() {
 		addressLine = new TSLine<Character>();
 		dataLine = new TSLine<Character>();
 		
-		readEnable = new TSLineBool();
-		writeEnable = new TSLineBool();
+		readEnable = new TSLine<Boolean>();
+		writeEnable = new TSLine<Boolean>();
 		
-		targetSpace = new TSLineBool();
+		targetSpace = new TSLine<Boolean>();
 	}
 
 	public void step() {

@@ -1,5 +1,7 @@
 package microsim.component;
 
+import java.util.Arrays;
+
 public class MemorySpace implements RunnableComponent {
 	// memory space layout
 	private static final int RAM_BEG = 0x0000; // 32 KiB
@@ -7,7 +9,7 @@ public class MemorySpace implements RunnableComponent {
 	private static final int VRAM_BEG = 0x8000; // 5 KiB
 	private static final int VRAM_END = 0x93ff;
 	private static final int EPROM_BEG = 0x9400; // 27 KiB
-	private static final int EPROM_END = 0xFFFF;
+	private static final int EPROM_END = 0xffff;
 
 	// one vector for each subspace
 	private byte[] ram;
@@ -31,6 +33,11 @@ public class MemorySpace implements RunnableComponent {
 		}
 	
 		System.arraycopy(epromData, 0, eprom, 0, epromData.length);
+
+		// System.out.println("EPROM contents after initialization are:");
+		// for (byte b : epromData) {
+  	// 	System.out.println(String.format("%02X ", b & 0xFF));
+		// }
 	}
 
 	@Override
@@ -51,16 +58,19 @@ public class MemorySpace implements RunnableComponent {
 			// read operation
 			char addr = bus.addressLine.read();
 
-			System.out.println("Memory saw read operation at address " + String.format("%04X", addr & 0xFFFF));
+			System.out.println("Memory saw read operation at address " + String.format("%04X", addr & 0xffff));
 		
 			// get word in two byte reads
 			byte dataHi = readMemory(addr);
 			byte dataLow = readMemory((char)((addr + 1) % EPROM_END));
-		
+	
+			System.out.println("Memory read high word " + String.format("%02X", dataHi & 0xff));
+			System.out.println("Memory read low word " + String.format("%02X", dataLow % 0xff));
+
 			// rebuild word
-			char data = (char)((dataHi << 8) | dataLow);
+			char data = (char)(((dataHi & 0xff) << 8) | (dataLow & 0xff));
 			
-			System.out.println("Memory read value " + String.format("%04X", data & 0xFFFF) + " from given address");
+			System.out.println("Memory read value " + String.format("%04X", data & 0xffff) + " from given address");
 
 			// drive data line with word
 			bus.dataLine.drive(this, data);
@@ -71,7 +81,17 @@ public class MemorySpace implements RunnableComponent {
 
 		if(writeEnable) {
 			// write operation
-			
+			char addr = bus.addressLine.read();
+			char data = bus.dataLine.read();
+
+			System.out.println("Memory saw write operation at address " + String.format("%04X", addr & 0xffff) + " of value " + String.format("%04X", data & 0xffff));
+
+			byte dataHi = (byte)((data >> 8) & 0xff);
+			byte dataLow = (byte)(data & 0xff);
+
+			writeMemory(addr, dataHi);
+			writeMemory((char)((addr + 1) % EPROM_END), dataLow);
+
 			return;
 		}
 
@@ -92,6 +112,21 @@ public class MemorySpace implements RunnableComponent {
 		}
 
 		throw new RuntimeException("Memory read out of bounds");
+	}
+
+	private void writeMemory(char addr, byte data) {
+		if(addr >= RAM_BEG && addr <= RAM_END) {
+			ram[addr - RAM_BEG] = data;
+			return;
+		} else if(addr >= VRAM_BEG && addr <= VRAM_END) {
+			vram[addr - VRAM_BEG] = data;
+			return;
+		} else if(addr >= EPROM_BEG && addr <= EPROM_END) {
+			eprom[addr - EPROM_BEG] = data;
+			return;
+		}
+
+		throw new RuntimeException("Memory write out of bounds");
 	}
 
 	// used by VideoDevice for direct reads

@@ -4,7 +4,7 @@ public class TSLine<T> implements RunnableComponent {
 	private RunnableComponent driver;
 
 	// data is buffered until update
-	protected T data;
+	private T data;
 	private T bufferedData;
 
 	@Override
