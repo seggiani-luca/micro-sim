@@ -179,7 +179,7 @@ public class Processor implements RunnableComponent {
 			case DECODE: {
 				char opcode = temp;
 
-				System.out.println(String.format("%04X", opcode & 0xFFFF));
+				System.out.println("Processor got opcode: " + String.format("%04X", opcode & 0xFFFF));
 
 				// bit 15 of opcode calls for another read
 				boolean hasImmediate = (opcode & 0x8000) != 0;
@@ -199,7 +199,7 @@ public class Processor implements RunnableComponent {
 					state = execState;
 				}
 
-				System.out.println("Got state: " + execState.name());
+				System.out.println("Processor got state: " + execState.name());
 
 				break;
 			}

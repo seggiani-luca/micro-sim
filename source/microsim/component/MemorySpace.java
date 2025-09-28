@@ -57,9 +57,6 @@ public class MemorySpace implements RunnableComponent {
 			byte dataHi = readMemory(addr);
 			byte dataLow = readMemory((char)((addr + 1) % EPROM_END));
 		
-			System.out.println("High memory read gave " + String.format("%02X", dataHi & 0xFF));
-			System.out.println("Low memory read gave " + String.format("%02X", dataLow & 0xFF));
-
 			// rebuild word
 			char data = (char)((dataHi << 8) | dataLow);
 			
