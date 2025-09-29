@@ -1,5 +1,7 @@
 import sys
-import re
+
+
+EPROM_OFFSET = 0x9400
 
 
 # instruction format:
@@ -129,6 +131,18 @@ INST_DICT = {
         "immediate": "yes",
         "operands": 1
     },
+
+    # other
+    "HLT": {
+        "opcode": 0x4800,
+        "immediate": "none",
+        "operands": 0
+    },
+    "NOP": {
+        "opcode": 0x4840,
+        "immediate": "none",
+        "operands": 0
+    }
 }
 
 # 0-3: general registers
@@ -161,12 +175,13 @@ class AssemblerError(Exception):
 
 
 def split_bytes(num):
-    num = int(num)
+    if type(num) != int:
+        num = int(num, 16)
 
     hi = (num >> 8) & 0xff
     lo = num & 0xff
 
-    return f"{hi:02X} {lo:02X}"
+    return f"{hi:02x} {lo:02x}"
 
 
 def get_reg_index(token):
@@ -240,7 +255,7 @@ def get_instruction(tokens):
 
 
 def do_first_pass(lines):
-    bytes = 0
+    bytes = EPROM_OFFSET
 
     label_dict = {}
 
@@ -251,15 +266,17 @@ def do_first_pass(lines):
         inst, immediate = get_instruction(tokens)
         if inst is not None:
             # instruction
-            bytes += 1
+            bytes += 2
             if immediate is not None:
-                bytes += 1
+                bytes += 2
 
             continue
 
-        if re.match(r"^_.*:$", tokens[0]):
+        first = tokens[0]
+
+        if first[0] == "_" and first[-1]:
             # label
-            label = tokens[0][0:-1]
+            label = first[0:-1]
 
             if len(tokens) != 1:
                 raise AssemblerError(f"trash after label {label}")
@@ -267,7 +284,7 @@ def do_first_pass(lines):
             bytes_hi = (bytes >> 8) & 0xff
             bytes_lo = bytes & 0xff
 
-            resolved_label = f"${bytes_hi:02X}{bytes_lo:02X}"
+            resolved_label = f"${bytes_hi:02x}{bytes_lo:02x}"
             label_dict[label] = resolved_label
 
             continue
@@ -291,18 +308,16 @@ def do_second_pass(lines, dest, label_dict, orig_lines):
             dest.write(f"{inst} // {orig_line.strip()}\n")
 
             if immediate is not None:
-                # bit hacky, if this fails it didn't resolve to immediate
-                try:
-                    immediate = split_bytes(immediate)
-                except ValueError:
-                    raise AssemblerError(f"couldn't resolve label _{immediate}")
+                immediate = split_bytes(immediate)
 
                 dest.write(f"{immediate}\n")
             continue
 
-        if re.match(r"^_.*:$", tokens[0]):
+        first = tokens[0]
+
+        if first[0] == "_" and first[-1]:
             # label
-            label = tokens[0][0:-1]
+            label = first[0:-1]
             byte = label_dict[label]
 
             dest.write(f"// {label} ({byte})\n")
@@ -329,6 +344,9 @@ def resolve_labels(lines, label_dict):
         for i, token in enumerate(tokens):
             if token in label_dict:
                 tokens[i] = label_dict[token]
+            else:
+                if token[0] == "_" and token[-1] != ":":
+                    raise AssemblerError(f"Couldn't resolve label {token}")
 
 
 if __name__ == "__main__":

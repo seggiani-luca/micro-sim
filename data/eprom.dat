@@ -1,10 +1,23 @@
-// _program ($0000)
-90 80 // call _subprogram
-00 05
-80 05 // mov $0000, %sp
-00 00
-40 04 // add %a, %ip
-// _subprogram ($0005)
-40 65 // sub %ip, %sp
-90 80 // call _program
-00 00
+80 00 // mov $0020, %a // counter
+00 20
+80 01 // mov $8000, %b // video pointer
+80 00
+// _loop ($9408)
+00 02 // mov %a, %c
+e0 02 // shl $0008, %c
+00 08
+00 91 // sto %c, %b
+c0 01 // add $0002, %b // next character in vram
+00 02
+40 c0 // inc %a
+c0 80 // cmp $007f, %a
+00 7f
+89 40 // jz _post
+94 22
+88 00 // jmp _loop
+94 08
+// _post ($9422)
+// _wait_loop ($9422)
+88 00 // jmp _wait_loop
+94 22
+48 00 // hlt
