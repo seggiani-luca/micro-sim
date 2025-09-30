@@ -1,5 +1,6 @@
 package microsim.component;
 
+import microsim.*;
 import java.util.Arrays;
 
 public class MemorySpace implements RunnableComponent {
@@ -33,11 +34,6 @@ public class MemorySpace implements RunnableComponent {
 		}
 	
 		System.arraycopy(epromData, 0, eprom, 0, epromData.length);
-
-		// System.out.println("EPROM contents after initialization are:");
-		// for (byte b : epromData) {
-  	// 	System.out.println(String.format("%02X ", b & 0xFF));
-		// }
 	}
 
 	@Override
@@ -57,20 +53,15 @@ public class MemorySpace implements RunnableComponent {
 		if(readEnable) {
 			// read operation
 			char addr = bus.addressLine.read();
-
-			System.out.println("Memory saw read operation at address " + String.format("%04X", addr & 0xffff));
-		
+	
 			// get word in two byte reads
 			byte dataHi = readMemory(addr);
 			byte dataLow = readMemory((char)((addr + 1) % EPROM_END));
 	
-			System.out.println("Memory read high word " + String.format("%02X", dataHi & 0xff));
-			System.out.println("Memory read low word " + String.format("%02X", dataLow % 0xff));
-
 			// rebuild word
 			char data = (char)(((dataHi & 0xff) << 8) | (dataLow & 0xff));
 			
-			System.out.println("Memory read value " + String.format("%04X", data & 0xffff) + " from given address");
+			DebugShell.log("Memory saw read operation at address " + String.format("%04X", addr & 0xffff) + " of value " + String.format("%04X", data & 0xffff));
 
 			// drive data line with word
 			bus.dataLine.drive(this, data);
@@ -84,7 +75,7 @@ public class MemorySpace implements RunnableComponent {
 			char addr = bus.addressLine.read();
 			char data = bus.dataLine.read();
 
-			System.out.println("Memory saw write operation at address " + String.format("%04X", addr & 0xffff) + " of value " + String.format("%04X", data & 0xffff));
+			DebugShell.log("Memory saw write operation at address " + String.format("%04X", addr & 0xffff) + " of value " + String.format("%04X", data & 0xffff));
 
 			byte dataHi = (byte)((data >> 8) & 0xff);
 			byte dataLow = (byte)(data & 0xff);

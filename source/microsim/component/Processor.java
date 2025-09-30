@@ -1,93 +1,95 @@
 package microsim.component;
 
+import microsim.*;
 import java.util.Map;
-
-enum ProcessorState {
-	FETCH, // read instruction
-	DECODE, // decode instruction
-
-	// execution states
-	// movement
-	MOV,
-	MOV_IMMEDIATE,
-	LOAD,
-	LOAD_POST,
-	LOAD_IMMEDIATE,
-	STORE,
-	STORE_IMMEDIATE,
-
-	// arithmetic
-	ADD,
-	ADD_IMMEDIATE,
-	SUB,
-	SUB_IMMEDIATE,
-	CMP,
-	CMP_IMMEDIATE,
-	INC,
-	DEC,
-
-	// logic
-	AND,
-	AND_IMMEDIATE,
-	OR,
-	OR_IMMEDIATE,
-	NOT,
-
-	// utility
-	SHL,
-	SHL_IMMEDIATE,
-	SHR,
-	SHR_IMMEDIATE,
-
-	// stack
-	PUSH,
-	POP,
-	POP_POST,
-	CALL,
-	RET,
-	RET_POST,
-
-	// jumps
-	JMP_IMMEDIATE,
-	JMP,
-	JO_IMMEDIATE,
-	JO,
-	// JNO_IMMEDIATE,
-	// JNO,
-	JS_IMMEDIATE,
-	JS,
-	// JNS_IMMEDIATE,
-	// JNS,
-	JZ_IMMEDIATE,
-	JZ,
-	// JNZ_IMMEDIATE,
-	// JNZ,
-	JC_IMMEDIATE,
-	JC,
-	// JNC_IMMEDIATE,
-	// JNC,
-
-	// other
-	NOP,
-	HLT,
-
-	// memory read routine
-	MEM_READ0, 	
-	MEM_READ1,
-	MEM_READ2,
-	
-	// memory write routine
-	MEM_WRITE0, 
-	MEM_WRITE1,
-	MEM_WRITE2,
-	MEM_WRITE3
-}
 
 public class Processor implements RunnableComponent {
 	// register constants
 	private static final int GENERAL_REGISTERS = 4;
 	
 	private static final char RESET_INSTRUCTION_ADDRESS = 0x9400; // set to EPROM_BEG 
+
+	// processor state enum	
+	public static enum ProcessorState {
+		FETCH, // read instruction
+		DECODE, // decode instruction
+
+		// execution states
+		// movement
+		MOV,
+		MOV_IMMEDIATE,
+		LOAD,
+		LOAD_POST,
+		LOAD_IMMEDIATE,
+		STORE,
+		STORE_IMMEDIATE,
+
+		// arithmetic
+		ADD,
+		ADD_IMMEDIATE,
+		SUB,
+		SUB_IMMEDIATE,
+		CMP,
+		CMP_IMMEDIATE,
+		INC,
+		DEC,
+
+		// logic
+		AND,
+		AND_IMMEDIATE,
+		OR,
+		OR_IMMEDIATE,
+		NOT,
+
+		// utility
+		SHL,
+		SHL_IMMEDIATE,
+		SHR,
+		SHR_IMMEDIATE,
+
+		// stack
+		PUSH,
+		POP,
+		POP_POST,
+		CALL,
+		RET,
+		RET_POST,
+
+		// jumps
+		JMP_IMMEDIATE,
+		JMP,
+		JO_IMMEDIATE,
+		JO,
+		// JNO_IMMEDIATE,
+		// JNO,
+		JS_IMMEDIATE,
+		JS,
+		// JNS_IMMEDIATE,
+		// JNS,
+		JZ_IMMEDIATE,
+		JZ,
+		// JNZ_IMMEDIATE,
+		// JNZ,
+		JC_IMMEDIATE,
+		JC,
+		// JNC_IMMEDIATE,
+		// JNC,
+
+		// other
+		NOP,
+		HLT,
+
+		// memory read routine
+		MEM_READ0, 	
+		MEM_READ1,
+		MEM_READ2,
+		
+		// memory write routine
+		MEM_WRITE0, 
+		MEM_WRITE1,
+		MEM_WRITE2,
+		MEM_WRITE3
+	}
 
 	// instruction maps
 	Map<Character, ProcessorState> opcodeStrings = Map.ofEntries(
@@ -163,10 +165,10 @@ public class Processor implements RunnableComponent {
 	private char sp;
 
 	// flag register
-	private boolean of;
-	private boolean sf;
-	private boolean zf;
-	private boolean cf;
+	private boolean of; // 0
+	private boolean sf; // 1
+	private boolean zf; // 2
+	private boolean cf; // 3
 
 	// utilities 
 	private int sourceIndex; // source register index
@@ -180,6 +182,26 @@ public class Processor implements RunnableComponent {
 	// state machine handling
 	ProcessorState state = ProcessorState.FETCH;
 	ProcessorState returnState; // aka multiway jump register
+
+	// getters for debug
+	public char[] getRegisters() {
+		char[] registers = new char[GENERAL_REGISTERS + 2];
+		
+		System.arraycopy(generalRegisters, 0, registers, 0, GENERAL_REGISTERS);
+		registers[GENERAL_REGISTERS] = ip;
+		registers[GENERAL_REGISTERS + 1] = sp;
+		
+		return registers;
+	}
+	public boolean[] getFlagRegister() {
+		boolean[] flags = {of, sf, zf, cf};
+		
+		return flags;
+	}
+	public ProcessorState getState() {
+		return state;
+	}
+
 
 	public Processor(Bus bus) {
 		this.bus = bus;
@@ -198,12 +220,10 @@ public class Processor implements RunnableComponent {
 
 	@Override
 	public void step() {
-		System.out.println("Processor has state " + state.name());
-
 		switch(state) {
 			// fetch
 			case FETCH: {
-				System.out.println("Processor has IP " + String.format("%04X", ip & 0xffff));
+				DebugShell.log("Processor is fetching from IP " + String.format("%04X", ip & 0xffff));
 
 				// read next instruction at ip
 				bus.addressLine.drive(this, ip);
@@ -222,8 +242,6 @@ public class Processor implements RunnableComponent {
 			case DECODE: {
 				char opcode = temp;
 
-				System.out.println("Processor got opcode: " + String.format("%04X", opcode & 0xffff));
-
 				// bit 15 of opcode calls for another read
 				boolean hasImmediate = (opcode & 0x8000) != 0;
 
@@ -232,9 +250,7 @@ public class Processor implements RunnableComponent {
 				ProcessorState execState = getExecutionState(temp);
 
 				if(hasImmediate) {
-					// read immediate word
-					System.out.println("Processor has IP " + String.format("%04X", ip & 0xffff) + " before immediate read");
-					
+					// read immediate word	
 					bus.addressLine.drive(this, ip);
 					ip += 2;
 
@@ -248,12 +264,11 @@ public class Processor implements RunnableComponent {
 					state = execState;
 				}
 
-				System.out.println("Processor got execution state: " + execState.name());
-				System.out.println("Processor source register index is " + sourceIndex);
-				System.out.println("Processor destination register index is " + destIndex);
-				if(hasImmediate) {
-					System.out.println("Processor requires immediate word read");
-				}
+				DebugShell.log("Processor decoded opcode " + String.format("%04X", opcode & 0xffff) + " to state " + execState.name() 
+					+ "\nSource register index: " + sourceIndex
+					+ "\nDestination register index: " + destIndex
+					+ (hasImmediate ? " \nImmediate read required" : "")
+				);
 
 				break;
 			}
@@ -624,7 +639,7 @@ public class Processor implements RunnableComponent {
 
 				returnState = ProcessorState.POP_POST;
 				
-				state = ProcessorState.MEM_WRITE0;
+				state = ProcessorState.MEM_READ0;
 
 				break;
 			}
@@ -638,8 +653,13 @@ public class Processor implements RunnableComponent {
 				break;
 			}
 			case CALL: {
-				// data is ip
+				// temp is ip
+				char temp_ip = temp;
+				
 				temp = ip; // write routine expects data to write at temp 
+
+				// now set jump ip
+				ip = temp_ip;
 
 				// write data at stack pointer 
 				bus.addressLine.drive(this, sp);
@@ -658,7 +678,7 @@ public class Processor implements RunnableComponent {
 
 				returnState = ProcessorState.RET_POST;
 				
-				state = ProcessorState.MEM_WRITE0;
+				state = ProcessorState.MEM_READ0;
 
 				break;
 			}
@@ -779,6 +799,9 @@ public class Processor implements RunnableComponent {
 			case NOP: {
 				state = ProcessorState.FETCH;
 
+				// System.out.println("A is " + String.format("%04X", generalRegisters[0] & 0xffff));
+				// System.out.println("B is " + String.format("%04X", generalRegisters[1] & 0xffff));
+
 				break;
 			}
 			case HLT: {
@@ -789,7 +812,7 @@ public class Processor implements RunnableComponent {
 			// memory read routine
 			case MEM_READ0: {
 				// expect bus address line to be driven by prior state
-				System.out.println("Processor initiated read operation at address " + String.format("%04X", bus.addressLine.read() & 0xffff));
+				DebugShell.log("Processor initiated read operation at address " + String.format("%04X", bus.addressLine.read() & 0xffff));
 
 				bus.readEnable.drive(this, true);
 
@@ -807,7 +830,7 @@ public class Processor implements RunnableComponent {
 			case MEM_READ2: {
 				temp = bus.dataLine.read();
 				
-				System.out.println("Processor got value " + String.format("%04X", temp & 0xffff) + " from read operation");
+				DebugShell.log("Processor got value " + String.format("%04X", temp & 0xffff) + " from read operation");
 				
 				// return
 				state = returnState;
@@ -818,7 +841,7 @@ public class Processor implements RunnableComponent {
 			// memory write routine
 			case MEM_WRITE0: {
 				// expect bus address line to be driven by prior state
-				System.out.println("Processor initiated write operation at address " + String.format("%04X", bus.addressLine.read() & 0xffff) + " of value " + String.format("%04X", temp & 0xffff));
+				DebugShell.log("Processor initiated write operation at address " + String.format("%04X", bus.addressLine.read() & 0xffff) + " of value " + String.format("%04X", temp & 0xffff));
 				
 				bus.dataLine.drive(this, temp);
 				
@@ -842,6 +865,8 @@ public class Processor implements RunnableComponent {
 			}
 			case MEM_WRITE3: {
 				bus.dataLine.release(this);
+
+				DebugShell.log("Processor finished write operation");
 
 				// return
 				state = returnState;

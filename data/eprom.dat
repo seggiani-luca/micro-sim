@@ -2,7 +2,18 @@
 00 20
 80 01 // mov $8000, %b // video pointer
 80 00
-// _loop ($9408)
+80 05 // mov $7FFE, %sp // init stack
+7f fe
+90 80 // call _trash
+94 38
+48 40 // nop
+90 80 // call _loop
+94 1c
+48 40 // nop
+// _wait_loop ($9418)
+88 00 // jmp _wait_loop
+94 18
+// _loop ($941c)
 00 02 // mov %a, %c
 e0 02 // shl $0008, %c
 00 08
@@ -13,11 +24,18 @@ c0 01 // add $0002, %b // next character in vram
 c0 80 // cmp $007f, %a
 00 7f
 89 40 // jz _post
-94 22
+94 36
 88 00 // jmp _loop
-94 08
-// _post ($9422)
-// _wait_loop ($9422)
-88 00 // jmp _wait_loop
-94 22
-48 00 // hlt
+94 1c
+// _post ($9436)
+10 c0 // ret
+// _trash ($9438)
+10 00 // push %a
+10 01 // push %b
+80 00 // mov $aaaa, %a
+aa aa
+80 01 // mov $bbbb, %b
+bb bb
+10 41 // pop %b
+10 40 // pop %a
+10 c0 // ret

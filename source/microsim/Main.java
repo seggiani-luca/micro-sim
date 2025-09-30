@@ -1,14 +1,16 @@
 package microsim;
 
+import microsim.DebugShell;
 import microsim.component.*;
 import java.io.*;
 import java.util.*;
 
-public class Main{
+public class Main {
 
 	// argument list:
 	// -e: EPROM data path
 	// -s: window scale
+	// -d: debug mode
 	static String getArgument(String[] args, String tag) {
 		// step through arguments until tag is found
 		for(int i = 0; i < args.length; i++) {
@@ -24,6 +26,16 @@ public class Main{
 		}
 
 		return null;
+	}
+	static boolean getIfArgument(String[] args, String tag) {
+		// step through arguments until tag is found
+		for(int i = 0; i < args.length; i++) {
+			if(tag.equals(args[i])) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	static byte[] loadEpromData(String path) throws IOException {
@@ -104,11 +116,19 @@ public class Main{
 		long cycle = 0;
 		long nextFrameCycle = CYCLES_PER_FRAME;
 
+		// get and set debug mode if given
+		boolean debugMode = getIfArgument(args, "-d");
+		DebugShell.debugMode = debugMode;
+		DebugShell.setComponents(proc, memory);
+
+		// show shell first time 
+		DebugShell.shell();	
+
 		// main simulation loop
 		while(true) {
 			// step through processor cycles
 			while(cycle < nextFrameCycle) {
-				System.out.println("--- Simulation cycle " + Long.toString(cycle) + " ---");
+				DebugShell.log("Cycle " + cycle);
 	
 				// bus lines take their value
 				bus.step();
@@ -117,6 +137,9 @@ public class Main{
 				proc.step();
 				memory.step();
 				video.step();
+
+				// if debugging, stop and show debug shell
+				DebugShell.shell();	
 
 				cycle++;
 			}
