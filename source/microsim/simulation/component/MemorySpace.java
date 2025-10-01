@@ -1,0 +1,246 @@
+package microsim.simulation.component;
+
+import microsim.simulation.event.*;
+
+/**
+ * Implements a memory space as a (to outside users) contiguous array of byte locations. Memory is
+ * divided in three regions:
+ * <ol>
+ * <li>
+ * RAM, Random Access Memory for general access. Spans from 0x0000 to 0x7fff (32 KiB).
+ * </li>
+ * <li>
+ * VRAM, Video Random Access Memory that gets rendered to video on
+ * {@link microsim.simulation.component.VideoDevice.render()} calls. Spans from 0x8000 to 0x93ff (5
+ * KiB).
+ * </li>
+ * <li>
+ * EPROM, Erasable Programmable Read Only Memory that contains program code and data at startup.
+ * Spans from 0x9400 to 0xffff (27 KiB).
+ * </li>
+ * </ol>
+ */
+public class MemorySpace extends SimulationComponent {
+
+  /**
+   * Beginning of RAM region.
+   */
+  private static final int RAM_BEG = 0x0000; // 32 KiB
+
+  /**
+   * End of RAM region.
+   */
+  private static final int RAM_END = 0x7fff;
+
+  /**
+   * Beginning of VRAM region.
+   */
+  private static final int VRAM_BEG = 0x8000; // 5 KiB
+
+  /**
+   * End of VRAM region.
+   */
+  private static final int VRAM_END = 0x93ff;
+
+  /**
+   * Beginning of EPROM region.
+   */
+  private static final int EPROM_BEG = 0x9400; // 27 KiB
+
+  /**
+   * End of EPROM region.
+   */
+  private static final int EPROM_END = 0xffff;
+
+  /**
+   * Holds RAM data.
+   */
+  private final byte[] ram;
+
+  /**
+   * Holds VRAM data.
+   */
+  private final byte[] vram;
+
+  /**
+   * Holds EPROM data;
+   */
+  private final byte[] eprom;
+
+  /**
+   * Reference to the communication bus the component is mounted on.
+   */
+  private final Bus bus;
+
+  /**
+   * Signals that the memory space is driving the bus, and should release it at the next simulation
+   * step.
+   */
+  private boolean driving;
+
+  /**
+   * Instantiates memory space, taking a reference to the bus it's mounted on and the EPROM data it
+   * should load in the EPROM region.
+   *
+   * @param bus bus the component is mounted on
+   * @param epromData EPROM data to load in {@link #epromData}
+   */
+  public MemorySpace(Bus bus, byte[] epromData) {
+    this.bus = bus;
+
+    // setup memory arrays
+    ram = new byte[RAM_END - RAM_BEG + 1];
+    vram = new byte[VRAM_END - VRAM_BEG + 1];
+    eprom = new byte[EPROM_END - EPROM_BEG + 1];
+
+    // read EPROM data into memory
+    if (epromData.length > eprom.length) {
+      throw new RuntimeException("Given EPROM data doesn't fit in EPROM");
+    }
+
+    System.arraycopy(epromData, 0, eprom, 0, epromData.length);
+  }
+
+  /**
+   * Steps by handling read/write operations seen on bus. Bus protocol is the following:
+   * <ul>
+   * <li>
+   * If {@link microsim.simulation.component.Bus.targetSpace} is not low, ignore any operation.
+   * </li>
+   * <li>
+   * If {@link microsim.simulation.component.Bus.readEnable} is high, start a read operation:
+   * <ol>
+   * <li>
+   * Read address from {@link microsim.simulation.component.Bus.addressLine}.
+   * </li>
+   * <li>
+   * Read data at address.
+   * </li>
+   * <li>
+   * Drive {@link microsim.simulation.component.Bus.dataLine} for 1 simulation step.
+   * </li>
+   * </ol>
+   * </li>
+   * <li>
+   * If {@link microsim.simulation.component.Bus.readWrite} is high, start a write operation:
+   * <ol>
+   * <li>
+   * Read address from {@link microsim.simulation.component.Bus.addressLine} and data from
+   * {@link microsim.simulation.component.Bus.dataLine}.
+   * </li>
+   * <li>
+   * Write data at address.
+   * </ol>
+   * </li>
+   * </ul>
+   * If both {@link microsim.simulation.component.Bus.readEnable} and
+   * {@link microsim.simulation.component.Bus.writeEnable} are high, raises an exception.
+   */
+  @Override
+  public void step() {
+    if (bus.targetSpace.read() != false) {
+      // not targeting ram
+      return;
+    }
+
+    // read control lines
+    boolean readEnable = bus.readEnable.read();
+    boolean writeEnable = bus.writeEnable.read();
+
+    if (readEnable && writeEnable) {
+      throw new RuntimeException("Read Enable and Write Enable simultaneously high");
+    }
+
+    if (readEnable) {
+      // read operation
+      char addr = bus.addressLine.read();
+
+      // get word in two byte reads
+      byte dataHi = readMemory(addr);
+      byte dataLow = readMemory((char) ((addr + 1) % EPROM_END));
+
+      // rebuild word
+      char data = (char) (((dataHi & 0xff) << 8) | (dataLow & 0xff));
+
+      raiseEvent(new MemoryEvent(this, "read", addr, data));
+
+      // drive data line with word
+      bus.dataLine.drive(this, data);
+      driving = true;
+
+      return;
+    }
+
+    if (writeEnable) {
+      // write operation
+      char addr = bus.addressLine.read();
+      char data = bus.dataLine.read();
+
+      raiseEvent(new MemoryEvent(this, "write", addr, data));
+
+      byte dataHi = (byte) ((data >> 8) & 0xff);
+      byte dataLow = (byte) (data & 0xff);
+
+      writeMemory(addr, dataHi);
+      writeMemory((char) ((addr + 1) % EPROM_END), dataLow);
+
+      return;
+    }
+
+    // release if driving
+    if (driving) {
+      bus.dataLine.release(this);
+      driving = false;
+    }
+  }
+
+  /**
+   * Reads from memory space at a given address. This is not meant to be used by other simulation
+   * components, but by {@link microsim.ui.DebugShell} objects displaying shells.
+   *
+   * @param addr address to read from
+   * @return data read
+   */
+  public byte readMemory(char addr) {
+    if (addr >= RAM_BEG && addr <= RAM_END) {
+      return ram[addr - RAM_BEG];
+    } else if (addr >= VRAM_BEG && addr <= VRAM_END) {
+      return vram[addr - VRAM_BEG];
+    } else if (addr >= EPROM_BEG && addr <= EPROM_END) {
+      return eprom[addr - EPROM_BEG];
+    }
+
+    throw new RuntimeException("Memory read out of bounds");
+  }
+
+  /**
+   * Writes to memory space at a given address. Usage is same as {@link #readMemory(char)}.
+   *
+   * @param addr address to write to
+   * @param data data to write
+   */
+  public void writeMemory(char addr, byte data) {
+    if (addr >= RAM_BEG && addr <= RAM_END) {
+      ram[addr - RAM_BEG] = data;
+      return;
+    } else if (addr >= VRAM_BEG && addr <= VRAM_END) {
+      vram[addr - VRAM_BEG] = data;
+      return;
+    } else if (addr >= EPROM_BEG && addr <= EPROM_END) {
+      eprom[addr - EPROM_BEG] = data;
+      return;
+    }
+
+    throw new RuntimeException("Memory write out of bounds");
+  }
+
+  /**
+   * Returns VRAM byte array. Used by {@link microsim.simulation.component.VideoDevice} for direct
+   * VRAM accesses when rendering to frame buffer.
+   *
+   * @return VRAM byte array
+   */
+  public byte[] getVRAM() {
+    return vram;
+  }
+}

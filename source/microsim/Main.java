@@ -1,158 +1,200 @@
 package microsim;
 
-import microsim.DebugShell;
-import microsim.component.*;
 import java.io.*;
-import java.util.*;
+import microsim.simulation.*;
+import microsim.ui.*;
 
+/**
+ * Contains program entry point. Handles program arguments and EPROM loading from .dat files,
+ * instantiates simulation instances and attaches interfaces.
+ */
 public class Main {
 
-	// argument list:
-	// -e: EPROM data path
-	// -s: window scale
-	// -d: debug mode
-	static String getArgument(String[] args, String tag) {
-		// step through arguments until tag is found
-		for(int i = 0; i < args.length; i++) {
-			if(tag.equals(args[i])) {
-				// is the next argument in bounds?
-				if(i + 1 >= args.length) {
-					return null;
-				} else {
-					// return argument
-					return args[i + 1];
-				}
-			}
-		}
+  /**
+   * The maximum size, in bytes, of EPROM data. This is set to EPROM_END - EPROM_BEG from
+   * {@link microsim.simulation.component.MemorySpace}.
+   */
+  static final int MAX_EPROM_SIZE = 27648; // set to EPROM_END - EPROM_BEG
 
-		return null;
-	}
-	static boolean getIfArgument(String[] args, String tag) {
-		// step through arguments until tag is found
-		for(int i = 0; i < args.length; i++) {
-			if(tag.equals(args[i])) {
-				return true;
-			}
-		}
+  /**
+   * Gets argument parameter following argument tag.
+   *
+   * @param args program's argument string Array
+   * @param args the argument tag to search for (such as "-d")
+   * @return the argument parameter as a string
+   */
+  static String getArgument(String[] args, String tag) {
+    // step through arguments until tag is found
+    for (int i = 0; i < args.length; i++) {
+      if (tag.equals(args[i])) {
+        // is the next argument in bounds?
+        if (i + 1 >= args.length) {
+          return null;
+        } else {
+          // return argument
+          return args[i + 1];
+        }
+      }
+    }
 
-		return false;
-	}
+    return null;
+  }
 
-	static byte[] loadEpromData(String path) throws IOException {
-		System.out.println("Reading EPROM from " + path);
+  /**
+   * Gets if argument tag is present (used for Boolean arguments).
+   *
+   * @param args program's argument string Array
+   * @param args the argument tag to search for (such as "-d")
+   * @return a Boolean that represents if the tag was found
+   */
+  static boolean getIfArgument(String[] args, String tag) {
+    // step through arguments until tag is found
+    for (String arg : args) {
+      if (tag.equals(arg)) {
+        return true;
+      }
+    }
 
-		// EPROM constants
-		final int MAX_EPROM_SIZE = 27648; // set to EPROM_END - EPROM_BEG
+    return false;
+  }
 
-		// initialize EPROM data array
-		byte[] epromData = new byte[MAX_EPROM_SIZE];
-		int idx = 0;
+  /**
+   * Opens .dat file containing EPROM data and returns it as a byte array. Each line in the .dat
+   * file is expected to contain a 16 byte word formatted as XX XX. Trailing comments preceded by
+   * "//" are ignored.
+   *
+   * @param path the path of the .dat file
+   * @return a byte array that contains EPROM data
+   * @throws IOException if the .dat file can't be opened
+   */
+  static byte[] loadEpromData(String path) throws IOException {
+    // always print EPROM file path
+    System.out.println("Reading EPROM from " + path);
 
-		// open EPROM data file
-		BufferedReader reader = new BufferedReader(new FileReader(path));
-		String line;
+    // initialize EPROM data array
+    byte[] epromData = new byte[MAX_EPROM_SIZE];
+    int idx = 0;
 
-		// read by line
-		while((line = reader.readLine()) != null) {
-			line = line.trim();
-			
-			if(line.isEmpty()) continue; // empty line
-			
-			// read by token
-			String[] tokens = line.split("\\s+"); // split by whitespace
-			for(String token : tokens) {
-				if(token.equals("//")) break; // comment
-				
-				// parse byte and insert
-				byte value = (byte) Integer.parseInt(token, 16);
-				epromData[idx++] = value;
-			
-				// System.out.println("Got byte: " + String.format("%02X", value & 0xFF));
-			}
-		}
+    // open EPROM data file
+    BufferedReader reader = new BufferedReader(new FileReader(path));
+    String line;
 
-		// close EPROM data file
-		reader.close();	
+    // read by line
+    while ((line = reader.readLine()) != null) {
+      line = line.strip();
+      if (line.isEmpty()) {
+        continue; // empty line
+      }
+      // read by token
+      String[] tokens = line.split("\\s+"); // split by whitespace
+      for (String token : tokens) {
+        if (token.equals("//")) {
+          break; // comment
+        }
+        // parse byte and insert
+        byte value = (byte) Integer.parseInt(token, 16);
+        epromData[idx++] = value;
 
-		return epromData;
-	}
+        // check bounds
+        if (idx >= MAX_EPROM_SIZE) {
+          System.out.println("Ignoring rest of EPROM data file, buffer full");
+          break;
+        }
+      }
+    }
 
-	public static void main(String[] args)  throws InterruptedException, IOException {
-		// read EPROM data
-		String epromDataPath = getArgument(args, "-e");
-		if(epromDataPath == null) {
-			throw new RuntimeException("Please specify an EPROM data path with argument -e <eprom_data_path>");
-		}
-		byte[] epromData = loadEpromData(epromDataPath);
+    // close EPROM data file
+    reader.close();
 
-		// simulation setup
-		// init bus
-		Bus bus = new Bus();
+    return epromData;
+  }
 
-		// init components on bus
-		Processor proc = new Processor(bus);
-		MemorySpace memory = new MemorySpace(bus, epromData);
-		VideoDevice video = new VideoDevice(bus, memory);
+  /**
+   * Program entry point. The program flow is:
+   * <ol>
+   * <li>
+   * Get data needed for simulation instantiation. This includes the .dat file containing EPROM data
+   * and the debug argument.
+   * </li>
+   * <li>
+   * Instantiate a {@link microsim.simulation.Simulation} object with said data.
+   * </li>
+   * <li>
+   * Attach interfaces to simulation. These include {@link microsim.ui.VideoWindow} and
+   * {@link microsim.ui.DebugShell}.
+   * </li>
+   * <li>
+   * Begin executing simulation.
+   * </li>
+   * </ol>
+   *
+   * Return values are:
+   * <ol>
+   * <li>
+   * Normal termination.
+   * </li>
+   * <li>
+   * User error.
+   * </li>
+   * <li>
+   * Simulation error.
+   * </li>
+   * </ol>
+   *
+   * @param args program arguments
+   */
+  public static void main(String[] args) {
+    // 1) read EPROM .dat file
+    // get .dat flile path argument
+    String epromDataPath = getArgument(args, "-e");
+    if (epromDataPath == null) {
+      System.out.println("Please specify an EPROM data path with argument -e <eprom_data_path>");
+      System.exit(1);
+    }
 
-		// set graphical window scale
-		int windowScale = 1;
-		
-		// get scale if given
-		String scaleArgument = getArgument(args, "-s");
-		if(scaleArgument != null) {
-			windowScale = Integer.parseInt(scaleArgument);
-		}
+    // load EPROM data in byte array
+    byte[] epromData = null;
+    try {
+      epromData = loadEpromData(epromDataPath);
+    } catch (IOException e) {
+      System.out.println("Error loading EPROM data: " + e.getMessage());
+      System.exit(1);
+    }
 
-		// init graphical window
-		VideoWindow window = new VideoWindow(video, windowScale);
+    // 2) instantiate simulation
+    Simulation simulation = new Simulation(epromData);
 
-		// timing constants
-		final int VIDEO_FREQ = 60;
-		final int CPU_FREQ = 1000000; // 1 MHz
-		final int FRAME_TIME = 1000 / VIDEO_FREQ;
-		final int CYCLES_PER_FRAME = CPU_FREQ / VIDEO_FREQ;
+    // 3) init interfaces
+    // get graphical window scale
+    int windowScale = 1;
 
-		// cycle counters
-		long cycle = 0;
-		long nextFrameCycle = CYCLES_PER_FRAME;
+    // get scale if given
+    String scaleArgument = getArgument(args, "-s");
+    if (scaleArgument != null) {
+      try {
+        windowScale = Integer.parseInt(scaleArgument);
+      } catch (NumberFormatException e) {
+        System.out.println("Ignoring scale argument " + scaleArgument);
+      }
+    }
 
-		// get and set debug mode if given
-		boolean debugMode = getIfArgument(args, "-d");
-		DebugShell.debugMode = debugMode;
-		DebugShell.setComponents(proc, memory);
+    // instantiate video window and attach it
+    VideoWindow window = new VideoWindow(windowScale);
+    simulation.addListener(window);
+    // get debug options
+    boolean debugMode = getIfArgument(args, "-d");
 
-		// show shell first time 
-		DebugShell.shell();	
+    // if debugging, attach DebugShell
+    if (debugMode) {
+      DebugShell.simulationInstance = simulation;
+    }
 
-		// main simulation loop
-		while(true) {
-			// step through processor cycles
-			while(cycle < nextFrameCycle) {
-				DebugShell.log("Cycle " + cycle);
-	
-				// bus lines take their value
-				bus.step();
-
-				// components read and step
-				proc.step();
-				memory.step();
-				video.step();
-
-				// if debugging, stop and show debug shell
-				DebugShell.shell();	
-
-				cycle++;
-			}
-
-			// perform video update
-			video.render();
-			window.repaint();
-
-			// set next video update cycle
-			nextFrameCycle = cycle + CYCLES_PER_FRAME;
-			
-			// sleep until next video update
-			Thread.sleep(FRAME_TIME);
-		}
-	}
+    // 4) begin simulation
+    try {
+      simulation.run();
+    } catch (RuntimeException e) {
+      System.out.println("Simulation error: " + e.getMessage());
+      System.exit(2);
+    }
+  }
 }
