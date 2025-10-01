@@ -6,18 +6,12 @@ import microsim.simulation.event.*;
  * Implements a memory space as a (to outside users) contiguous array of byte locations. Memory is
  * divided in three regions:
  * <ol>
- * <li>
- * RAM, Random Access Memory for general access. Spans from 0x0000 to 0x7fff (32 KiB).
- * </li>
- * <li>
- * VRAM, Video Random Access Memory that gets rendered to video on
- * {@link microsim.simulation.component.VideoDevice.render()} calls. Spans from 0x8000 to 0x93ff (5
- * KiB).
- * </li>
- * <li>
- * EPROM, Erasable Programmable Read Only Memory that contains program code and data at startup.
- * Spans from 0x9400 to 0xffff (27 KiB).
- * </li>
+ * <li>RAM, Random Access Memory for general access. Spans from 0x0000 to 0x7fff (32 KiB).</li>
+ * <li>VRAM, Video Random Access Memory that gets rendered to video on
+ * {@link microsim.simulation.component.VideoDevice#render()} calls. Spans from 0x8000 to 0x93ff (5
+ * KiB).</li>
+ * <li>EPROM, Erasable Programmable Read Only Memory that contains program code and data at startup.
+ * Spans from 0x9400 to 0xffff (27 KiB).</li>
  * </ol>
  */
 public class MemorySpace extends SimulationComponent {
@@ -83,7 +77,7 @@ public class MemorySpace extends SimulationComponent {
    * should load in the EPROM region.
    *
    * @param bus bus the component is mounted on
-   * @param epromData EPROM data to load in {@link #epromData}
+   * @param epromData EPROM data to load in {@link #eprom}
    */
   public MemorySpace(Bus bus, byte[] epromData) {
     this.bus = bus;
@@ -104,37 +98,27 @@ public class MemorySpace extends SimulationComponent {
   /**
    * Steps by handling read/write operations seen on bus. Bus protocol is the following:
    * <ul>
+   * <li>If {@link microsim.simulation.component.Bus#targetSpace} is not low, ignore any
+   * operation.</li>
    * <li>
-   * If {@link microsim.simulation.component.Bus.targetSpace} is not low, ignore any operation.
-   * </li>
-   * <li>
-   * If {@link microsim.simulation.component.Bus.readEnable} is high, start a read operation:
-   * <ol>
-   * <li>
-   * Read address from {@link microsim.simulation.component.Bus.addressLine}.
-   * </li>
-   * <li>
-   * Read data at address.
-   * </li>
-   * <li>
-   * Drive {@link microsim.simulation.component.Bus.dataLine} for 1 simulation step.
-   * </li>
+   * If {@link microsim.simulation.component.Bus#readEnable} is high, start a read operation:
+   * <ol><li>
+   * Read address from {@link microsim.simulation.component.Bus#addressLine}.</li>
+   * <li>Read data at address.</li>
+   * <li>Drive {@link microsim.simulation.component.Bus#dataLine} for 1 simulation step.</li>
    * </ol>
    * </li>
    * <li>
-   * If {@link microsim.simulation.component.Bus.readWrite} is high, start a write operation:
+   * If {@link microsim.simulation.component.Bus#writeEnable} is high, start a write operation:
    * <ol>
-   * <li>
-   * Read address from {@link microsim.simulation.component.Bus.addressLine} and data from
-   * {@link microsim.simulation.component.Bus.dataLine}.
-   * </li>
-   * <li>
-   * Write data at address.
+   * <li>Read address from {@link microsim.simulation.component.Bus#addressLine} and data from
+   * {@link microsim.simulation.component.Bus#dataLine}.</li>
+   * <li>Write data at address.</li>
    * </ol>
    * </li>
    * </ul>
-   * If both {@link microsim.simulation.component.Bus.readEnable} and
-   * {@link microsim.simulation.component.Bus.writeEnable} are high, raises an exception.
+   * If both {@link microsim.simulation.component.Bus#readEnable} and
+   * {@link microsim.simulation.component.Bus#writeEnable} are high, raises an exception.
    */
   @Override
   public void step() {

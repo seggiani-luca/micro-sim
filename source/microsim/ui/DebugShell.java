@@ -6,13 +6,9 @@ import microsim.simulation.component.*;
 /**
  * Handles the shell shown in debug mode. Debug information is shown in 2 ways:
  * <ol>
- * <li>
- * Via the {@link #log(java.lang.String)} method, which prints information mid-cycle.
- * </li>
- * <li>
- * Via the {@link #shell(microsim.simulation.Simulation)} method, which offers interactive debugging
- * at the end of cycles.
- * </li>
+ * <li>Via the {@link #log(java.lang.String)} method, which prints information mid-cycle.</li>
+ * <li>Via the {@link #shell(microsim.simulation.Simulation)} method, which offers interactive
+ * debugging at the end of cycles.</li>
  * </ol>
  */
 public class DebugShell {
@@ -88,29 +84,19 @@ public class DebugShell {
    * Displays a debug shell for the current simulation instance. The shell offers the following
    * commands:
    * <ul>
-   * <li>
-   * step: steps execution by 1 cycle.
-   * </li>
-   * <li>
-   * quit: halts execution and quits.
-   * </li>
+   * <li>step: steps execution by 1 cycle.</li>
+   * <li>quit: halts execution and quits.</li>
    * <li>
    * proc: offers processor information with following options:
    * <ul>
-   * <li>
-   * registers: prints all registers-
-   * </li>
-   * <li>
-   * state prints state information-
-   * </li>
+   * <li>registers: prints all registers:</li>
+   * <li>state prints state information:</li>
    * </ul>
    * </li>
    * <li>
    * mem: offers memory information with following options:
    * <ul>
-   * <li>
-   * read: reads memory at address.
-   * </li>
+   * <li>read: reads memory at address.</li>
    * </ul>
    * </li>
    * </ul>

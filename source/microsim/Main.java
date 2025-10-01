@@ -20,7 +20,7 @@ public class Main {
    * Gets argument parameter following argument tag.
    *
    * @param args program's argument string Array
-   * @param args the argument tag to search for (such as "-d")
+   * @param tag the argument tag to search for (such as "-d")
    * @return the argument parameter as a string
    */
   static String getArgument(String[] args, String tag) {
@@ -44,7 +44,7 @@ public class Main {
    * Gets if argument tag is present (used for Boolean arguments).
    *
    * @param args program's argument string Array
-   * @param args the argument tag to search for (such as "-d")
+   * @param tag the argument tag to search for (such as "-d")
    * @return a Boolean that represents if the tag was found
    */
   static boolean getIfArgument(String[] args, String tag) {
@@ -112,33 +112,19 @@ public class Main {
   /**
    * Program entry point. The program flow is:
    * <ol>
-   * <li>
-   * Get data needed for simulation instantiation. This includes the .dat file containing EPROM data
-   * and the debug argument.
-   * </li>
-   * <li>
-   * Instantiate a {@link microsim.simulation.Simulation} object with said data.
-   * </li>
-   * <li>
-   * Attach interfaces to simulation. These include {@link microsim.ui.VideoWindow} and
-   * {@link microsim.ui.DebugShell}.
-   * </li>
-   * <li>
-   * Begin executing simulation.
-   * </li>
+   * <li>Get data needed for simulation instantiation. This includes the .dat file containing EPROM
+   * data and the debug argument.</li>
+   * <li>Instantiate a {@link microsim.simulation.Simulation} object with said data.</li>
+   * <li>Attach interfaces to simulation. These include {@link microsim.ui.VideoWindow} and
+   * {@link microsim.ui.DebugShell}.</li>
+   * <li>Begin executing simulation.</li>
    * </ol>
    *
    * Return values are:
    * <ol>
-   * <li>
-   * Normal termination.
-   * </li>
-   * <li>
-   * User error.
-   * </li>
-   * <li>
-   * Simulation error.
-   * </li>
+   * <li>Normal termination.</li>
+   * <li>User error.</li>
+   * <li>Simulation error.</li>
    * </ol>
    *
    * @param args program arguments

@@ -7,6 +7,9 @@ import microsim.simulation.component.*;
  */
 public abstract class SimulationEvent {
 
+  /**
+   * Simulation component that raised this event.
+   */
   SimulationComponent owner;
 
   /**

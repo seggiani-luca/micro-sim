@@ -1,6 +1,6 @@
 package microsim.simulation.event;
 
-import microsim.simulation.component.SimulationComponent;
+import microsim.simulation.component.*;
 
 /**
  * SimulationEvent that represents a fetch operation completed by a
@@ -19,7 +19,7 @@ public class FetchEvent extends DebugEvent {
    * @param owner Processor that raised DecodeEvent
    * @param ip address of fetched opcode
    */
-  public FetchEvent(SimulationComponent owner, char ip) {
+  public FetchEvent(Processor owner, char ip) {
     super(owner);
     this.ip = ip;
   }

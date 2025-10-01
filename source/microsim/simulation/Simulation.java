@@ -89,21 +89,12 @@ public class Simulation extends SimulationComponent implements SimulationListene
   /**
    * Performs a simulation cycle. A cycle is performed by:
    * <ol>
-   * <li>
-   * Stepping the bus to propagate buffered values.
-   * </li>
-   * <li>
-   * Stepping components. Components are stepped in order:
+   * <li>Stepping the bus to propagate buffered values.</li>
+   * <li>Stepping components. Components are stepped in order:
    * <ol>
-   * <li>
-   * Processor.
-   * </li>
-   * <li>
-   * Memory space.
-   * </li>
-   * <li>
-   * I/O devices.
-   * </li>
+   * <li>Processor.</li>
+   * <li>Memory space.</li>
+   * <li>I/O devices.</li>
    * </ol>
    * </li>
    * </ol>

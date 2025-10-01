@@ -3,24 +3,14 @@ package microsim.simulation.component;
 /**
  * Represents a communication bus for a simulation. A bus is comprised of:
  * <ul>
- * <li>
- * A 16 bit address line.
- * </li>
- * <li>
- * A 16 bit data line.
- * </li>
+ * <li>A 16 bit address line.</li>
+ * <li>A 16 bit data line.</li>
  * <li>
  * Control lines (active high):
  * <ul>
- * <li>
- * Read enable line.
- * </li>
- * <li>
- * Write enable line.
- * </li>
- * <li>
- * Target space line. Low is memory, high is I/O space.
- * </li>
+ * <li>Read enable line.</li>
+ * <li>Write enable line.</li>
+ * <li>Target space line. Low is memory, high is I/O space.</li>
  * </ul>
  * </li>
  * </ul>

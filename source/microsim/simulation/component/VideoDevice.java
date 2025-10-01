@@ -1,20 +1,45 @@
 package microsim.simulation.component;
 
 import java.awt.image.*;
-import java.io.File;
-import java.io.IOException;
-import javax.imageio.ImageIO;
+import java.io.*;
+import javax.imageio.*;
 import microsim.simulation.event.*;
 
+/**
+ * Implements a video device that renders a frame buffer by reading from VRAM. Functions in text
+ * mode, with bitmap characters read from a file.
+ */
 public class VideoDevice extends SimulationComponent {
 
+  /**
+   * Number of columns in text mode.
+   */
   static final int COLS = 80;
+
+  /**
+   * Number of rows in text mode.
+   */
   static final int ROWS = 30;
+
+  /**
+   * Width of character in text mode.
+   */
   static final int CHAR_WIDTH = 8;
+
+  /**
+   * Height of character in text mode.
+   */
   static final int CHAR_HEIGHT = 16;
 
+  /**
+   * Width (in characters) of the character atlas. Height is not needed as we are targeting 256
+   * character extended ASCII.
+   */
   private static final int ATLAS_SIZE = 16;
 
+  /**
+   * Character atlas, read from file "assets/charAtlas.bmp".
+   */
   private static BufferedImage charAtlas;
 
   // try to fetch charAtlas
@@ -22,14 +47,24 @@ public class VideoDevice extends SimulationComponent {
     try {
       charAtlas = ImageIO.read(new File("assets/charAtlas.bmp"));
     } catch (IOException e) {
-      e.printStackTrace();
-      charAtlas = null;
+      System.out.println("Error loading character atlas: " + e.getMessage());
+      System.exit(1);
     }
   }
 
+  /**
+   * Reference to the communication bus the component is mounted on.
+   */
   private final Bus bus;
-  private final MemorySpace memory; // reference to memory for direct VRAM reads
+  /**
+   * Reference to memory space. Used to directly access VRAM via the
+   * {@link microsim.simulation.component.MemorySpace#getVRAM()} method.
+   */
+  private final MemorySpace memory;
 
+  /**
+   * Frame buffer to render on.
+   */
   private final BufferedImage frame;
 
   /**
@@ -50,6 +85,13 @@ public class VideoDevice extends SimulationComponent {
     return ROWS * CHAR_HEIGHT;
   }
 
+  /**
+   * Instantiates video device, taking a reference to the bus it's mounted on and the memory space
+   * it should read VRAM from.
+   *
+   * @param bus bus the component is mounted on
+   * @param memory memory space to read from
+   */
   public VideoDevice(Bus bus, MemorySpace memory) {
     this.bus = bus;
     this.memory = memory;
@@ -62,11 +104,18 @@ public class VideoDevice extends SimulationComponent {
     );
   }
 
+  /**
+   * Currently unused by video device. TODO: implement cursor functionality reading from ports.
+   */
   @Override
   public void step() {
 
   }
 
+  /**
+   * Renders frame buffer from read VRAM. Characters in VRAM are comprised of 2 bytes, with higher
+   * byte representing extended ASCII code point, and lower byte representing style.
+   */
   public void render() {
     // directly read VRAM
     byte[] vram = memory.getVRAM();
@@ -99,6 +148,13 @@ public class VideoDevice extends SimulationComponent {
     raiseEvent(new FrameEvent(this, frame));
   }
 
+  /**
+   * Gets a character from code point and style byte.
+   *
+   * @param ch character code point
+   * @param st style byte
+   * @return character image
+   */
   private BufferedImage getCharSprite(byte ch, byte st) {
     // get character coordinates on charAtlas
     int x = ch % ATLAS_SIZE;

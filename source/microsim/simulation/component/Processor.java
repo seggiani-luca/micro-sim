@@ -13,44 +13,24 @@ import microsim.ui.*;
  * <ul>
  * <li> {@link #GENERAL_REGISTERS} general registers. This is fixed to 4:
  * <ul>
- * <li>
- * %a.
- * </li>
- * <li>
- * %b.
- * </li>
- * <li>
- * %c.
- * </li>
- * <li>
- * %d.
- * </li>
+ * <li>%a.</li>
+ * <li>%b.</li>
+ * <li>%c.</li>
+ * <li>%d.</li>
  * </ul>
  * </li>
  * <li>
  * Special registers:
  * <ul>
- * <li>
- * %ip, the instruction pointer. Resets to {@link #RESET_INSTRUCTION_ADDRESS}.
- * </li>
- * <li>
- * %sp, the stack pointer.
- * </li>
+ * <li>%ip, the instruction pointer. Resets to {@link #RESET_INSTRUCTION_ADDRESS}.</li>
+ * <li>%sp, the stack pointer.</li>
  * <li>
  * Flag register, accessible only to jump instructions. It contains bits:
  * <ol start="0">
- * <li>
- * of, overflow flag.
- * </li>
- * <li>
- * sf, sign flag.
- * </li>
- * <li>
- * zf, zero flag.
- * </li>
- * <li>
- * cf, carry flag.
- * </li>
+ * <li>of, overflow flag.</li>
+ * <li>sf, sign flag.</li>
+ * <li>zf, zero flag.</li>
+ * <li>cf, carry flag.</li>
  * </ol>
  * </li>
  * </ul>
@@ -77,54 +57,35 @@ public class Processor extends SimulationComponent {
    * <li>
    * Instruction fetch and decode:
    * <ul>
-   * <li> {@link #FETCH}.
-   * </li>
-   * <li> {@link #DECODE}.
-   * </li>
+   * <li>{@link #FETCH}.</li>
+   * <li>{@link #DECODE}.</li>
    * </ul>
    * </li>
    * <li>
    * Execution states:
    * <ul>
-   * <li>
-   * Movement instructions:{@link #MOV}, {@link #MOV_IMMEDIATE}, {@link #LOAD}, {@link #LOAD_POST},
-   * {@link #LOAD_IMMEDIATE}, {@link #STORE}, {@link #STORE_IMMEDIATE}.
-   * </li>
-   * <li>
-   * Arithmetic instructions: {@link #ADD}, {@link #ADD_IMMEDIATE}, {@link #SUB},
-   * {@link #SUB_IMMEDIATE}, {@link #CMP}, {@link #CMP_IMMEDIATE}, {@link #INC}, {@link #DEC}.
-   * </li>
-   * <li>
-   * Logical instructions: {@link #AND}, {@link #AND_IMMEDIATE}, {@link #OR}, {@link #OR_IMMEDIATE},
-   * {@link #NOT}.
-   * </li>
-   * <li>
-   * Utility instructions: {@link #SHL}, {@link #SHL_IMMEDIATE}, {@link #SHR},
-   * {@link #SHR_IMMEDIATE}.
-   * </li>
-   * <li>
-   * Stack Operations: {@link #PUSH}, {@link #POP}, {@link #POP_POST}, {@link #CALL}, {@link #RET},
-   * {@link #RET_POST}.
-   * </li>
-   * <li>
-   * Jump instructions: {@link #JMP_IMMEDIATE}, {@link #JMP}, {@link #JO_IMMEDIATE}, {@link #JO},
-   * {@link #JS_IMMEDIATE}, {@link #JS}, {@link #JZ_IMMEDIATE}, {@link #JZ}, {@link #JC_IMMEDIATE},
-   * {@link #JC}.
-   * </li>
-   * <li>
-   * Other instructions: {@link #NOP}, {@link #HLT}.
-   * </li>
+   * <li>Movement instructions:{@link #MOV}, {@link #MOV_IMMEDIATE}, {@link #LOAD},
+   * {@link #LOAD_POST}, {@link #LOAD_IMMEDIATE}, {@link #STORE}, {@link #STORE_IMMEDIATE}.</li>
+   * <li>Arithmetic instructions: {@link #ADD}, {@link #ADD_IMMEDIATE}, {@link #SUB},
+   * {@link #SUB_IMMEDIATE}, {@link #CMP}, {@link #CMP_IMMEDIATE}, {@link #INC}, {@link #DEC}.</li>
+   * <li>Logical instructions: {@link #AND}, {@link #AND_IMMEDIATE}, {@link #OR},
+   * {@link #OR_IMMEDIATE}, {@link #NOT}.</li>
+   * <li>Utility instructions: {@link #SHL}, {@link #SHL_IMMEDIATE}, {@link #SHR},
+   * {@link #SHR_IMMEDIATE}.</li>
+   * <li>Stack Operations: {@link #PUSH}, {@link #POP}, {@link #POP_POST}, {@link #CALL},
+   * {@link #RET}, {@link #RET_POST}.</li>
+   * <li>Jump instructions: {@link #JMP_IMMEDIATE}, {@link #JMP}, {@link #JO_IMMEDIATE},
+   * {@link #JO}, {@link #JS_IMMEDIATE}, {@link #JS}, {@link #JZ_IMMEDIATE}, {@link #JZ},
+   * {@link #JC_IMMEDIATE}, {@link #JC}.</li>
+   * <li>Other instructions: {@link #NOP}, {@link #HLT}.</li>
    * </ul>
    * </li>
    * <li>
    * Memory access routines:
    * <ul>
-   * <li>
-   * Read: {@link #MEM_READ0}, {@link #MEM_READ1}, {@link #MEM_READ2}
-   * </li>
-   * <li>
-   * Write: {@link #MEM_WRITE0}, {@link #MEM_WRITE1}, {@link #MEM_WRITE2}, {@link #MEM_WRITE3}
-   * </li>
+   * <li>Read: {@link #MEM_READ0}, {@link #MEM_READ1}, {@link #MEM_READ2}</li>
+   * <li>Write:
+   * {@link #MEM_WRITE0}, {@link #MEM_WRITE1}, {@link #MEM_WRITE2}, {@link #MEM_WRITE3}</li>
    * </ul>
    * </li>
    * </ul>
@@ -308,24 +269,12 @@ public class Processor extends SimulationComponent {
   /**
    * Source register index for last decoded instruction. Register indices are as follows:
    * <ol>
-   * <li>
-   * %a.
-   * </li>
-   * <li>
-   * %b.
-   * </li>
-   * <li>
-   * %c.
-   * </li>
-   * <li>
-   * %d.
-   * </li>
-   * <li>
-   * %ip.
-   * </li>
-   * <li>
-   * %sp.
-   * </li>
+   * <li>%a.</li>
+   * <li>%b.</li>
+   * <li>%c.</li>
+   * <li>%d.</li>
+   * <li>%ip.</li>
+   * <li>%sp.</li>
    * </ol>
    */
   private int sourceIndex;
@@ -339,18 +288,15 @@ public class Processor extends SimulationComponent {
   /**
    * Utility register used by memory access routines. Usage is as follows:
    * <ol>
-   * <li>
-   * Read routine: temp will contain the read data at the end of the operation.
-   * </li>
-   * <li>
-   * Write routine: temp must contain the data to be written before the beginning of the operation.
-   * </li>
+   * <li>Read routine: temp will contain the read data at the end of the operation.</li>
+   * <li>Write routine: temp must contain the data to be written before the beginning of the
+   * operation.</li>
    * </ol>
    */
   private char temp;
 
   /**
-   * Current state of processor. Initializes to {@link #FETCH}.
+   * Current state of processor. Initializes to fetch state.
    */
   private ProcessorState state = ProcessorState.FETCH;
 
@@ -1124,7 +1070,7 @@ public class Processor extends SimulationComponent {
    *
    * @param dataS source operand
    * @param dataD destination operand
-   * @return
+   * @return addition of source and destination
    */
   private char doAddition(char dataS, char dataD) {
     int res = dataD + dataS;
@@ -1143,7 +1089,7 @@ public class Processor extends SimulationComponent {
    *
    * @param dataS source operand
    * @param dataD destination operand
-   * @return
+   * @return subtraction of source and destination
    */
   private char doSubtraction(char dataS, char dataD) {
     int res = dataD - dataS;
