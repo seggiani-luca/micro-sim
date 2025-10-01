@@ -142,13 +142,17 @@ public class DebugShell implements SimulationListener {
    *
    * @param e simulation event
    */
+  @Override
   public void onSimulationEvent(SimulationEvent e) {
-    if (e instanceof SimulationEvent) {
-      String message = ((SimulationEvent) e).getDebugMessage();
+    if (e instanceof SimulationEvent simulationEvent) {
+      String message = simulationEvent.getDebugMessage();
+
+      // is there a debug message event?
       if (message != null) {
         log(message);
       }
 
+      // if it's a cycle, launch shell
       if (e instanceof CycleEvent) {
         shell();
       }
@@ -284,7 +288,6 @@ public class DebugShell implements SimulationListener {
 
         default:
           System.out.println("Unknown command " + cmd);
-          continue;
       }
     }
   }
