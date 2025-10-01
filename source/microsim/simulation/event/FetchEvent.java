@@ -1,6 +1,6 @@
 package microsim.simulation.event;
 
-import microsim.simulation.component.*;
+import microsim.simulation.component.processor.*;
 
 /**
  * SimulationEvent that represents a fetch operation completed by a

@@ -1,11 +1,11 @@
 package microsim.simulation.event;
 
-import microsim.simulation.component.*;
-import microsim.simulation.component.Processor.ProcessorState;
+import microsim.simulation.component.processor.*;
+import microsim.simulation.component.processor.Processor.ProcessorState;
 
 /**
  * SimulationEvent that represents a decode operation completed by a
- * {@link microsim.simulation.component.Processor} component.
+ * {@link microsim.simulation.component.processor.Processor} component.
  */
 public class DecodeEvent extends SimulationEvent {
 

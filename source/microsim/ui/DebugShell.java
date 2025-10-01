@@ -1,5 +1,6 @@
 package microsim.ui;
 
+import microsim.simulation.component.processor.*;
 import microsim.simulation.*;
 import microsim.simulation.component.*;
 import microsim.simulation.event.*;

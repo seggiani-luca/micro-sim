@@ -1,6 +1,9 @@
-package microsim.simulation.component;
+package microsim.simulation.component.processor;
 
 import java.util.Map;
+import microsim.simulation.component.Bus;
+import microsim.simulation.component.MemorySpace;
+import microsim.simulation.component.SimulationComponent;
 import microsim.simulation.event.*;
 import microsim.ui.*;
 
