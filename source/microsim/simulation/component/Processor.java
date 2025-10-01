@@ -48,7 +48,7 @@ public class Processor extends SimulationComponent {
    * The reset value of {@link #ip}. This is set to EPROM_BEG from
    * {@link microsim.simulation.component.MemorySpace}.
    */
-  private static final char RESET_INSTRUCTION_ADDRESS = 0x9400;
+  private static final char RESET_INSTRUCTION_ADDRESS = MemorySpace.EPROM_BEG;
 
   /**
    * Enum representing all possible states of a processor in its instruction cycle. These can be
@@ -959,7 +959,7 @@ public class Processor extends SimulationComponent {
       // memory read routine
       case MEM_READ0: {
         // expect bus address line to be driven by prior state
-        raiseEvent(new BusEvent(this, "read_begin", bus.addressLine.read(), null));
+        raiseEvent(new BusEvent(this, "read_beg", bus.addressLine.read(), null));
 
         bus.readEnable.drive(this, true);
 
@@ -977,7 +977,7 @@ public class Processor extends SimulationComponent {
       case MEM_READ2: {
         temp = bus.dataLine.read();
 
-        raiseEvent(new BusEvent(this, "read_get", bus.addressLine.read(), temp));
+        raiseEvent(new BusEvent(this, "read_end", bus.addressLine.read(), temp));
 
         // return
         state = returnState;
@@ -988,7 +988,7 @@ public class Processor extends SimulationComponent {
       // memory write routine
       case MEM_WRITE0: {
         // expect bus address line to be driven by prior state
-        raiseEvent(new BusEvent(this, "write", bus.addressLine.read(), temp));
+        raiseEvent(new BusEvent(this, "write_beg", bus.addressLine.read(), temp));
 
         bus.dataLine.drive(this, temp);
 
@@ -1013,7 +1013,7 @@ public class Processor extends SimulationComponent {
       case MEM_WRITE3: {
         bus.dataLine.release(this);
 
-        DebugShell.log("Processor finished write operation");
+        raiseEvent(new BusEvent(this, "write_end", bus.addressLine.read(), null));
 
         // return
         state = returnState;

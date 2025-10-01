@@ -2,6 +2,7 @@ package microsim;
 
 import java.io.*;
 import microsim.simulation.*;
+import microsim.simulation.component.*;
 import microsim.ui.*;
 
 /**
@@ -14,7 +15,7 @@ public class Main {
    * The maximum size, in bytes, of EPROM data. This is set to EPROM_END - EPROM_BEG from
    * {@link microsim.simulation.component.MemorySpace}.
    */
-  static final int MAX_EPROM_SIZE = 27648; // set to EPROM_END - EPROM_BEG
+  static final int MAX_EPROM_SIZE = MemorySpace.EPROM_END - MemorySpace.EPROM_BEG;
 
   /**
    * Gets argument parameter following argument tag.
@@ -142,7 +143,7 @@ public class Main {
     byte[] epromData = null;
     try {
       epromData = loadEpromData(epromDataPath);
-    } catch (IOException e) {
+    } catch (IOException | NumberFormatException e) {
       System.out.println("Error loading EPROM data: " + e.getMessage());
       System.exit(1);
     }
@@ -167,12 +168,14 @@ public class Main {
     // instantiate video window and attach it
     VideoWindow window = new VideoWindow(windowScale);
     simulation.addListener(window);
+
     // get debug options
     boolean debugMode = getIfArgument(args, "-d");
 
     // if debugging, attach DebugShell
+    DebugShell debugShell = new DebugShell();
     if (debugMode) {
-      DebugShell.simulationInstance = simulation;
+      debugShell.attachSimulation(simulation);
     }
 
     // 4) begin simulation

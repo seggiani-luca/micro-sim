@@ -20,4 +20,13 @@ public abstract class SimulationEvent {
   public SimulationEvent(SimulationComponent owner) {
     this.owner = owner;
   }
+
+  /**
+   * Returns a debug string regarding this event.
+   *
+   * @return debug string
+   */
+  public String getDebugMessage() {
+    return null; // return nothing by default
+  }
 }

@@ -10,5 +10,5 @@ public interface SimulationListener {
    *
    * @param e event received
    */
-  void onSimulationEvent(SimulationEvent e);
+  public void onSimulationEvent(SimulationEvent e);
 }

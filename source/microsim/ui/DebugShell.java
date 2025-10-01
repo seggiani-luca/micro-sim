@@ -2,26 +2,49 @@ package microsim.ui;
 
 import microsim.simulation.*;
 import microsim.simulation.component.*;
+import microsim.simulation.event.*;
 
 /**
  * Handles the shell shown in debug mode. Debug information is shown in 2 ways:
  * <ol>
  * <li>Via the {@link #log(java.lang.String)} method, which prints information mid-cycle.</li>
- * <li>Via the {@link #shell(microsim.simulation.Simulation)} method, which offers interactive
- * debugging at the end of cycles.</li>
+ * <li>Via the {@link #shell()} method, which offers interactive debugging at the end of
+ * cycles.</li>
  * </ol>
  */
-public class DebugShell {
+public class DebugShell implements SimulationListener {
 
   /**
-   * Simulation instance to debug.
+   * Simulation instance to debug. Used to access processor and memory information from shell.
    */
-  public static Simulation simulationInstance = null;
+  private Simulation simulationInstance = null;
+
+  /**
+   * Attaches a new simulation instance to the debug shell.
+   *
+   * @param simulationInstance simulation instance to attach
+   */
+  public void attachSimulation(Simulation simulationInstance) {
+    this.simulationInstance = simulationInstance;
+    simulationInstance.addListener(this);
+  }
+
+  /**
+   * Detaches attached simulation instance. If no simulation instance is attached, nothing changes.
+   */
+  public void detachSimulation() {
+    if (simulationInstance == null) {
+      return;
+    }
+
+    simulationInstance.removeListener(this);
+    this.simulationInstance = null;
+  }
 
   /**
    * Fetches processor registers from processor in current simulation and displays them.
    */
-  private static void printProcessorRegisters() {
+  private void printProcessorRegisters() {
     Processor proc = simulationInstance.proc;
 
     char[] registers = proc.getRegisters();
@@ -47,7 +70,7 @@ public class DebugShell {
   /**
    * Fetches processor state from processor in current simulation and displays it.
    */
-  private static void printProcessorState() {
+  private void printProcessorState() {
     Processor proc = simulationInstance.proc;
     Processor.ProcessorState state = proc.getState();
 
@@ -55,27 +78,89 @@ public class DebugShell {
   }
 
   /**
-   * Reads and prints data from memory at given address
+   * Reads and prints data from memory at given address.
    *
    * @param addr the address to read from
    */
-  private static void printMemoryAtAddress(String addr) {
+  private void readMemoryAtAddress(String addr) {
     MemorySpace memory = simulationInstance.memory;
-    // TODO: implement
+    char numAddr = 0;
+
+    try {
+      numAddr = (char) Integer.parseInt(addr, 16);
+    } catch (NumberFormatException e) {
+      System.out.println("Invalid address: " + e.getMessage());
+    }
+
+    if (numAddr < MemorySpace.RAM_BEG || numAddr >= MemorySpace.EPROM_END) {
+      System.out.println("Invalid address: out of bounds");
+    }
+
+    // read
+    byte data = memory.readMemory(numAddr);
+    System.out.println("Read " + String.format("%02X", data & 0xff)
+      + " from memory at address " + String.format("%04X", numAddr & 0xffff));
   }
 
   /**
-   * Logs a simulation event. TODO: turn this into an event listener
+   * Writes data to memory at given address.
    *
-   * @param message message of the event
+   * @param addr the address to read from
    */
-  public static void log(String message) {
-    // for now check if there is a debugInstance
-    if (simulationInstance == null) {
-      return;
+  private void writeMemoryAtAddress(String addr, String data) {
+    MemorySpace memory = simulationInstance.memory;
+    char numAddr = 0;
+
+    try {
+      numAddr = (char) Integer.parseInt(addr, 16);
+    } catch (NumberFormatException e) {
+      System.out.println("Invalid address: " + e.getMessage());
     }
 
-    // tab message
+    if (numAddr < MemorySpace.RAM_BEG || numAddr >= MemorySpace.EPROM_END) {
+      System.out.println("Invalid address: out of bounds");
+    }
+
+    byte numData = 0;
+
+    try {
+      numData = (byte) Integer.parseInt(data, 16);
+    } catch (NumberFormatException e) {
+      System.out.println("Invalid data: " + e.getMessage());
+    }
+
+    // read
+    memory.writeMemory(numAddr, numData);
+    System.out.println("Wrote " + String.format("%02X", numData & 0xff)
+      + " to memory at address " + String.format("%04X", numAddr & 0xffff));
+  }
+
+  /**
+   * Receives a simulation event. {@link microsim.simulation.event.SimulationEvent} events that
+   * return a non-null debug string are logged, and {@link microsim.simulation.event.CycleEvent}
+   * events launch the interactive shell.
+   *
+   * @param e simulation event
+   */
+  public void onSimulationEvent(SimulationEvent e) {
+    if (e instanceof SimulationEvent) {
+      String message = ((SimulationEvent) e).getDebugMessage();
+      if (message != null) {
+        log(message);
+      }
+
+      if (e instanceof CycleEvent) {
+        shell();
+      }
+    }
+  }
+
+  /**
+   * Logs a debug message.
+   *
+   * @param message message to display
+   */
+  private void log(String message) {
     message = message.replace("\n", "\n\t");
     System.out.println("\t" + message);
   }
@@ -97,18 +182,12 @@ public class DebugShell {
    * mem: offers memory information with following options:
    * <ul>
    * <li>read: reads memory at address.</li>
+   * <li>write: writes memory at address.</li>
    * </ul>
    * </li>
    * </ul>
-   *
-   * @param which the simulation instance that called the shell
    */
-  public static void shell(Simulation which) {
-    // only debug if it's current debugInstance
-    if (simulationInstance != which) {
-      return;
-    }
-
+  private void shell() {
     // enter debug shell loop
     while (true) {
       System.out.print("debug> ");
@@ -167,18 +246,35 @@ public class DebugShell {
           if (tokens.length < 2) {
             System.out.println("Available mem options:");
             System.out.println("\tread: reads memory at address");
+            System.out.println("\twrite: reads memory at address");
             continue;
           }
 
           switch (tokens[1]) {
             case "r":
-            case "read":
+            case "read": {
               if (tokens.length < 3) {
                 System.out.println("Please specify memory address");
               }
 
               String addr = tokens[2];
-              printMemoryAtAddress(addr);
+
+              readMemoryAtAddress(addr);
+              continue;
+            }
+
+            case "w":
+            case "write": {
+              if (tokens.length < 4) {
+                System.out.println("Please specify memory address and data to be written");
+              }
+
+              String addr = tokens[2];
+              String data = tokens[3];
+
+              writeMemoryAtAddress(addr, data);
+              continue;
+            }
 
             default:
               System.out.println("Unknown mem option: " + cmd);

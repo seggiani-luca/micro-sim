@@ -6,7 +6,7 @@ import microsim.simulation.component.*;
  * SimulationEvent that signals a memory operation on a
  * {@link microsim.simulation.component.MemorySpace} component.
  */
-public class MemoryEvent extends DebugEvent {
+public class MemoryEvent extends SimulationEvent {
 
   /**
    * Type of operation started.

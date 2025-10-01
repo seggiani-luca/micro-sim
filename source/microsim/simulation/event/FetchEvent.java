@@ -6,7 +6,7 @@ import microsim.simulation.component.*;
  * SimulationEvent that represents a fetch operation completed by a
  * {@link microsim.simulation.component.Processor} component.
  */
-public class FetchEvent extends DebugEvent {
+public class FetchEvent extends SimulationEvent {
 
   /**
    * Address of fetched opcode.
@@ -27,7 +27,7 @@ public class FetchEvent extends DebugEvent {
   /**
    * Returns information about where the fetch operation happened.
    *
-   * @return memory operation debug string
+   * @return fetch operation debug string
    */
   @Override
   public String getDebugMessage() {

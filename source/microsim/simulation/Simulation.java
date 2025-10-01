@@ -116,23 +116,20 @@ public class Simulation extends SimulationComponent implements SimulationListene
    */
   public void run() {
     // init cycle counters
-    long cycle = 0;
+    long cycle = 1;
     long nextFrameCycle = CYCLES_PER_FRAME;
 
     // show shell before beginning
-    DebugShell.shell(this);
+    raiseEvent(new CycleEvent(this, 0));
 
     // enter simulation loop
     while (true) {
       // step through simulation cycles
       while (cycle < nextFrameCycle) {
-        DebugShell.log("Cycle " + cycle);
+        raiseEvent(new CycleEvent(this, cycle));
 
         // actually perform simulation
         step();
-
-        // if debugging, stop and show debug shell
-        DebugShell.shell(this);
 
         cycle++;
       }

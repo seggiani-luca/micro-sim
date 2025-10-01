@@ -6,7 +6,7 @@ import microsim.simulation.component.SimulationComponent;
  * SimulationEvent that represents a bus operation completed by any
  * {@link microsim.simulation.component.SimulationComponent} component.
  */
-public class BusEvent extends DebugEvent {
+public class BusEvent extends SimulationEvent {
 
   /**
    * Type of bus operation.
@@ -43,8 +43,8 @@ public class BusEvent extends DebugEvent {
    */
   @Override
   public String getDebugMessage() {
-    return (owner.getClass().getName() + " initiated " + type + " operation on bus at address "
-      + String.format("%04X", addr & 0xffff)
+    return (owner.getClass().getSimpleName() + " initiated " + type
+      + " operation on bus at address " + String.format("%04X", addr & 0xffff)
       + (data != null ? " with data " + String.format("%04X", data & 0xffff) : ""));
   }
 }

@@ -19,32 +19,32 @@ public class MemorySpace extends SimulationComponent {
   /**
    * Beginning of RAM region.
    */
-  private static final int RAM_BEG = 0x0000; // 32 KiB
+  public static final int RAM_BEG = 0x0000; // 32 KiB
 
   /**
    * End of RAM region.
    */
-  private static final int RAM_END = 0x7fff;
+  public static final int RAM_END = 0x7fff;
 
   /**
    * Beginning of VRAM region.
    */
-  private static final int VRAM_BEG = 0x8000; // 5 KiB
+  public static final int VRAM_BEG = 0x8000; // 5 KiB
 
   /**
    * End of VRAM region.
    */
-  private static final int VRAM_END = 0x93ff;
+  public static final int VRAM_END = 0x93ff;
 
   /**
    * Beginning of EPROM region.
    */
-  private static final int EPROM_BEG = 0x9400; // 27 KiB
+  public static final int EPROM_BEG = 0x9400; // 27 KiB
 
   /**
    * End of EPROM region.
    */
-  private static final int EPROM_END = 0xffff;
+  public static final int EPROM_END = 0xffff;
 
   /**
    * Holds RAM data.

@@ -7,7 +7,7 @@ import microsim.simulation.component.Processor.ProcessorState;
  * SimulationEvent that represents a decode operation completed by a
  * {@link microsim.simulation.component.Processor} component.
  */
-public class DecodeEvent extends DebugEvent {
+public class DecodeEvent extends SimulationEvent {
 
   /**
    * Opcode to decode.
@@ -57,7 +57,7 @@ public class DecodeEvent extends DebugEvent {
   /**
    * Returns information about what type of instruction was decoded and its operands.
    *
-   * @return memory operation debug string
+   * @return decode operation debug string
    */
   @Override
   public String getDebugMessage() {
