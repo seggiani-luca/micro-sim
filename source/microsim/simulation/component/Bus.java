@@ -3,13 +3,20 @@ package microsim.simulation.component;
 /**
  * Represents a communication bus for a simulation. A bus is comprised of:
  * <ul>
- * <li>A 16 bit address line.</li>
- * <li>A 16 bit data line.</li>
+ * <li>A 32 bit address line.</li>
+ * <li>A 32 bit data line.</li>
  * <li>
  * Control lines (active high):
  * <ul>
  * <li>Read enable line.</li>
  * <li>Write enable line.</li>
+ * <li>A byte select line with states:
+ * <ol>
+ * <li>Byte.</li>
+ * <li>Half.</li>
+ * <li>Word.</li>
+ * </ol>
+ * </li>
  * <li>Target space line. Low is memory, high is I/O space.</li>
  * </ul>
  * </li>
@@ -20,13 +27,22 @@ package microsim.simulation.component;
 public class Bus extends SimulationComponent {
 
   /**
-   * 16 bit address line.
+   * Byte select modes.
    */
-  public TSLine<Character> addressLine;
+  public static enum BYTE_SELECT {
+    BYTE,
+    HALF,
+    WORD
+  }
+
   /**
-   * 16 bit data line.
+   * 32 bit address line.
    */
-  public TSLine<Character> dataLine;
+  public TSLine<Integer> addressLine;
+  /**
+   * 32 bit data line.
+   */
+  public TSLine<Integer> dataLine;
 
   /**
    * Read enable control line (active high).
@@ -37,6 +53,11 @@ public class Bus extends SimulationComponent {
    * Write enable control line (active high).
    */
   public TSLine<Boolean> writeEnable;
+
+  /**
+   * Byte select mode control line.
+   */
+  public TSLine<BYTE_SELECT> byteSelect;
 
   /**
    * Target space control line. Low is memory, high is I/O space.

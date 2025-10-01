@@ -137,9 +137,9 @@ public class MemorySpace extends SimulationComponent {
 
     if (readEnable) {
       // read operation
-      char addr = bus.addressLine.read();
+      int addr = bus.addressLine.read();
 
-      // get word in two byte reads
+      // get word in four byte reads
       byte dataHi = readMemory(addr);
       byte dataLow = readMemory((char) ((addr + 1) % EPROM_END));
 
@@ -185,7 +185,7 @@ public class MemorySpace extends SimulationComponent {
    * @param addr address to read from
    * @return data read
    */
-  public byte readMemory(char addr) {
+  public byte readMemory(int addr) {
     if (addr >= RAM_BEG && addr <= RAM_END) {
       return ram[addr - RAM_BEG];
     } else if (addr >= VRAM_BEG && addr <= VRAM_END) {
@@ -203,7 +203,7 @@ public class MemorySpace extends SimulationComponent {
    * @param addr address to write to
    * @param data data to write
    */
-  public void writeMemory(char addr, byte data) {
+  public void writeMemory(int addr, byte data) {
     if (addr >= RAM_BEG && addr <= RAM_END) {
       ram[addr - RAM_BEG] = data;
       return;

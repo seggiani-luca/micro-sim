@@ -1,8 +1,8 @@
 package microsim.ui;
 
-import microsim.simulation.component.processor.*;
 import microsim.simulation.*;
 import microsim.simulation.component.*;
+import microsim.simulation.component.processor.*;
 import microsim.simulation.event.*;
 
 /**
@@ -43,29 +43,35 @@ public class DebugShell implements SimulationListener {
   }
 
   /**
+   * Helper to convert an int to a hexadecimal string.
+   *
+   * @param val int to convert
+   * @return hexadecimal string representing int
+   */
+  private String int32ToString(int val) {
+    return String.format("%08x", val);
+  }
+
+  /**
    * Fetches processor registers from processor in current simulation and displays them.
    */
   private void printProcessorRegisters() {
     Processor proc = simulationInstance.proc;
 
-    char[] registers = proc.getRegisters();
+    int[] registers = proc.registers;
+    int pc = proc.pc;
 
-    System.out.println("\t%a:\t" + String.format("%04X", registers[0] & 0xffff));
-    System.out.println("\t%b:\t" + String.format("%04X", registers[1] & 0xffff));
-    System.out.println("\t%c:\t" + String.format("%04X", registers[2] & 0xffff));
-    System.out.println("\t%d:\t" + String.format("%04X", registers[3] & 0xffff));
-    System.out.println("\t%ip:\t" + String.format("%04X", registers[4] & 0xffff));
-    System.out.println("\t%sp:\t" + String.format("%04X", registers[5] & 0xffff));
+    System.out.println("\tpc:\t" + int32ToString(pc));
+    System.out.println("\tzero:\t0");
 
-    boolean[] flags = proc.getFlagRegister();
+    final String[] mnemonics = {
+      "ra", "sp", "gp", "tp", "t0", "t1", "t2", "s0/fp", "s1", "a0", "a1", "a2", "a3", "a4", "a5",
+      "a6", "s2", "s3", "s4", "s5", "s6", "s7", "s8", "s9", "s10", "s11", "t3", "t4", "t5", "t6"
+    };
 
-    System.out.print("\tflag:\t{");
-    System.out.print("of: " + (flags[0] ? 1 : 0));
-    System.out.print(" sf: " + (flags[1] ? 1 : 0));
-    System.out.print(" zf: " + (flags[2] ? 1 : 0));
-    System.out.print(" cf: " + (flags[3] ? 1 : 0));
-
-    System.out.println("}");
+    for (int i = 1; i < proc.REGISTERS; i++) {
+      System.out.println("\t" + mnemonics[i] + ":\t" + int32ToString(registers[i]));
+    }
   }
 
   /**
