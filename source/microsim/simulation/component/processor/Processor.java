@@ -3,6 +3,7 @@ package microsim.simulation.component.processor;
 import java.util.LinkedList;
 import java.util.Queue;
 import microsim.simulation.component.*;
+import microsim.simulation.component.Bus.BYTE_SELECT;
 
 public class Processor extends SimulationComponent {
 
@@ -124,23 +125,32 @@ public class Processor extends SimulationComponent {
   Queue<MicroOp> opQueue = new LinkedList<>();
 
   private void fetchDecode() {
+    doReadRoutine(pc, BYTE_SELECT.WORD);
 
+    opQueue.add(
+      (proc) -> {
+        // temp is read instruction
+        Decoder.decode(proc, temp);
+      }
+    );
   }
 
-  void doReadOperation(int addr, Bus.BYTE_SELECT byteSelect) {
+  void doReadRoutine(int addr, BYTE_SELECT byteSelect) {
     bus.addressLine.drive(this, addr);
     bus.byteSelect.drive(this, byteSelect);
+
+    readRoutine();
   }
 
   private void readRoutine() {
     opQueue.add(
       (cpu) -> {
-        cpu.bus.readEnable.drive(this, true);
+        cpu.bus.readEnable.drive(cpu, true);
       }
     );
     opQueue.add(
       (cpu) -> {
-        cpu.bus.readEnable.drive(this, false);
+        cpu.bus.readEnable.drive(cpu, false);
       }
     );
     opQueue.add(
@@ -150,31 +160,33 @@ public class Processor extends SimulationComponent {
     );
   }
 
-  void doWriteOperation(int addr, int data, Bus.BYTE_SELECT byteSelect) {
+  void doWriteRoutine(int addr, int data, Bus.BYTE_SELECT byteSelect) {
     temp = data;
     bus.addressLine.drive(this, addr);
     bus.byteSelect.drive(this, byteSelect);
+
+    writeRoutine();
   }
 
   private void writeRoutine() {
     opQueue.add(
       (cpu) -> {
-        cpu.bus.dataLine.drive(this, temp);
+        cpu.bus.dataLine.drive(cpu, temp);
       }
     );
     opQueue.add(
       (cpu) -> {
-        cpu.bus.writeEnable.drive(this, true);
+        cpu.bus.writeEnable.drive(cpu, true);
       }
     );
     opQueue.add(
       (cpu) -> {
-        cpu.bus.writeEnable.drive(this, false);
+        cpu.bus.writeEnable.drive(cpu, false);
       }
     );
     opQueue.add(
       (cpu) -> {
-        cpu.bus.dataLine.release(this);
+        cpu.bus.dataLine.release(cpu);
       }
     );
   }
