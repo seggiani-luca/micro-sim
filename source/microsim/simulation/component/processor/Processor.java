@@ -1,9 +1,10 @@
 package microsim.simulation.component.processor;
 
+import java.util.Deque;
 import java.util.LinkedList;
-import java.util.Queue;
 import microsim.simulation.component.*;
 import microsim.simulation.component.Bus.BYTE_SELECT;
+import microsim.simulation.component.processor.MicroOp.OpType;
 
 public class Processor extends SimulationComponent {
 
@@ -93,7 +94,23 @@ public class Processor extends SimulationComponent {
    * </tr>
    * </table>
    */
-  int[] registers = new int[REGISTERS];
+  private int[] registers = new int[REGISTERS - 1];
+
+  int getRegister(int i) {
+    if (i == 0) {
+      return 0;
+    } else {
+      return registers[i - 1];
+    }
+  }
+
+  void setRegister(int i, int val) {
+    if (i == 0) {
+      return;
+    } else {
+      registers[i - 1] = val;
+    }
+  }
 
   /**
    * Reference to the communication bus the component is mounted on.
@@ -121,16 +138,12 @@ public class Processor extends SimulationComponent {
 
   int temp;
 
-  Queue<MicroOp> opQueue = new LinkedList<>();
+  Deque<MicroOp> opQueue = new LinkedList<>();
 
   private void fetchDecode() {
     BusInterface.doReadRoutine(this, pc, BYTE_SELECT.WORD);
 
-    opQueue.add(
-      (proc) -> {
-        // temp is read instruction
-        Decoder.decode(proc, temp);
-      }
+    opQueue.add(new MicroOp(OpType.DECODE)
     );
   }
 

@@ -135,6 +135,8 @@ public class MemorySpace extends SimulationComponent {
       throw new RuntimeException("Read Enable and Write Enable simultaneously high");
     }
 
+    // TODO: edit ops to work with byte selectors
+
     if (readEnable) {
       // read operation
       int addr = bus.addressLine.read();

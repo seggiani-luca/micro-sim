@@ -2,6 +2,7 @@ package microsim.simulation.component.processor;
 
 import microsim.simulation.component.Bus;
 import microsim.simulation.component.Bus.BYTE_SELECT;
+import microsim.simulation.component.processor.MicroOp.OpType;
 
 public class BusInterface {
 
@@ -13,21 +14,9 @@ public class BusInterface {
   }
 
   private static void readRoutine(Processor proc) {
-    proc.opQueue.add(
-      (cpu) -> {
-        cpu.bus.readEnable.drive(cpu, true);
-      }
-    );
-    proc.opQueue.add(
-      (cpu) -> {
-        cpu.bus.readEnable.drive(cpu, false);
-      }
-    );
-    proc.opQueue.add(
-      (cpu) -> {
-        proc.temp = cpu.bus.dataLine.read();
-      }
-    );
+    proc.opQueue.addFirst(new MicroOp(OpType.MEM_READ0));
+    proc.opQueue.addFirst(new MicroOp(OpType.MEM_READ1));
+    proc.opQueue.addFirst(new MicroOp(OpType.MEM_READ2));
   }
 
   public static void doWriteRoutine(
@@ -40,25 +29,10 @@ public class BusInterface {
   }
 
   private static void writeRoutine(Processor proc) {
-    proc.opQueue.add(
-      (cpu) -> {
-        cpu.bus.dataLine.drive(cpu, proc.temp);
-      }
-    );
-    proc.opQueue.add(
-      (cpu) -> {
-        cpu.bus.writeEnable.drive(cpu, true);
-      }
-    );
-    proc.opQueue.add(
-      (cpu) -> {
-        cpu.bus.writeEnable.drive(cpu, false);
-      }
-    );
-    proc.opQueue.add(
-      (cpu) -> {
-        cpu.bus.dataLine.release(cpu);
-      }
-    );
+    proc.opQueue.addFirst(new MicroOp(OpType.MEM_WRITE0));
+    proc.opQueue.addFirst(new MicroOp(OpType.MEM_WRITE1));
+    proc.opQueue.addFirst(new MicroOp(OpType.MEM_WRITE2));
+    proc.opQueue.addFirst(new MicroOp(OpType.MEM_WRITE3));
+
   }
 }

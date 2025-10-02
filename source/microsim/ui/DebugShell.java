@@ -56,6 +56,8 @@ public class DebugShell implements SimulationListener {
    * Fetches processor registers from processor in current simulation and displays them.
    */
   private void printProcessorRegisters() {
+    // TODO: processor structure changes frequently, fix that and then this
+
     Processor proc = simulationInstance.proc;
 
     int[] registers = proc.registers;
