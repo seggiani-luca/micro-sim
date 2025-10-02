@@ -141,6 +141,42 @@ public class Decoder {
         break;
       }
 
+      case 0x13: {
+        // I
+        IType i = new IType(inst);
+        i.decode(proc);
+      }
+
+      case 0x23: {
+        // S
+        SType s = new SType(inst);
+        s.decode(proc);
+      }
+
+      case 0x63: {
+        // B
+        BType b = new BType(inst);
+        b.decode(proc);
+      }
+
+      case 0x6f: {
+        // J
+        JType j = new JType(inst);
+        j.decode(proc);
+      }
+
+      case 0x37: {
+        // U type (lui)
+        UType u = new UType(inst);
+        u.decode(proc);
+      }
+
+      case 0x37, 0x17: {
+        // U type (lui, auipc)
+        UType u = new UType(inst);
+        u.decode(proc);
+      }
+
     }
   }
 }
