@@ -1,50 +1,54 @@
 package microsim.simulation.component;
 
 import microsim.simulation.event.*;
+import microsim.simulation.component.Bus.ByteSelect;
 
 /**
  * Implements a memory space as a (to outside users) contiguous array of byte locations. Memory is
  * divided in three regions:
  * <ol>
- * <li>RAM, Random Access Memory for general access. Spans from 0x0000 to 0x7fff (32 KiB).</li>
- * <li>VRAM, Video Random Access Memory that gets rendered to video on
- * {@link microsim.simulation.component.VideoDevice#render()} calls. Spans from 0x8000 to 0x93ff (5
- * KiB).</li>
- * <li>EPROM, Erasable Programmable Read Only Memory that contains program code and data at startup.
- * Spans from 0x9400 to 0xffff (27 KiB).</li>
+ * <li>EPROM: contains program code and data at startup.</li>
+ * <li>RAM: for general access. </li>
+ * <li>VRAM: gets rendered to video on {@link microsim.simulation.component.VideoDevice#render()}
+ * calls.</li>
  * </ol>
  */
 public class MemorySpace extends SimulationComponent {
 
   /**
-   * Beginning of RAM region.
-   */
-  public static final int RAM_BEG = 0x0000; // 32 KiB
-
-  /**
-   * End of RAM region.
-   */
-  public static final int RAM_END = 0x7fff;
-
-  /**
-   * Beginning of VRAM region.
-   */
-  public static final int VRAM_BEG = 0x8000; // 5 KiB
-
-  /**
-   * End of VRAM region.
-   */
-  public static final int VRAM_END = 0x93ff;
-
-  /**
    * Beginning of EPROM region.
    */
-  public static final int EPROM_BEG = 0x9400; // 27 KiB
+  public static final int EPROM_BEG = 0x0000_0000;
 
   /**
    * End of EPROM region.
    */
-  public static final int EPROM_END = 0xffff;
+  public static final int EPROM_END = 0x0000_ffff;
+
+  /**
+   * Beginning of RAM region.
+   */
+  public static final int RAM_BEG = 0x0001_0000;
+
+  /**
+   * End of RAM region.
+   */
+  public static final int RAM_END = 0x00001_ffff;
+
+  /**
+   * Beginning of VRAM region.
+   */
+  public static final int VRAM_BEG = 0x0002_0000;
+
+  /**
+   * End of VRAM region.
+   */
+  public static final int VRAM_END = 0x0002_1400;
+
+  /**
+   * Holds EPROM data;
+   */
+  private final byte[] eprom;
 
   /**
    * Holds RAM data.
@@ -55,11 +59,6 @@ public class MemorySpace extends SimulationComponent {
    * Holds VRAM data.
    */
   private final byte[] vram;
-
-  /**
-   * Holds EPROM data;
-   */
-  private final byte[] eprom;
 
   /**
    * Reference to the communication bus the component is mounted on.
@@ -83,15 +82,16 @@ public class MemorySpace extends SimulationComponent {
     this.bus = bus;
 
     // setup memory arrays
+    eprom = new byte[EPROM_END - EPROM_BEG + 1];
     ram = new byte[RAM_END - RAM_BEG + 1];
     vram = new byte[VRAM_END - VRAM_BEG + 1];
-    eprom = new byte[EPROM_END - EPROM_BEG + 1];
 
-    // read EPROM data into memory
+    // check if EPROM data fits
     if (epromData.length > eprom.length) {
       throw new RuntimeException("Given EPROM data doesn't fit in EPROM");
     }
 
+    // load EPROM data
     System.arraycopy(epromData, 0, eprom, 0, epromData.length);
   }
 
@@ -102,8 +102,8 @@ public class MemorySpace extends SimulationComponent {
    * operation.</li>
    * <li>
    * If {@link microsim.simulation.component.Bus#readEnable} is high, start a read operation:
-   * <ol><li>
-   * Read address from {@link microsim.simulation.component.Bus#addressLine}.</li>
+   * <ol>
+   * <li>Read address from {@link microsim.simulation.component.Bus#addressLine}.</li>
    * <li>Read data at address.</li>
    * <li>Drive {@link microsim.simulation.component.Bus#dataLine} for 1 simulation step.</li>
    * </ol>
@@ -135,20 +135,26 @@ public class MemorySpace extends SimulationComponent {
       throw new RuntimeException("Read Enable and Write Enable simultaneously high");
     }
 
-    // TODO: edit ops to work with byte selectors
-
     if (readEnable) {
       // read operation
       int addr = bus.addressLine.read();
+      ByteSelect byteSelect = bus.byteSelect.read();
 
-      // get word in four byte reads
-      byte dataHi = readMemory(addr);
-      byte dataLow = readMemory((char) ((addr + 1) % EPROM_END));
+      int data = 0x0;
+
+      // get word in (max) four byte reads
+      switch (byteSelect) {
+        case ByteSelect.WORD:
+          data |= readMemory(addr + 3) << 24;
+          data |= readMemory(addr + 2) << 16;
+        case ByteSelect.HALF:
+          data |= readMemory(addr + 1) << 8;
+        case ByteSelect.BYTE:
+          data |= readMemory(addr);
+      }
 
       // rebuild word
-      char data = (char) (((dataHi & 0xff) << 8) | (dataLow & 0xff));
-
-      raiseEvent(new MemoryEvent(this, "read", addr, data));
+      raiseEvent(new DebugEvent(this, "memory saw read operation at addr " + addr + " of data " + data));
 
       // drive data line with word
       bus.dataLine.drive(this, data);
@@ -159,16 +165,22 @@ public class MemorySpace extends SimulationComponent {
 
     if (writeEnable) {
       // write operation
-      char addr = bus.addressLine.read();
-      char data = bus.dataLine.read();
+      int addr = bus.addressLine.read();
+      ByteSelect byteSelect = bus.byteSelect.read();
+      int data = bus.dataLine.read();
 
-      raiseEvent(new MemoryEvent(this, "write", addr, data));
+      raiseEvent(new DebugEvent(this, "memory saw read operation at addr " + addr + " of data " + data));
 
-      byte dataHi = (byte) ((data >> 8) & 0xff);
-      byte dataLow = (byte) (data & 0xff);
-
-      writeMemory(addr, dataHi);
-      writeMemory((char) ((addr + 1) % EPROM_END), dataLow);
+      // set word in (max) four byte writes
+      switch (byteSelect) {
+        case ByteSelect.WORD:
+          writeMemory(addr + 3, (byte) (data >>> 24));
+          writeMemory(addr + 2, (byte) (data >>> 16));
+        case ByteSelect.HALF:
+          writeMemory(addr + 1, (byte) (data >>> 8));
+        case ByteSelect.BYTE:
+          writeMemory(addr, (byte) data);
+      }
 
       return;
     }
@@ -182,18 +194,18 @@ public class MemorySpace extends SimulationComponent {
 
   /**
    * Reads from memory space at a given address. This is not meant to be used by other simulation
-   * components, but by {@link microsim.ui.DebugShell} objects displaying shells.
+   * components, but by this class and {@link microsim.ui.DebugShell} objects displaying shells.
    *
    * @param addr address to read from
    * @return data read
    */
   public byte readMemory(int addr) {
-    if (addr >= RAM_BEG && addr <= RAM_END) {
+    if (addr >= EPROM_BEG && addr <= EPROM_END) {
       return ram[addr - RAM_BEG];
+    } else if (addr >= RAM_BEG && addr <= RAM_END) {
+      return eprom[addr - EPROM_BEG];
     } else if (addr >= VRAM_BEG && addr <= VRAM_END) {
       return vram[addr - VRAM_BEG];
-    } else if (addr >= EPROM_BEG && addr <= EPROM_END) {
-      return eprom[addr - EPROM_BEG];
     }
 
     throw new RuntimeException("Memory read out of bounds");
@@ -206,14 +218,14 @@ public class MemorySpace extends SimulationComponent {
    * @param data data to write
    */
   public void writeMemory(int addr, byte data) {
-    if (addr >= RAM_BEG && addr <= RAM_END) {
+    if (addr >= EPROM_BEG && addr <= EPROM_END) {
+      eprom[addr - EPROM_BEG] = data;
+      return;
+    } else if (addr >= RAM_BEG && addr <= RAM_END) {
       ram[addr - RAM_BEG] = data;
       return;
     } else if (addr >= VRAM_BEG && addr <= VRAM_END) {
       vram[addr - VRAM_BEG] = data;
-      return;
-    } else if (addr >= EPROM_BEG && addr <= EPROM_END) {
-      eprom[addr - EPROM_BEG] = data;
       return;
     }
 

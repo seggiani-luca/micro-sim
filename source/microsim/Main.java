@@ -1,12 +1,13 @@
 package microsim;
 
-import java.io.*;
-import microsim.simulation.*;
+import java.io.IOException;
 import microsim.simulation.component.*;
+import microsim.elf.*;
+import microsim.simulation.*;
 import microsim.ui.*;
 
 /**
- * Contains program entry point. Handles program arguments and EPROM loading from .dat files,
+ * Contains program entry point. Handles program arguments and EPROM loading from object files,
  * instantiates simulation instances and attaches interfaces.
  */
 public class Main {
@@ -60,61 +61,10 @@ public class Main {
   }
 
   /**
-   * Opens .dat file containing EPROM data and returns it as a byte array. Each line in the .dat
-   * file is expected to contain a 16 byte word formatted as XX XX. Trailing comments preceded by
-   * "//" are ignored.
-   *
-   * @param path the path of the .dat file
-   * @return a byte array that contains EPROM data
-   * @throws IOException if the .dat file can't be opened
-   */
-  static byte[] loadEpromData(String path) throws IOException {
-    // always print EPROM file path
-    System.out.println("Reading EPROM from " + path);
-
-    // initialize EPROM data array
-    byte[] epromData = new byte[MAX_EPROM_SIZE];
-    int idx = 0;
-
-    // open EPROM data file
-    BufferedReader reader = new BufferedReader(new FileReader(path));
-    String line;
-
-    // read by line
-    while ((line = reader.readLine()) != null) {
-      line = line.strip();
-      if (line.isEmpty()) {
-        continue; // empty line
-      }
-      // read by token
-      String[] tokens = line.split("\\s+"); // split by whitespace
-      for (String token : tokens) {
-        if (token.equals("//")) {
-          break; // comment
-        }
-        // parse byte and insert
-        byte value = (byte) Integer.parseInt(token, 16);
-        epromData[idx++] = value;
-
-        // check bounds
-        if (idx >= MAX_EPROM_SIZE) {
-          System.out.println("Ignoring rest of EPROM data file, buffer full");
-          break;
-        }
-      }
-    }
-
-    // close EPROM data file
-    reader.close();
-
-    return epromData;
-  }
-
-  /**
    * Program entry point. The program flow is:
    * <ol>
-   * <li>Get data needed for simulation instantiation. This includes the .dat file containing EPROM
-   * data and the debug argument.</li>
+   * <li>Get data needed for simulation instantiation. This includes the object file containing
+   * EPROM data and the debug argument.</li>
    * <li>Instantiate a {@link microsim.simulation.Simulation} object with said data.</li>
    * <li>Attach interfaces to simulation. These include {@link microsim.ui.VideoWindow} and
    * {@link microsim.ui.DebugShell}.</li>
@@ -131,26 +81,29 @@ public class Main {
    * @param args program arguments
    */
   public static void main(String[] args) {
-    // 1) read EPROM .dat file
-    // get .dat flile path argument
+    // 1) read object file
+    // get object path argument
     String epromDataPath = getArgument(args, "-e");
     if (epromDataPath == null) {
-      System.out.println("Please specify an EPROM data path with argument -e <eprom_data_path>");
+      System.out.println("Please specify an object data path with argument -e <object_data_path>");
       System.exit(1);
     }
 
-    // load EPROM data in byte array
-    byte[] epromData = null;
     try {
-      epromData = loadEpromData(epromDataPath);
-    } catch (IOException | NumberFormatException e) {
-      System.out.println("Error loading EPROM data: " + e.getMessage());
+      // load object data
+      Elf elf = Elf.readELF(epromDataPath);
+
+      System.exit(0);
+
+      // read object data segments into EPROM array
+      // byte[] epromData = elf.getEPROM();
+    } catch (IOException e) {
+      System.out.println("Object data couldn't be read. " + e.getMessage());
       System.exit(1);
     }
 
     // 2) instantiate simulation
-    Simulation simulation = new Simulation(epromData);
-
+    // Simulation simulation = new Simulation(epromData);
     // 3) init interfaces
     // get graphical window scale
     int windowScale = 1;
@@ -167,7 +120,7 @@ public class Main {
 
     // instantiate video window and attach it
     VideoWindow window = new VideoWindow(windowScale);
-    simulation.addListener(window);
+    // simulation.addListener(window);
 
     // get debug options
     boolean debugMode = getIfArgument(args, "-d");
@@ -175,12 +128,12 @@ public class Main {
     // if debugging, attach DebugShell
     DebugShell debugShell = new DebugShell();
     if (debugMode) {
-      debugShell.attachSimulation(simulation);
+      // debugShell.attachSimulation(simulation);
     }
 
     // 4) begin simulation
     try {
-      simulation.run();
+      // simulation.run();
     } catch (RuntimeException e) {
       System.out.println("Simulation error: " + e.getMessage());
       System.exit(2);

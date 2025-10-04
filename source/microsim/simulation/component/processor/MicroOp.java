@@ -3,9 +3,17 @@ package microsim.simulation.component.processor;
 import microsim.simulation.component.Bus;
 import static microsim.simulation.component.processor.Decoder.*;
 
-class MicroOp {
+/**
+ * Implements a micro operation (microop) the
+ * {@link microsim.simulation.component.processor.Processor} can execute. Each instruction is split
+ * into one or more microops.
+ */
+public class MicroOp {
 
-  enum OpType {
+  /**
+   * Enum of microop types. These are a superset of the implemented ISA.
+   */
+  public static enum OpType {
     DECODE,
     // R format
     ADD_SUB,
@@ -31,6 +39,25 @@ class MicroOp {
     LOAD_WORD,
     LOAD_POST,
     LOAD_POST_U,
+    // S format
+    STORE_BYTE,
+    STORE_HALF,
+    STORE_WORD,
+    // B format
+    BRANCH_EQ,
+    BRANCH_NE,
+    BRANCH_LT,
+    BRANCH_GE,
+    BRANCH_LTU,
+    BRANCH_GEU,
+    // I format (jump)
+    JAL,
+    JAL_REG,
+    // U format
+    LUI,
+    AUIPC,
+    // I format (environment)
+    ENV,
     // memory read routine
     MEM_READ0,
     MEM_READ1,
@@ -42,22 +69,69 @@ class MicroOp {
     MEM_WRITE3
   }
 
+  /**
+   * Type of microop.
+   */
   private OpType type;
 
+  /**
+   * Returns type of microop.
+   *
+   * @return type of microop
+   */
+  public OpType getType() {
+    return type;
+  }
+
+  /**
+   * Instruction this microop translates. Is used to fetch instruction-specific fields at execution
+   * time.
+   */
   private int inst;
 
+  /**
+   * Returns instruction microop translates.
+   *
+   * @return instruction this microop translates
+   */
+  public int getInstruction() {
+    return inst;
+  }
+
+  /**
+   * Sets the instruction this microop translates.
+   *
+   * @param inst instruction to set to
+   */
   public void setInst(int inst) {
     this.inst = inst;
   }
 
+  /**
+   * Constructs a microop from its type.
+   *
+   * @param type type of microop
+   */
   public MicroOp(OpType type) {
     this.type = type;
   }
 
+  /**
+   * Gets the address for load instructions.
+   *
+   * @param proc processor instance to run on
+   * @param inst load instruction
+   * @return address to load from
+   */
   static int getAddr(Processor proc, int inst) {
-    int addr = immI(inst) + proc.getRegister(rs1(inst));
+    return immS(inst) + proc.getRegister(rs1(inst));
   }
 
+  /**
+   * Executes a microop on a processor instance.
+   *
+   * @param proc processor instance to run on
+   */
   void execute(Processor proc) {
     switch (type) {
       // decode
@@ -76,7 +150,7 @@ class MicroOp {
             proc.setRegister(rd(inst), proc.getRegister(rs1(inst)) - proc.getRegister(rs2(inst)));
 
           default ->
-            throw new RuntimeException("Invalid funct7 value for R Instruction 0x0 (add/sub)");
+            throw new RuntimeException("Invalid funct7 for R Instruction 0x0 (add/sub)");
         }
       }
       case XOR -> {
@@ -107,7 +181,9 @@ class MicroOp {
         }
       }
       case SLT -> {
-        proc.setRegister(rd(inst), (proc.getRegister(rs1(inst)) < proc.getRegister(rs2(inst))) ? 1 : 0);
+        proc.setRegister(rd(inst),
+          (proc.getRegister(rs1(inst)) < proc.getRegister(rs2(inst))) ? 1 : 0
+        );
       }
       case SLTU -> {
         int op1 = proc.getRegister(rs1(inst));
@@ -136,7 +212,7 @@ class MicroOp {
       case SRL_SRA_I -> {
         int shamt = immI(inst) & 0x1f;
 
-        switch (immI(inst) >>> 5) {
+        switch (funct7(inst)) {
           case 0x00 -> // srl
             proc.setRegister(rd(inst), proc.getRegister(rs1(inst)) >>> shamt);
 
@@ -159,13 +235,13 @@ class MicroOp {
 
       // I format (load)
       case LOAD_BYTE -> {
-        BusInterface.doReadRoutine(proc, getAddr(proc, inst), Bus.BYTE_SELECT.BYTE);
+        BusInterface.doReadRoutine(proc, getAddr(proc, inst), Bus.ByteSelect.BYTE);
       }
       case LOAD_HALF -> {
-        BusInterface.doReadRoutine(proc, getAddr(proc, inst), Bus.BYTE_SELECT.HALF);
+        BusInterface.doReadRoutine(proc, getAddr(proc, inst), Bus.ByteSelect.HALF);
       }
       case LOAD_WORD -> {
-        BusInterface.doReadRoutine(proc, getAddr(proc, inst), Bus.BYTE_SELECT.WORD);
+        BusInterface.doReadRoutine(proc, getAddr(proc, inst), Bus.ByteSelect.WORD);
       }
 
       case LOAD_POST -> {
@@ -177,6 +253,91 @@ class MicroOp {
       case LOAD_POST_U -> {
         // temp is read data
         proc.setRegister(rd(inst), proc.temp);
+      }
+
+      // S format
+      case STORE_BYTE -> {
+        BusInterface.doWriteRoutine(proc, getAddr(proc, inst), proc.getRegister(rs2(inst)),
+          Bus.ByteSelect.BYTE);
+      }
+      case STORE_HALF -> {
+        BusInterface.doWriteRoutine(proc, getAddr(proc, inst), proc.getRegister(rs2(inst)),
+          Bus.ByteSelect.HALF);
+      }
+      case STORE_WORD -> {
+        BusInterface.doWriteRoutine(proc, getAddr(proc, inst), proc.getRegister(rs2(inst)),
+          Bus.ByteSelect.WORD);
+      }
+
+      // B format
+      case BRANCH_EQ -> {
+        if (proc.getRegister(rs1(inst)) == proc.getRegister(rs2(inst))) {
+          proc.pc += immB(inst);
+        }
+      }
+      case BRANCH_NE -> {
+        if (proc.getRegister(rs1(inst)) != proc.getRegister(rs2(inst))) {
+          proc.pc += immB(inst);
+        }
+      }
+      case BRANCH_LT -> {
+        if (proc.getRegister(rs1(inst)) < proc.getRegister(rs2(inst))) {
+          proc.pc += immB(inst);
+        }
+      }
+      case BRANCH_GE -> {
+        if (proc.getRegister(rs1(inst)) >= proc.getRegister(rs2(inst))) {
+          proc.pc += immB(inst);
+        }
+      }
+      case BRANCH_LTU -> {
+        if (Integer.compareUnsigned(proc.getRegister(rs1(inst)),
+          proc.getRegister(rs2(inst))) < 0) {
+          proc.pc += immB(inst);
+        }
+      }
+      case BRANCH_GEU -> {
+        if (Integer.compareUnsigned(proc.getRegister(rs1(inst)),
+          proc.getRegister(rs2(inst))) >= 0) {
+          proc.pc += immB(inst);
+        }
+      }
+
+      // J format
+      case JAL -> {
+        proc.setRegister(rd(inst), proc.pc + 4);
+        proc.pc += immJ(inst);
+      }
+      // I format (jump)
+      case JAL_REG -> {
+        proc.setRegister(rd(inst), proc.pc + 4);
+        proc.pc += proc.getRegister(rs1(inst)) + immI(inst);
+      }
+
+      // U format
+      case LUI -> {
+        proc.setRegister(rd(inst), immU(inst));
+      }
+      case AUIPC -> {
+        proc.setRegister(rd(inst), proc.pc + immU(inst));
+      }
+
+      // I format (environment)
+      case ENV -> {
+        switch (immI(inst)) {
+          case 0x00 -> { // ecall
+            System.out.println("Environment call, halting...");
+            System.exit(0);
+          }
+
+          case 0x01 -> { // ebreak
+            System.out.println("Environment break, launching debugger...");
+            System.exit(0); // TODO: eventually call debugger
+          }
+
+          default ->
+            throw new RuntimeException("Invalid immediate for environment call");
+        }
       }
 
       // memory read routine

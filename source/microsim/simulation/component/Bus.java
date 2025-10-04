@@ -29,7 +29,7 @@ public class Bus extends SimulationComponent {
   /**
    * Byte select modes.
    */
-  public static enum BYTE_SELECT {
+  public static enum ByteSelect {
     BYTE,
     HALF,
     WORD
@@ -57,7 +57,7 @@ public class Bus extends SimulationComponent {
   /**
    * Byte select mode control line.
    */
-  public TSLine<BYTE_SELECT> byteSelect;
+  public TSLine<ByteSelect> byteSelect;
 
   /**
    * Target space control line. Low is memory, high is I/O space.

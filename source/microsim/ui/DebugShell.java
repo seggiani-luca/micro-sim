@@ -1,7 +1,8 @@
 package microsim.ui;
 
-import microsim.simulation.*;
+import java.util.Deque;
 import microsim.simulation.component.*;
+import microsim.simulation.*;
 import microsim.simulation.component.processor.*;
 import microsim.simulation.event.*;
 
@@ -48,7 +49,7 @@ public class DebugShell implements SimulationListener {
    * @param val int to convert
    * @return hexadecimal string representing int
    */
-  private String int32ToString(int val) {
+  public static String int32ToString(int val) {
     return String.format("%08x", val);
   }
 
@@ -60,8 +61,8 @@ public class DebugShell implements SimulationListener {
 
     Processor proc = simulationInstance.proc;
 
-    int[] registers = proc.registers;
-    int pc = proc.pc;
+    int[] registers = proc.getRegisters();
+    int pc = proc.getPc();
 
     System.out.println("\tpc:\t" + int32ToString(pc));
     System.out.println("\tzero:\t0");
@@ -77,13 +78,17 @@ public class DebugShell implements SimulationListener {
   }
 
   /**
-   * Fetches processor state from processor in current simulation and displays it.
+   * Fetches MicroOp queue from processor in current simulation and displays it.
    */
-  private void printProcessorState() {
+  private void printProcessorMicroOps() {
     Processor proc = simulationInstance.proc;
-    Processor.ProcessorState state = proc.getState();
+    Deque<MicroOp> ops = proc.getMicroOps();
 
-    System.out.println("\tPresent state is: " + state.name());
+    for (MicroOp op : ops) {
+      int inst = op.getInstruction();
+      System.out.println(op.getType().name() + " - ("
+        + (inst == 0 ? "freestanding" : int32ToString(inst)) + ")");
+    }
   }
 
   /**
@@ -188,7 +193,7 @@ public class DebugShell implements SimulationListener {
    * proc: offers processor information with following options:
    * <ul>
    * <li>registers: prints all registers:</li>
-   * <li>state prints state information:</li>
+   * <li>pipeline: prints pipeline information:</li>
    * </ul>
    * </li>
    * <li>
@@ -233,7 +238,7 @@ public class DebugShell implements SimulationListener {
           if (tokens.length < 2) {
             System.out.println("Available proc options:");
             System.out.println("\tregisters: prints all registers");
-            System.out.println("\tstate: prints state information");
+            System.out.println("\tpipeline: prints pipeline information");
             continue;
           }
 
@@ -243,9 +248,9 @@ public class DebugShell implements SimulationListener {
               printProcessorRegisters();
               continue;
 
-            case "s":
-            case "state":
-              printProcessorState();
+            case "p":
+            case "pipeline":
+              printProcessorMicroOps();
               continue;
 
             default:

@@ -1,25 +1,68 @@
+# -- directories --
+# program
 SRC := $(shell find source -name "*.java")
 OUT := out
 MAIN := microsim.Main
-ASSEMBLER := tools/assembler.py
-EPROM_SRC := data/eprom.s
-EPROM := data/eprom.dat
+
+# eprom
+EPROM_SRC := data/eprom_source
+EPROM_SRC_C := $(shell find $(EPROM_SRC) -name "*.c")
+EPROM_SRC_S := $(shell find $(EPROM_SRC) -name "*.s")
+EPROM_OUT := data/eprom_out
+EPROM_OBJ_C := $(patsubst $(EPROM_SRC)/%, $(EPROM_OUT)/%, $(EPROM_SRC_C:.c=.o))
+EPROM_OBJ_S := $(patsubst $(EPROM_SRC)/%, $(EPROM_OUT)/%, $(EPROM_SRC_S:.s=.o))
+EPROM := data/eprom.elf
+EPROM_MEM_MAP := data/memory_map.ld
+
+# documentation
 DOC := docs
 
-all: $(OUT)
-	@javac -d $(OUT) $(SRC)
+# -- tools --
+# java
+JAVAC := javac
+JAVA := java
 
-assemble:
-	@python $(ASSEMBLER) $(EPROM_SRC) $(EPROM) 
+# eprom
+RISCV_C := riscv32-unknown-elf-gcc
+RISCV_S := riscv32-unknown-elf-as
+RISCV_L := riscv32-unknown-elf-ld
+
+# documentation
+JAVADOC := javadoc
+
+# -- targets --
+# program
+all: $(OUT)
+	@$(JAVAC) -d $(OUT) $(SRC)
 
 run: all
-	@java -cp $(OUT) $(MAIN) -e $(EPROM) $(ARGS)
+	@$(JAVA) -cp $(OUT) $(MAIN) -e $(EPROM) $(ARGS)
 
 debug: all
-	@java -cp $(OUT) $(MAIN) -e $(EPROM) -d $(ARGS)
+	@$(JAVA) -cp $(OUT) $(MAIN) -e $(EPROM) -d $(ARGS)
 
-docs:
-	@javadoc -d $(DOC) -private $(SRC)
+$(OUT):
+	@mkdir -p $(OUT)
 
-clean:
+clean: clean_eprom
 	@rm -rf $(OUT)
+
+# eprom
+$(EPROM_OUT)/%.o: $(EPROM_SRC)/%.c | $(EPROM_OUT)
+	@$(RISCV_C) -O0 -ffreestanding -nostdlib -c $< -o $@
+
+$(EPROM_OUT)/%.o: $(EPROM_SRC)/%.s | $(EPROM_OUT)
+	@$(RISCV_S) $< -o $@
+
+eprom: $(EPROM_OBJ_C) $(EPROM_OBJ_S)
+	@$(RISCV_L) -T $(EPROM_MEM_MAP) $(EPROM_OBJ_C) $(EPROM_OBJ_S) -o $(EPROM)
+
+$(EPROM_OUT):
+	@mkdir -p $(EPROM_OUT)
+
+clean_eprom:
+	@rm -rf $(EPROM_OUT) $(EPROM)
+
+# documentation
+docs:
+	@$(JAVADOC) -d $(DOC) -private $(SRC)

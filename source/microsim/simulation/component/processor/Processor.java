@@ -3,9 +3,14 @@ package microsim.simulation.component.processor;
 import java.util.Deque;
 import java.util.LinkedList;
 import microsim.simulation.component.*;
-import microsim.simulation.component.Bus.BYTE_SELECT;
+import microsim.simulation.component.Bus.ByteSelect;
 import microsim.simulation.component.processor.MicroOp.OpType;
 
+/**
+ * A processor implementing the rv32i ISA. For more info, see the {@link
+ * <a href="www.cs.sfu.ca/~ashriram/Courses/CS295/assets/notebooks/RISCV/RISCV_CARD.pdf">green
+ * card</a>}.
+ */
 public class Processor extends SimulationComponent {
 
   /**
@@ -23,6 +28,15 @@ public class Processor extends SimulationComponent {
    * Program counter, separate from registers.
    */
   int pc;
+
+  /**
+   * Gets program counter, used for debugging.
+   *
+   * @return pc
+   */
+  public int getPc() {
+    return pc;
+  }
 
   /**
    * General registers. registers[0] is unused as it's the zero register. ABI specifies:
@@ -96,6 +110,12 @@ public class Processor extends SimulationComponent {
    */
   private int[] registers = new int[REGISTERS - 1];
 
+  /**
+   * Gets register at index, ensuring zero register behavior.
+   *
+   * @param i index of register to get
+   * @return register value
+   */
   int getRegister(int i) {
     if (i == 0) {
       return 0;
@@ -104,12 +124,27 @@ public class Processor extends SimulationComponent {
     }
   }
 
+  /**
+   * Sets register at index, ensuring zero register behavior.
+   *
+   * @param i index of register to set
+   * @param val value to set register to
+   */
   void setRegister(int i, int val) {
     if (i == 0) {
       return;
     } else {
       registers[i - 1] = val;
     }
+  }
+
+  /**
+   * Returns all registers, used for debugging.
+   *
+   * @return all registers
+   */
+  public int[] getRegisters() {
+    return registers;
   }
 
   /**
@@ -133,20 +168,45 @@ public class Processor extends SimulationComponent {
     bus.targetSpace.drive(this, false);
 
     // reset instruction pointer
-    pc = RESET_INSTRUCTION_ADDRESS;
+    pc = RESET_INSTRUCTION_ADDRESS - 4;
   }
 
+  /**
+   * Temporary value used to keep bus operation results in-between microops.
+   */
   int temp;
 
+  /**
+   * Queue of microops to execute, basically acts as a pipeline.
+   */
   Deque<MicroOp> opQueue = new LinkedList<>();
 
-  private void fetchDecode() {
-    BusInterface.doReadRoutine(this, pc, BYTE_SELECT.WORD);
-
-    opQueue.add(new MicroOp(OpType.DECODE)
-    );
+  /**
+   * Returns all current microops, used for debugging.
+   *
+   * @return current microops
+   */
+  public Deque<MicroOp> getMicroOps() {
+    return opQueue;
   }
 
+  /**
+   * Sets processor up for a fetch execute cycle, called when microop queue is empty.
+   */
+  private void fetchDecode() {
+    pc += 4;
+
+    // read next instruction word and move
+    BusInterface.doReadRoutine(this, pc, ByteSelect.WORD);
+
+    // decode instruction word
+    opQueue.add(new MicroOp(OpType.DECODE));
+  }
+
+  /**
+   * Steps by fetching the next microop and executing it, or filling the queue with
+   * {@link #fetchDecode} if it's empty
+   */
   @Override
   public void step() {
     MicroOp nextOp = opQueue.poll();

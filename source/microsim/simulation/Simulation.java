@@ -1,5 +1,6 @@
 package microsim.simulation;
 
+import microsim.simulation.component.MemorySpace;
 import microsim.simulation.component.processor.*;
 import microsim.simulation.component.*;
 import microsim.simulation.event.*;
