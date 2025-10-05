@@ -10,7 +10,7 @@ public class CycleEvent extends SimulationEvent {
   /**
    * Cycle reached.
    */
-  long cycle;
+  public long cycle;
 
   /**
    * Instantiates CycleEvent getting cycle information.

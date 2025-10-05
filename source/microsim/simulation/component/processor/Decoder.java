@@ -115,7 +115,7 @@ public class Decoder {
    */
   static int immB(int inst) {
     int i12 = (inst >>> 31) & 0x1;
-    int i10_5 = (inst >>> 20) & 0x3f;
+    int i10_5 = (inst >>> 25) & 0x3f;
     int i4_1 = (inst >>> 8) & 0xf;
     int i11 = (inst >>> 7) & 0x1;
 
@@ -131,7 +131,7 @@ public class Decoder {
    */
   static int immU(int inst) {
     int i = (inst >>> 12) & 0xfffff;
-    return i << 20;
+    return i << 12;
   }
 
   /**

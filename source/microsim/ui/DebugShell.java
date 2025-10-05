@@ -17,6 +17,17 @@ import microsim.simulation.event.*;
 public class DebugShell implements SimulationListener {
 
   /**
+   * Next cycle to show shell at.
+   */
+  private int nextShellCycle = 0;
+
+  /**
+   * Signals whether shell should be shown or not. Used with {@link #nextShellStep} to jump to
+   * specific cycle.
+   */
+  private boolean shouldShowShell = true;
+
+  /**
    * Simulation instance to debug. Used to access processor and memory information from shell.
    */
   private Simulation simulationInstance = null;
@@ -50,15 +61,13 @@ public class DebugShell implements SimulationListener {
    * @return hexadecimal string representing int
    */
   public static String int32ToString(int val) {
-    return String.format("%08x", val);
+    return String.format("0x%08x", val);
   }
 
   /**
    * Fetches processor registers from processor in current simulation and displays them.
    */
   private void printProcessorRegisters() {
-    // TODO: processor structure changes frequently, fix that and then this
-
     Processor proc = simulationInstance.proc;
 
     int[] registers = proc.getRegisters();
@@ -69,10 +78,11 @@ public class DebugShell implements SimulationListener {
 
     final String[] mnemonics = {
       "ra", "sp", "gp", "tp", "t0", "t1", "t2", "s0/fp", "s1", "a0", "a1", "a2", "a3", "a4", "a5",
-      "a6", "s2", "s3", "s4", "s5", "s6", "s7", "s8", "s9", "s10", "s11", "t3", "t4", "t5", "t6"
+      "a6", "a7", "s2", "s3", "s4", "s5", "s6", "s7", "s8", "s9", "s10", "s11", "t3", "t4", "t5",
+      "t6"
     };
 
-    for (int i = 1; i < proc.REGISTERS; i++) {
+    for (int i = 0; i < proc.REGISTERS - 1; i++) {
       System.out.println("\t" + mnemonics[i] + ":\t" + int32ToString(registers[i]));
     }
   }
@@ -84,10 +94,13 @@ public class DebugShell implements SimulationListener {
     Processor proc = simulationInstance.proc;
     Deque<MicroOp> ops = proc.getMicroOps();
 
+    if (ops.isEmpty()) {
+      System.out.println("\tPipeline empty");
+    }
+
     for (MicroOp op : ops) {
       int inst = op.getInstruction();
-      System.out.println(op.getType().name() + " - ("
-        + (inst == 0 ? "freestanding" : int32ToString(inst)) + ")");
+      System.out.println("\t" + op.toString());
     }
   }
 
@@ -98,22 +111,19 @@ public class DebugShell implements SimulationListener {
    */
   private void readMemoryAtAddress(String addr) {
     MemorySpace memory = simulationInstance.memory;
-    char numAddr = 0;
+    int numAddr = 0;
 
     try {
-      numAddr = (char) Integer.parseInt(addr, 16);
+      numAddr = (int) Integer.parseInt(addr, 16);
     } catch (NumberFormatException e) {
       System.out.println("Invalid address: " + e.getMessage());
-    }
-
-    if (numAddr < MemorySpace.RAM_BEG || numAddr >= MemorySpace.EPROM_END) {
-      System.out.println("Invalid address: out of bounds");
+      return;
     }
 
     // read
     byte data = memory.readMemory(numAddr);
     System.out.println("Read " + String.format("%02X", data & 0xff)
-      + " from memory at address " + String.format("%04X", numAddr & 0xffff));
+      + " from memory at address " + int32ToString(numAddr));
   }
 
   /**
@@ -123,16 +133,13 @@ public class DebugShell implements SimulationListener {
    */
   private void writeMemoryAtAddress(String addr, String data) {
     MemorySpace memory = simulationInstance.memory;
-    char numAddr = 0;
+    int numAddr = 0;
 
     try {
-      numAddr = (char) Integer.parseInt(addr, 16);
+      numAddr = (int) Integer.parseInt(addr, 16);
     } catch (NumberFormatException e) {
       System.out.println("Invalid address: " + e.getMessage());
-    }
-
-    if (numAddr < MemorySpace.RAM_BEG || numAddr >= MemorySpace.EPROM_END) {
-      System.out.println("Invalid address: out of bounds");
+      return;
     }
 
     byte numData = 0;
@@ -146,7 +153,7 @@ public class DebugShell implements SimulationListener {
     // read
     memory.writeMemory(numAddr, numData);
     System.out.println("Wrote " + String.format("%02X", numData & 0xff)
-      + " to memory at address " + String.format("%04X", numAddr & 0xffff));
+      + " to memory at address " + int32ToString(numAddr));
   }
 
   /**
@@ -167,8 +174,15 @@ public class DebugShell implements SimulationListener {
       }
 
       // if it's a cycle, launch shell
-      if (e instanceof CycleEvent) {
-        shell();
+      if (e instanceof CycleEvent cycleEvent) {
+        if (shouldShowShell) {
+          shell();
+        } else {
+          if (cycleEvent.cycle >= nextShellCycle) {
+            shouldShowShell = true;
+            shell();
+          }
+        }
       }
     }
   }
@@ -187,7 +201,8 @@ public class DebugShell implements SimulationListener {
    * Displays a debug shell for the current simulation instance. The shell offers the following
    * commands:
    * <ul>
-   * <li>step: steps execution by 1 cycle.</li>
+   * <li>step: steps execution by 1 cycle. Operand can be specified to specify at which step to
+   * stop.</li>
    * <li>quit: halts execution and quits.</li>
    * <li>
    * proc: offers processor information with following options:
@@ -203,6 +218,9 @@ public class DebugShell implements SimulationListener {
    * <li>write: writes memory at address.</li>
    * </ul>
    * </li>
+   * <li>
+   * render: forces screen rendering
+   * </li>
    * </ul>
    */
   private void shell() {
@@ -214,10 +232,11 @@ public class DebugShell implements SimulationListener {
       // print help on empty commands
       if (cmd.isEmpty()) {
         System.out.println("Available commands:");
-        System.out.println("\tstep: steps execution by 1 cycle");
+        System.out.println("\tstep: steps execution by 1 cycle or to specific cycle");
         System.out.println("\tquit: halts executions and quits");
         System.out.println("\tproc: offers processor information");
         System.out.println("\tmem: offers memory information");
+        System.out.println("\trender: forces screen rendering");
         continue;
       }
 
@@ -226,6 +245,15 @@ public class DebugShell implements SimulationListener {
       switch (tokens[0]) {
         case "s":
         case "step":
+          if (tokens.length == 2) {
+            try {
+              nextShellCycle = Integer.parseInt(tokens[1]);
+              shouldShowShell = false;
+            } catch (NumberFormatException e) {
+              System.out.println("Invalid cycle index");
+              continue;
+            }
+          }
           return;
 
         case "q":
@@ -298,6 +326,12 @@ public class DebugShell implements SimulationListener {
               System.out.println("Unknown mem option: " + cmd);
               continue;
           }
+        }
+
+        case "r":
+        case "render": {
+          simulationInstance.video.render();
+          continue;
         }
 
         default:

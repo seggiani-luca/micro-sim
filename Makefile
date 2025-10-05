@@ -12,7 +12,7 @@ EPROM_OUT := data/eprom_out
 EPROM_OBJ_C := $(patsubst $(EPROM_SRC)/%, $(EPROM_OUT)/%, $(EPROM_SRC_C:.c=.o))
 EPROM_OBJ_S := $(patsubst $(EPROM_SRC)/%, $(EPROM_OUT)/%, $(EPROM_SRC_S:.s=.o))
 EPROM := data/eprom.elf
-EPROM_MEM_MAP := data/memory_map.ld
+EPROM_MEM_MAP := $(EPROM_SRC)/memory_map.ld
 
 # documentation
 DOC := docs
@@ -49,10 +49,10 @@ clean: clean_eprom
 
 # eprom
 $(EPROM_OUT)/%.o: $(EPROM_SRC)/%.c | $(EPROM_OUT)
-	@$(RISCV_C) -O0 -ffreestanding -nostdlib -c $< -o $@
+	@$(RISCV_C) -march=rv32i -mabi=ilp32 -O0 -ffreestanding -nostdlib -c $< -o $@
 
 $(EPROM_OUT)/%.o: $(EPROM_SRC)/%.s | $(EPROM_OUT)
-	@$(RISCV_S) $< -o $@
+	@$(RISCV_S) -march=rv32i -mabi=ilp32 $< -o $@
 
 eprom: $(EPROM_OBJ_C) $(EPROM_OBJ_S)
 	@$(RISCV_L) -T $(EPROM_MEM_MAP) $(EPROM_OBJ_C) $(EPROM_OBJ_S) -o $(EPROM)

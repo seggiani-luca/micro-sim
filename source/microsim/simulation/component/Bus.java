@@ -73,6 +73,7 @@ public class Bus extends SimulationComponent {
 
     readEnable = new TSLine<>();
     writeEnable = new TSLine<>();
+    byteSelect = new TSLine<>();
 
     targetSpace = new TSLine<>();
   }
@@ -88,6 +89,7 @@ public class Bus extends SimulationComponent {
 
     readEnable.step();
     writeEnable.step();
+    byteSelect.step();
 
     targetSpace.step();
   }

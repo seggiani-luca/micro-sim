@@ -1,6 +1,8 @@
 package microsim;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import microsim.simulation.component.*;
 import microsim.elf.*;
 import microsim.simulation.*;
@@ -81,6 +83,9 @@ public class Main {
    * @param args program arguments
    */
   public static void main(String[] args) {
+    // get debug options
+    boolean debugMode = getIfArgument(args, "-d");
+
     // 1) read object file
     // get object path argument
     String epromDataPath = getArgument(args, "-e");
@@ -89,21 +94,33 @@ public class Main {
       System.exit(1);
     }
 
+    // load object data
+    byte[] epromData = new byte[0];
     try {
-      // load object data
-      Elf elf = Elf.readELF(epromDataPath);
-
-      System.exit(0);
+      // read ELF file
+      Elf elf = Elf.readELF(epromDataPath, debugMode);
 
       // read object data segments into EPROM array
-      // byte[] epromData = elf.getEPROM();
+      epromData = elf.getEPROM();
     } catch (IOException e) {
       System.out.println("Object data couldn't be read. " + e.getMessage());
       System.exit(1);
     }
 
+    // if debugging, print EPROM segment
+    if (debugMode) {
+      System.out.println("Read EPROM data:");
+
+      ByteBuffer epromBuffer = ByteBuffer.wrap(epromData).order(ByteOrder.LITTLE_ENDIAN);
+      while (epromBuffer.remaining() >= 4) {
+        System.out.println("\t" + DebugShell.int32ToString(epromBuffer.position()) + ": "
+          + DebugShell.int32ToString(epromBuffer.getInt()));
+      }
+    }
+
     // 2) instantiate simulation
-    // Simulation simulation = new Simulation(epromData);
+    Simulation simulation = new Simulation(epromData);
+
     // 3) init interfaces
     // get graphical window scale
     int windowScale = 1;
@@ -120,20 +137,17 @@ public class Main {
 
     // instantiate video window and attach it
     VideoWindow window = new VideoWindow(windowScale);
-    // simulation.addListener(window);
+    simulation.addListener(window);
 
-    // get debug options
-    boolean debugMode = getIfArgument(args, "-d");
-
-    // if debugging, attach DebugShell
+    // also attach DebugShell
     DebugShell debugShell = new DebugShell();
     if (debugMode) {
-      // debugShell.attachSimulation(simulation);
+      debugShell.attachSimulation(simulation);
     }
 
     // 4) begin simulation
     try {
-      // simulation.run();
+      simulation.run();
     } catch (RuntimeException e) {
       System.out.println("Simulation error: " + e.getMessage());
       System.exit(2);

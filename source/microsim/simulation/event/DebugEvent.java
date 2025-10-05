@@ -10,13 +10,14 @@ public class DebugEvent extends SimulationEvent {
   String message;
 
   /**
-   * Instantiates DebugEvent getting memory operation information.
+   * Instantiates DebugEvent getting debug information
    *
    * @param owner component that raised event
-   * @param operationType
+   * @param message debug message
    */
-  public DebugEvent(SimulationComponent owner, String operationType) {
+  public DebugEvent(SimulationComponent owner, String message) {
     super(owner);
+    this.message = message;
   }
 
   /**

@@ -1,0 +1,31 @@
+	.section .start
+	.global _start
+
+_start:
+	/* init stack */
+	la sp, __stack_top
+
+	/* copy .data to RAM */
+	la a0, __data_ram_start
+	la a1, __data_ram_end
+	la a2, __data_eprom_start
+
+_data_cpy_loop:
+	beq a0, a1, _data_cpy_end
+	
+	lw t0, 0(a2)
+	sw t0, 0(a0)
+
+	addi a0, a0, 4
+	addi a2, a2, 4
+	j _data_cpy_loop
+
+_data_cpy_end:
+	/* jump to entry point */
+	call main
+
+	/* halt */
+	call _exit
+
+_exit:
+	j _exit

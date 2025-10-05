@@ -2,6 +2,7 @@ package microsim.simulation.component;
 
 import microsim.simulation.event.*;
 import microsim.simulation.component.Bus.ByteSelect;
+import microsim.ui.DebugShell;
 
 /**
  * Implements a memory space as a (to outside users) contiguous array of byte locations. Memory is
@@ -145,16 +146,18 @@ public class MemorySpace extends SimulationComponent {
       // get word in (max) four byte reads
       switch (byteSelect) {
         case ByteSelect.WORD:
-          data |= readMemory(addr + 3) << 24;
-          data |= readMemory(addr + 2) << 16;
+          data |= (readMemory(addr + 3) & 0xff) << 24;
+          data |= (readMemory(addr + 2) & 0xff) << 16;
         case ByteSelect.HALF:
-          data |= readMemory(addr + 1) << 8;
+          data |= (readMemory(addr + 1) & 0xff) << 8;
         case ByteSelect.BYTE:
-          data |= readMemory(addr);
+          data |= (readMemory(addr) & 0xff);
       }
 
       // rebuild word
-      raiseEvent(new DebugEvent(this, "memory saw read operation at addr " + addr + " of data " + data));
+      raiseEvent(new DebugEvent(this, "Memory saw read operation at addr "
+        + DebugShell.int32ToString(addr) + " of data "
+        + DebugShell.int32ToString(data)));
 
       // drive data line with word
       bus.dataLine.drive(this, data);
@@ -169,7 +172,9 @@ public class MemorySpace extends SimulationComponent {
       ByteSelect byteSelect = bus.byteSelect.read();
       int data = bus.dataLine.read();
 
-      raiseEvent(new DebugEvent(this, "memory saw read operation at addr " + addr + " of data " + data));
+      raiseEvent(new DebugEvent(this, "memory saw read operation at addr "
+        + DebugShell.int32ToString(addr) + " of data "
+        + DebugShell.int32ToString(data)));
 
       // set word in (max) four byte writes
       switch (byteSelect) {
@@ -201,9 +206,9 @@ public class MemorySpace extends SimulationComponent {
    */
   public byte readMemory(int addr) {
     if (addr >= EPROM_BEG && addr <= EPROM_END) {
-      return ram[addr - RAM_BEG];
-    } else if (addr >= RAM_BEG && addr <= RAM_END) {
       return eprom[addr - EPROM_BEG];
+    } else if (addr >= RAM_BEG && addr <= RAM_END) {
+      return ram[addr - RAM_BEG];
     } else if (addr >= VRAM_BEG && addr <= VRAM_END) {
       return vram[addr - VRAM_BEG];
     }

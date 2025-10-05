@@ -39,7 +39,7 @@ public abstract class SimulationComponent {
    *
    * @param e event to raise
    */
-  protected void raiseEvent(SimulationEvent e) {
+  public void raiseEvent(SimulationEvent e) {
     for (SimulationListener l : listeners) {
       l.onSimulationEvent(e);
     }

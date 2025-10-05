@@ -121,9 +121,6 @@ public class Simulation extends SimulationComponent implements SimulationListene
     long cycle = 1;
     long nextFrameCycle = CYCLES_PER_FRAME;
 
-    // show shell before beginning
-    raiseEvent(new CycleEvent(this, 0));
-
     // enter simulation loop
     while (true) {
       // step through simulation cycles

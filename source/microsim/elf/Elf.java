@@ -62,13 +62,13 @@ class ProgramHeader {
 
     System.out.print("\tFlags:\t");
     if ((p_flags & 0x1) == 0x1) {
-      System.out.print("executable ");
+      System.out.print("E ");
     }
     if ((p_flags & 0x2) == 0x2) {
-      System.out.print("writeable ");
+      System.out.print("W ");
     }
     if ((p_flags & 0x4) == 0x4) {
-      System.out.print("readeable ");
+      System.out.print("R ");
     }
     System.out.println("\n");
   }
@@ -79,29 +79,35 @@ class ProgramHeader {
 
 public class Elf {
 
-  byte[] e_ident_magic = new byte[4];
-  byte e_ident_class;
-  byte e_ident_data;
+  private byte[] e_ident_magic = new byte[4];
+  private byte e_ident_class;
+  private byte e_ident_data;
   // byte e_ident_version;
   // byte e_ident_osabi;
   // byte e_ident_abiversion;
-  short e_type;
-  short e_machine;
+  private short e_type;
+  private short e_machine;
   // int e_version;
   // int e_entry;
-  int e_phoff;
+  private int e_phoff;
   // int e_shoff;
   // int e_flags;
   // short e_ehsize;
   short e_phentsize;
-  short e_phnum;
+  private short e_phnum;
   // short e_shentsize;
   // short e_shnum;
   // short e_shstrndx;
 
   ProgramHeader[] programHeaders;
 
-  public static Elf readELF(String path) throws IOException {
+  private byte[] eprom;
+
+  public byte[] getEPROM() {
+    return eprom;
+  }
+
+  public static Elf readELF(String path, boolean debugMode) throws IOException {
     Elf elf = new Elf();
 
     // open file channel
@@ -111,7 +117,9 @@ public class Elf {
     parseHeader(elf, channel);
 
     // check header
-    elf.printHeader();
+    if (debugMode) {
+      elf.printHeader();
+    }
     elf.checkHeader();
 
     // prepare to read program header array
@@ -123,7 +131,9 @@ public class Elf {
       elf.programHeaders[i] = ProgramHeader.parseProgramHeader(elf, channel, i);
 
       // print program header
-      elf.programHeaders[i].printProgramHeader();
+      if (debugMode) {
+        elf.programHeaders[i].printProgramHeader();
+      }
     }
 
     // find first executable program header
@@ -142,6 +152,20 @@ public class Elf {
     if (execIndex == -1) {
       throw new IOException("ELF doesn't have an executable program header");
     }
+
+    // get executable segment location
+    int epromOffset = elf.programHeaders[execIndex].p_offset;
+    int epromSize = elf.programHeaders[execIndex].p_filesz;
+
+    // move channel to segment
+    channel.position(epromOffset);
+
+    // use ByteBuffer wrapping EPROM array
+    elf.eprom = new byte[epromSize];
+    ByteBuffer segmentBuffer = ByteBuffer.wrap(elf.eprom);
+
+    // read into buffer
+    channel.read(segmentBuffer);
 
     // check
     return elf;

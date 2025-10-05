@@ -5,6 +5,8 @@ import java.util.LinkedList;
 import microsim.simulation.component.*;
 import microsim.simulation.component.Bus.ByteSelect;
 import microsim.simulation.component.processor.MicroOp.OpType;
+import microsim.simulation.event.DebugEvent;
+import microsim.ui.DebugShell;
 
 /**
  * A processor implementing the rv32i ISA. For more info, see the {@link
@@ -177,6 +179,11 @@ public class Processor extends SimulationComponent {
   int temp;
 
   /**
+   * Temporary indicator of read/write byteSelect.
+   */
+  ByteSelect byteSelect;
+
+  /**
    * Queue of microops to execute, basically acts as a pipeline.
    */
   Deque<MicroOp> opQueue = new LinkedList<>();
@@ -212,8 +219,12 @@ public class Processor extends SimulationComponent {
     MicroOp nextOp = opQueue.poll();
 
     if (nextOp == null) {
+      raiseEvent(new DebugEvent(this,
+        "Processor found empty pipeline and started fetch-decode cycle"));
       fetchDecode();
     } else {
+      raiseEvent(new DebugEvent(this,
+        "Processor found microop " + nextOp.toString()));
       nextOp.execute(this);
     }
   }

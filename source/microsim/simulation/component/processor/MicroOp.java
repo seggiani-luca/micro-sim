@@ -1,7 +1,10 @@
 package microsim.simulation.component.processor;
 
 import microsim.simulation.component.Bus;
+import microsim.simulation.component.Bus.ByteSelect;
 import static microsim.simulation.component.processor.Decoder.*;
+import microsim.simulation.event.DebugEvent;
+import microsim.ui.DebugShell;
 
 /**
  * Implements a micro operation (microop) the
@@ -123,7 +126,18 @@ public class MicroOp {
    * @param inst load instruction
    * @return address to load from
    */
-  static int getAddr(Processor proc, int inst) {
+  static int getAddrL(Processor proc, int inst) {
+    return immI(inst) + proc.getRegister(rs1(inst));
+  }
+
+  /**
+   * Gets the address for store instructions.
+   *
+   * @param proc processor instance to run on
+   * @param inst load instruction
+   * @return address to load from
+   */
+  static int getAddrS(Processor proc, int inst) {
     return immS(inst) + proc.getRegister(rs1(inst));
   }
 
@@ -235,18 +249,28 @@ public class MicroOp {
 
       // I format (load)
       case LOAD_BYTE -> {
-        BusInterface.doReadRoutine(proc, getAddr(proc, inst), Bus.ByteSelect.BYTE);
+        BusInterface.doReadRoutine(proc, getAddrL(proc, inst), Bus.ByteSelect.BYTE);
       }
       case LOAD_HALF -> {
-        BusInterface.doReadRoutine(proc, getAddr(proc, inst), Bus.ByteSelect.HALF);
+        BusInterface.doReadRoutine(proc, getAddrL(proc, inst), Bus.ByteSelect.HALF);
       }
       case LOAD_WORD -> {
-        BusInterface.doReadRoutine(proc, getAddr(proc, inst), Bus.ByteSelect.WORD);
+        BusInterface.doReadRoutine(proc, getAddrL(proc, inst), Bus.ByteSelect.WORD);
       }
 
       case LOAD_POST -> {
         // temp is read data
-        int signed = signExtend(proc.temp, 8);
+        int size = 0;
+        switch (proc.byteSelect) {
+          case ByteSelect.BYTE ->
+            size = 8;
+          case ByteSelect.HALF ->
+            size = 16;
+          case ByteSelect.WORD ->
+            size = 32;
+        }
+
+        int signed = signExtend(proc.temp, size);
 
         proc.setRegister(rd(inst), signed);
       }
@@ -257,61 +281,61 @@ public class MicroOp {
 
       // S format
       case STORE_BYTE -> {
-        BusInterface.doWriteRoutine(proc, getAddr(proc, inst), proc.getRegister(rs2(inst)),
+        BusInterface.doWriteRoutine(proc, getAddrS(proc, inst), proc.getRegister(rs2(inst)),
           Bus.ByteSelect.BYTE);
       }
       case STORE_HALF -> {
-        BusInterface.doWriteRoutine(proc, getAddr(proc, inst), proc.getRegister(rs2(inst)),
+        BusInterface.doWriteRoutine(proc, getAddrS(proc, inst), proc.getRegister(rs2(inst)),
           Bus.ByteSelect.HALF);
       }
       case STORE_WORD -> {
-        BusInterface.doWriteRoutine(proc, getAddr(proc, inst), proc.getRegister(rs2(inst)),
+        BusInterface.doWriteRoutine(proc, getAddrS(proc, inst), proc.getRegister(rs2(inst)),
           Bus.ByteSelect.WORD);
       }
 
       // B format
       case BRANCH_EQ -> {
         if (proc.getRegister(rs1(inst)) == proc.getRegister(rs2(inst))) {
-          proc.pc += immB(inst);
+          proc.pc += immB(inst) - 4;
         }
       }
       case BRANCH_NE -> {
         if (proc.getRegister(rs1(inst)) != proc.getRegister(rs2(inst))) {
-          proc.pc += immB(inst);
+          proc.pc += immB(inst) - 4;
         }
       }
       case BRANCH_LT -> {
         if (proc.getRegister(rs1(inst)) < proc.getRegister(rs2(inst))) {
-          proc.pc += immB(inst);
+          proc.pc += immB(inst) - 4;
         }
       }
       case BRANCH_GE -> {
         if (proc.getRegister(rs1(inst)) >= proc.getRegister(rs2(inst))) {
-          proc.pc += immB(inst);
+          proc.pc += immB(inst) - 4;
         }
       }
       case BRANCH_LTU -> {
         if (Integer.compareUnsigned(proc.getRegister(rs1(inst)),
           proc.getRegister(rs2(inst))) < 0) {
-          proc.pc += immB(inst);
+          proc.pc += immB(inst) - 4;
         }
       }
       case BRANCH_GEU -> {
         if (Integer.compareUnsigned(proc.getRegister(rs1(inst)),
           proc.getRegister(rs2(inst))) >= 0) {
-          proc.pc += immB(inst);
+          proc.pc += immB(inst) - 4;
         }
       }
 
       // J format
       case JAL -> {
         proc.setRegister(rd(inst), proc.pc + 4);
-        proc.pc += immJ(inst);
+        proc.pc += immJ(inst) - 4;
       }
       // I format (jump)
       case JAL_REG -> {
         proc.setRegister(rd(inst), proc.pc + 4);
-        proc.pc += proc.getRegister(rs1(inst)) + immI(inst);
+        proc.pc = proc.getRegister(rs1(inst)) + immI(inst) - 4;
       }
 
       // U format
@@ -349,6 +373,9 @@ public class MicroOp {
       }
       case MEM_READ2 -> {
         proc.temp = proc.bus.dataLine.read();
+
+        proc.raiseEvent(new DebugEvent(proc, "Processor read routine finished and got value "
+          + DebugShell.int32ToString(proc.temp)));
       }
 
       // memory write routine
@@ -363,7 +390,14 @@ public class MicroOp {
       }
       case MEM_WRITE3 -> {
         proc.bus.dataLine.release(proc);
+
+        proc.raiseEvent(new DebugEvent(proc, "Processor write routine finished"));
       }
     }
+  }
+
+  public String toString() {
+    return type.name() + " - (" + (inst == 0 ? "freestanding" : DebugShell.int32ToString(inst))
+      + ")";
   }
 }
