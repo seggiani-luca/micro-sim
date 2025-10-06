@@ -26,6 +26,8 @@ JAVA := java
 RISCV_C := riscv32-unknown-elf-gcc
 RISCV_S := riscv32-unknown-elf-as
 RISCV_L := riscv32-unknown-elf-ld
+RISCV_DUMP := riscv32-unknown-elf-objdump
+RISCV_RELF := readelf
 
 # documentation
 JAVADOC := javadoc
@@ -56,6 +58,12 @@ $(EPROM_OUT)/%.o: $(EPROM_SRC)/%.s | $(EPROM_OUT)
 
 eprom: $(EPROM_OBJ_C) $(EPROM_OBJ_S)
 	@$(RISCV_L) -T $(EPROM_MEM_MAP) $(EPROM_OBJ_C) $(EPROM_OBJ_S) -o $(EPROM)
+
+eprom_dump: eprom
+	@$(RISCV_DUMP) -D $(EPROM)
+
+eprom_read: eprom
+	@$(RISCV_RELF) -a $(EPROM)
 
 $(EPROM_OUT):
 	@mkdir -p $(EPROM_OUT)

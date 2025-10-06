@@ -14,6 +14,7 @@ void print(const char* str) {
 }
 
 int main() {
+	mess[3] = 'u';
 	print(mess);
 
 	return 0;

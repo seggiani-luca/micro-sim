@@ -52,10 +52,6 @@ class ProgramHeader {
     return ph;
   }
 
-  boolean isExecutable() {
-    return (p_flags & 0x1) == 0x1;
-  }
-
   void printProgramHeader() {
     System.out.println("\tOffset:\t" + DebugShell.int32ToString(p_offset));
     System.out.println("\tSize:\t" + DebugShell.int32ToString(p_filesz));
@@ -136,36 +132,35 @@ public class Elf {
       }
     }
 
-    // find first executable program header
-    int execIndex = -1;
-
-    // iterate for index
-    for (int i = 0; i < elf.e_phnum; i++) {
-      // if it's executable, flag and break
-      if (elf.programHeaders[i].isExecutable()) {
-        execIndex = i;
-        break;
-      }
+    // expected program headers are:
+    // 1) riscv attributes (ignored)
+    // 2) text + rodata
+    // 3) data (to be loaded in RAM by _start routine)
+    // 4) bss (ignored)
+    // 5) video (ignored)
+    // 6) gnu stack (ignored)
+    if (elf.programHeaders.length < 3) {
+      throw new IOException("Not enough program headers in ELF");
     }
 
-    // if no executable program header is found quit
-    if (execIndex == -1) {
-      throw new IOException("ELF doesn't have an executable program header");
-    }
+    // get segment location
+    int textOffset = elf.programHeaders[1].p_offset;
+    int textSize = elf.programHeaders[1].p_filesz;
+    int dataOffset = elf.programHeaders[2].p_offset;
+    int dataSize = elf.programHeaders[2].p_filesz;
 
-    // get executable segment location
-    int epromOffset = elf.programHeaders[execIndex].p_offset;
-    int epromSize = elf.programHeaders[execIndex].p_filesz;
+    // init EPROM aray
+    elf.eprom = new byte[textSize + dataSize];
 
-    // move channel to segment
-    channel.position(epromOffset);
+    // read segment (2)
+    channel.position(textOffset);
+    ByteBuffer textBuffer = ByteBuffer.wrap(elf.eprom, 0, textSize);
+    channel.read(textBuffer);
 
-    // use ByteBuffer wrapping EPROM array
-    elf.eprom = new byte[epromSize];
-    ByteBuffer segmentBuffer = ByteBuffer.wrap(elf.eprom);
-
-    // read into buffer
-    channel.read(segmentBuffer);
+    // read segment (3)
+    channel.position(dataOffset);
+    ByteBuffer dataBuffer = ByteBuffer.wrap(elf.eprom, textSize, dataSize);
+    channel.read(dataBuffer);
 
     // check
     return elf;
