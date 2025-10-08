@@ -1,23 +1,24 @@
 package microsim.ui;
 
+import java.nio.*;
 import java.util.Deque;
-import microsim.simulation.component.*;
 import microsim.simulation.*;
+import microsim.simulation.component.*;
 import microsim.simulation.component.processor.*;
 import microsim.simulation.event.*;
 
 /**
  * Handles the shell shown in debug mode. Debug information is shown in 2 ways:
  * <ol>
- * <li>Via the {@link #log(java.lang.String)} method, which prints information mid-cycle.</li>
- * <li>Via the {@link #shell()} method, which offers interactive debugging at the end of
- * cycles.</li>
+ * <li>Via the {@link #log(java.lang.String)} method, which prints event information mid-cycle.</li>
+ * <li>Via the {@link #shell()} method, which offers interactive debugging at the beginning of
+ * simulation cycles.</li>
  * </ol>
  */
 public class DebugShell implements SimulationListener {
 
   /**
-   * Next cycle to show shell at.
+   * Next cycle to show shell at. Used with {@link #nextShellStep} to jump to specific cycle.
    */
   private int nextShellCycle = 0;
 
@@ -55,17 +56,49 @@ public class DebugShell implements SimulationListener {
   }
 
   /**
-   * Helper to convert an int to a hexadecimal string.
+   * Helper to convert an int to a hexadecimal string. Used by this class and as an utility to build
+   * {@link microsim.simulation.event.DebugEvent} messages.
    *
    * @param val int to convert
-   * @return hexadecimal string representing int
+   * @return hexadecimal hex string representing int
    */
   public static String int32ToString(int val) {
     return String.format("0x%08x", val);
   }
 
   /**
-   * Fetches processor registers from processor in current simulation and displays them.
+   * Prints EPROM data array word by word. Used as an utility by whoever gets data from
+   * {@link microsim.elf.Elf}.
+   *
+   * @param eprom EPROM data array
+   */
+  public static void printEPROM(byte[] eprom) {
+    System.out.println("Read EPROM data:");
+
+    // wrap in ByteBuffer
+    ByteBuffer epromBuffer = ByteBuffer.wrap(eprom).order(ByteOrder.LITTLE_ENDIAN);
+
+    // print as many words as possible
+    while (epromBuffer.remaining() >= 4) {
+      System.out.println("\t" + DebugShell.int32ToString(epromBuffer.position()) + ": "
+        + DebugShell.int32ToString(epromBuffer.getInt()));
+    }
+
+    // print last word
+    int lastPos = epromBuffer.position();
+
+    int last = 0, shift = 0;
+    while (epromBuffer.remaining() >= 1) {
+      last |= (epromBuffer.get() & 0xff) << shift;
+      shift += 8;
+    }
+
+    System.out.println("\t" + DebugShell.int32ToString(lastPos) + ": "
+      + DebugShell.int32ToString(last));
+  }
+
+  /**
+   * Fetches processor registers from processor in current simulation and prints them.
    */
   private void printProcessorRegisters() {
     Processor proc = simulationInstance.proc;
@@ -74,7 +107,7 @@ public class DebugShell implements SimulationListener {
     int pc = proc.getPc();
 
     System.out.println("\tpc:\t" + int32ToString(pc));
-    System.out.println("\tzero:\t0");
+    System.out.println("\tzero:\t0"); // defaults to zero register
 
     final String[] mnemonics = {
       "ra", "sp", "gp", "tp", "t0", "t1", "t2", "s0/fp", "s1", "a0", "a1", "a2", "a3", "a4", "a5",
@@ -82,13 +115,14 @@ public class DebugShell implements SimulationListener {
       "t6"
     };
 
+    // loop through registers and print
     for (int i = 0; i < proc.REGISTERS - 1; i++) {
       System.out.println("\t" + mnemonics[i] + ":\t" + int32ToString(registers[i]));
     }
   }
 
   /**
-   * Fetches MicroOp queue from processor in current simulation and displays it.
+   * Fetches MicroOp queue from processor in current simulation and prints it.
    */
   private void printProcessorMicroOps() {
     Processor proc = simulationInstance.proc;
@@ -98,6 +132,7 @@ public class DebugShell implements SimulationListener {
       System.out.println("\tPipeline empty");
     }
 
+    // loop through microops and print
     for (MicroOp op : ops) {
       int inst = op.getInstruction();
       System.out.println("\t" + op.toString());
@@ -105,7 +140,8 @@ public class DebugShell implements SimulationListener {
   }
 
   /**
-   * Reads and prints data from memory at given address.
+   * Reads and prints data from memory at given address. Checks valid addresses and out of bound
+   * reads.
    *
    * @param addr the address to read from
    */
@@ -113,21 +149,30 @@ public class DebugShell implements SimulationListener {
     MemorySpace memory = simulationInstance.memory;
     int numAddr = 0;
 
+    // is address valid?
     try {
       numAddr = (int) Integer.parseInt(addr, 16);
     } catch (NumberFormatException e) {
-      System.out.println("Invalid address: " + e.getMessage());
+      System.err.println("Invalid address. " + e.getMessage());
+      return;
+    }
+
+    // is addres in bounds?
+    if (!memory.inBounds(numAddr)) {
+      System.err.println("Address out of bounds");
       return;
     }
 
     // read
     byte data = memory.readMemory(numAddr);
+
     System.out.println("Read " + String.format("%02X", data & 0xff)
       + " from memory at address " + int32ToString(numAddr));
   }
 
   /**
-   * Writes data to memory at given address.
+   * Writes data to memory at given address. Checks valid addresses, valid data and out of bound
+   * writes.
    *
    * @param addr the address to read from
    */
@@ -135,19 +180,28 @@ public class DebugShell implements SimulationListener {
     MemorySpace memory = simulationInstance.memory;
     int numAddr = 0;
 
+    // is address valid?
     try {
       numAddr = (int) Integer.parseInt(addr, 16);
     } catch (NumberFormatException e) {
-      System.out.println("Invalid address: " + e.getMessage());
+      System.err.println("Invalid address. " + e.getMessage());
+      return;
+    }
+
+    // is addres in bounds?
+    if (!memory.inBounds(numAddr)) {
+      System.err.println("Address out of bounds");
       return;
     }
 
     byte numData = 0;
 
+    // is data valid?
     try {
       numData = (byte) Integer.parseInt(data, 16);
     } catch (NumberFormatException e) {
-      System.out.println("Invalid data: " + e.getMessage());
+      System.err.println("Invalid data: " + e.getMessage());
+      return;
     }
 
     // read
