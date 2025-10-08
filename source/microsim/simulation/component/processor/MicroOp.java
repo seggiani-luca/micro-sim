@@ -19,12 +19,14 @@ public class MicroOp {
   public static enum OpType {
     DECODE,
     // R format
-    ADD_SUB,
+    ADD,
+    SUB,
     XOR,
     OR,
     AND,
     SLL,
-    SRL_SRA,
+    SRL,
+    SRA,
     SLT,
     SLTU,
     // I format (immediate)
@@ -33,7 +35,8 @@ public class MicroOp {
     OR_I,
     AND_I,
     SLL_I,
-    SRL_SRA_I,
+    SRL_I,
+    SRA_I,
     SLT_I,
     SLTU_I,
     // I format (load)
@@ -61,6 +64,8 @@ public class MicroOp {
     AUIPC,
     // I format (environment)
     ENV,
+    // post execution
+    EXEC_POST,
     // memory read routine
     MEM_READ0,
     MEM_READ1,
@@ -142,6 +147,17 @@ public class MicroOp {
   }
 
   /**
+   * Get shift amount for shift instructions.
+   *
+   * @param proc processor instance to run on
+   * @param inst load instruction
+   * @return amount to shift by
+   */
+  static int getShamt(Processor proc, int inst) {
+    return proc.getRegister(rs2(inst)) & 0x1f;
+  }
+
+  /**
    * Executes a microop on a processor instance.
    *
    * @param proc processor instance to run on
@@ -155,17 +171,11 @@ public class MicroOp {
       }
 
       // R format
-      case ADD_SUB -> {
-        switch (funct7(inst)) {
-          case 0x00 -> // add
-            proc.setRegister(rd(inst), proc.getRegister(rs1(inst)) + proc.getRegister(rs2(inst)));
-
-          case 0x20 -> // sub
-            proc.setRegister(rd(inst), proc.getRegister(rs1(inst)) - proc.getRegister(rs2(inst)));
-
-          default ->
-            throw new RuntimeException("Invalid funct7 for R Instruction 0x0 (add/sub)");
-        }
+      case ADD -> {
+        proc.setRegister(rd(inst), proc.getRegister(rs1(inst)) + proc.getRegister(rs2(inst)));
+      }
+      case SUB -> {
+        proc.setRegister(rd(inst), proc.getRegister(rs1(inst)) - proc.getRegister(rs2(inst)));
       }
       case XOR -> {
         proc.setRegister(rd(inst), proc.getRegister(rs1(inst)) ^ proc.getRegister(rs2(inst)));
@@ -177,22 +187,17 @@ public class MicroOp {
         proc.setRegister(rd(inst), proc.getRegister(rs1(inst)) & proc.getRegister(rs2(inst)));
       }
       case SLL -> {
-        int shamt = proc.getRegister(rs2(inst)) & 0x1f;
+        int shamt = getShamt(proc, inst);
         proc.setRegister(rd(inst), proc.getRegister(rs1(inst)) << shamt);
       }
-      case SRL_SRA -> {
-        int shamt = proc.getRegister(rs2(inst)) & 0x1f;
+      case SRL -> {
+        int shamt = getShamt(proc, inst);
+        proc.setRegister(rd(inst), proc.getRegister(rs1(inst)) >>> shamt);
 
-        switch (funct7(inst)) {
-          case 0x00 -> // srl
-            proc.setRegister(rd(inst), proc.getRegister(rs1(inst)) >>> shamt);
-
-          case 0x20 -> // sra
-            proc.setRegister(rd(inst), proc.getRegister(rs1(inst)) >> shamt);
-
-          default ->
-            throw new RuntimeException("Invalid funct7 value for R Instruction 0x5 (srl/sra)");
-        }
+      }
+      case SRA -> {
+        int shamt = getShamt(proc, inst);
+        proc.setRegister(rd(inst), proc.getRegister(rs1(inst)) >> shamt);
       }
       case SLT -> {
         proc.setRegister(rd(inst),
@@ -220,22 +225,16 @@ public class MicroOp {
         proc.setRegister(rd(inst), proc.getRegister(rs1(inst)) & immI(inst));
       }
       case SLL_I -> {
-        int shamt = immI(inst) & 0x1f;
+        int shamt = getShamt(proc, inst);
         proc.setRegister(rd(inst), proc.getRegister(rs1(inst)) << shamt);
       }
-      case SRL_SRA_I -> {
-        int shamt = immI(inst) & 0x1f;
-
-        switch (funct7(inst)) {
-          case 0x00 -> // srl
-            proc.setRegister(rd(inst), proc.getRegister(rs1(inst)) >>> shamt);
-
-          case 0x20 -> // sra
-            proc.setRegister(rd(inst), proc.getRegister(rs1(inst)) >> shamt);
-
-          default ->
-            throw new RuntimeException("Invalid funct7 value for R Instruction 0x5 (srl/sra)");
-        }
+      case SRL_I -> {
+        int shamt = getShamt(proc, inst);
+        proc.setRegister(rd(inst), proc.getRegister(rs1(inst)) >>> shamt);
+      }
+      case SRA_I -> {
+        int shamt = getShamt(proc, inst);
+        proc.setRegister(rd(inst), proc.getRegister(rs1(inst)) >> shamt);
       }
       case SLT_I -> {
         proc.setRegister(rd(inst), (proc.getRegister(rs1(inst)) < immI(inst)) ? 1 : 0);
@@ -296,46 +295,58 @@ public class MicroOp {
       // B format
       case BRANCH_EQ -> {
         if (proc.getRegister(rs1(inst)) == proc.getRegister(rs2(inst))) {
-          proc.pc += immB(inst) - 4;
+          proc.pc += immB(inst);
+        } else {
+          proc.pc += 4;
         }
       }
       case BRANCH_NE -> {
         if (proc.getRegister(rs1(inst)) != proc.getRegister(rs2(inst))) {
-          proc.pc += immB(inst) - 4;
+          proc.pc += immB(inst);
+        } else {
+          proc.pc += 4;
         }
       }
       case BRANCH_LT -> {
         if (proc.getRegister(rs1(inst)) < proc.getRegister(rs2(inst))) {
-          proc.pc += immB(inst) - 4;
+          proc.pc += immB(inst);
+        } else {
+          proc.pc += 4;
         }
       }
       case BRANCH_GE -> {
         if (proc.getRegister(rs1(inst)) >= proc.getRegister(rs2(inst))) {
-          proc.pc += immB(inst) - 4;
+          proc.pc += immB(inst);
+        } else {
+          proc.pc += 4;
         }
       }
       case BRANCH_LTU -> {
         if (Integer.compareUnsigned(proc.getRegister(rs1(inst)),
           proc.getRegister(rs2(inst))) < 0) {
-          proc.pc += immB(inst) - 4;
+          proc.pc += immB(inst);
+        } else {
+          proc.pc += 4;
         }
       }
       case BRANCH_GEU -> {
         if (Integer.compareUnsigned(proc.getRegister(rs1(inst)),
           proc.getRegister(rs2(inst))) >= 0) {
-          proc.pc += immB(inst) - 4;
+          proc.pc += immB(inst);
+        } else {
+          proc.pc += 4;
         }
       }
 
       // J format
       case JAL -> {
         proc.setRegister(rd(inst), proc.pc + 4);
-        proc.pc += immJ(inst) - 4;
+        proc.pc += immJ(inst);
       }
       // I format (jump)
       case JAL_REG -> {
         proc.setRegister(rd(inst), proc.pc + 4);
-        proc.pc = proc.getRegister(rs1(inst)) + immI(inst) - 4;
+        proc.pc = proc.getRegister(rs1(inst)) + immI(inst);
       }
 
       // U format
@@ -362,6 +373,11 @@ public class MicroOp {
           default ->
             throw new RuntimeException("Invalid immediate for environment call");
         }
+      }
+
+      // post execution
+      case EXEC_POST -> {
+        proc.pc += 4;
       }
 
       // memory read routine

@@ -24,12 +24,12 @@ public class CycleEvent extends SimulationEvent {
   }
 
   /**
-   * Returns information about which cycle was reached.
+   * Returns information about which cycle was reached. Doesn't print the zero cycle.
    *
    * @return cycle debug string
    */
   @Override
   public String getDebugMessage() {
-    return ("\nCycle " + cycle);
+    return (cycle == 0) ? "" : ("\nCycle " + cycle);
   }
 }

@@ -6,7 +6,83 @@ import java.util.Map;
 import microsim.simulation.component.processor.MicroOp.OpType;
 
 /**
- * Decodes instruction into microop sequences through a static {@link #decode()} method.
+ * Defines a trie data structure used to query microop sequences from instruction encodings.
+ * Supports putting objects and retrieving them.
+ *
+ * @param <T> trie data type
+ */
+class Trie<T> {
+
+  /**
+   * Trie node. Holds a hash map to children and a (possibly null) data field.
+   *
+   * @param <T> trie data type
+   */
+  class TrieNode<T> {
+
+    /**
+     * Map of children trie nodes.
+     */
+    Map<Integer, TrieNode<T>> children = new HashMap<>();
+
+    /**
+     * Data held by node. Non leaf trie nodes are signaled by this field being null. Leafs can still
+     * have children.
+     */
+    T data;
+  }
+
+  /**
+   * Root of trie.
+   */
+  private TrieNode<T> root = new TrieNode<>();
+
+  /**
+   * Put an item in the trie at the given key.
+   *
+   * @param keys key to put item at
+   * @param data item to put
+   */
+  public void put(List<Integer> keys, T data) {
+    // traverse trie to data
+    TrieNode<T> child = root;
+    for (Integer key : keys) {
+      child.children.putIfAbsent(key, new TrieNode<>());
+      child = child.children.get(key);
+    }
+
+    // put data
+    child.data = data;
+  }
+
+  /**
+   * Get an item from the trie at the given key. Returns null if no such item is found. Shorcircuits
+   * at the first valid data node if key is longer than available path (keys are expected to be).
+   *
+   * @param keys key to search item at
+   * @return item, if found
+   */
+  public T get(List<Integer> keys) {
+    // traverse trie to data
+    TrieNode<T> child = root;
+    for (Integer key : keys) {
+      // shortcircuit
+      if (child.children.get(key) == null) {
+        break;
+      }
+
+      // traverse normally
+      child = child.children.get(key);
+    }
+
+    // get data
+    return child.data;
+  }
+}
+
+/**
+ * Decodes instruction into microop sequences through a static {@link #decode()} method, using the
+ * {@link microsim.simulation.component.processor.Trie} class to index.
  */
 public class Decoder {
 
@@ -199,218 +275,177 @@ public class Decoder {
   static final int IE_OPCODE = 0x73;
 
   /**
-   * Gets funct3 to select from secondary map. For instructions where funct3 is not significant,
-   * returns 0.
-   *
-   * @param inst instruction to get funct3
-   * @return funct3 to index secondary map
+   * Trie from instruction encoding to microop list.
    */
-  static int getFunct3(int inst) {
-    int opcode = opcode(inst);
-    switch (opcode) {
-      case R_OPCODE, II_OPCODE, IL_OPCODE, S_OPCODE, B_OPCODE, IJ_OPCODE, IE_OPCODE -> {
-        // these either distinguish or enforce funct3 to 0x00
-        return funct3(inst);
-      }
-      case J_OPCODE, UL_OPCODE, UA_OPCODE -> {
-        // these don't have funct3
-        return 0;
-      }
-      default -> {
-        throw new RuntimeException("Invalid opcode");
-      }
-    }
-  }
+  static final Trie<List<MicroOp>> instTrie = new Trie<>();
 
-  /**
-   * Dual map to index instructions. TODO: a trie would be better than a dual map setup.
-   */
-  static final Map<Integer, Map<Integer, List<MicroOp>>> instMap = new HashMap();
-
-  // setup dual map
+  // setup trie
   static {
     // R format
-    Map<Integer, List<MicroOp>> rInstMap = new HashMap();
-
-    // fill R format
-    rInstMap.put(0x0, List.of(
-      new MicroOp(OpType.ADD_SUB)
+    instTrie.put(List.of(R_OPCODE, 0x0, 0x00), List.of(
+      new MicroOp(OpType.ADD),
+      new MicroOp(OpType.EXEC_POST)
     ));
-    rInstMap.put(0x4, List.of(
-      new MicroOp(OpType.XOR)
+    instTrie.put(List.of(R_OPCODE, 0x0, 0x20), List.of(
+      new MicroOp(OpType.SUB),
+      new MicroOp(OpType.EXEC_POST)
     ));
-    rInstMap.put(0x6, List.of(
-      new MicroOp(OpType.OR)
+    instTrie.put(List.of(R_OPCODE, 0x4, 0x00), List.of(
+      new MicroOp(OpType.XOR),
+      new MicroOp(OpType.EXEC_POST)
     ));
-    rInstMap.put(0x7, List.of(
-      new MicroOp(OpType.AND)
+    instTrie.put(List.of(R_OPCODE, 0x6, 0x00), List.of(
+      new MicroOp(OpType.OR),
+      new MicroOp(OpType.EXEC_POST)
     ));
-    rInstMap.put(0x1, List.of(
-      new MicroOp(OpType.SLL)
+    instTrie.put(List.of(R_OPCODE, 0x7, 0x00), List.of(
+      new MicroOp(OpType.AND),
+      new MicroOp(OpType.EXEC_POST)
     ));
-    rInstMap.put(0x5, List.of(
-      new MicroOp(OpType.SRL_SRA)
+    instTrie.put(List.of(R_OPCODE, 0x1, 0x00), List.of(
+      new MicroOp(OpType.SLL),
+      new MicroOp(OpType.EXEC_POST)
     ));
-    rInstMap.put(0x2, List.of(
-      new MicroOp(OpType.SLT)
+    instTrie.put(List.of(R_OPCODE, 0x5, 0x00), List.of(
+      new MicroOp(OpType.SRL),
+      new MicroOp(OpType.EXEC_POST)
     ));
-    rInstMap.put(0x3, List.of(
-      new MicroOp(OpType.SLTU)
+    instTrie.put(List.of(R_OPCODE, 0x5, 0x20), List.of(
+      new MicroOp(OpType.SRA),
+      new MicroOp(OpType.EXEC_POST)
     ));
-
-    // insert R format
-    instMap.put(R_OPCODE, rInstMap);
+    instTrie.put(List.of(R_OPCODE, 0x2, 0x00), List.of(
+      new MicroOp(OpType.SLT),
+      new MicroOp(OpType.EXEC_POST)
+    ));
+    instTrie.put(List.of(R_OPCODE, 0x3, 0x00), List.of(
+      new MicroOp(OpType.SLTU),
+      new MicroOp(OpType.EXEC_POST)
+    ));
 
     // I format (immediate)
-    Map<Integer, List<MicroOp>> iiInstMap = new HashMap();
-
-    // fill I format (immediate)
-    iiInstMap.put(0x0, List.of(
-      new MicroOp(OpType.ADD_I)
+    instTrie.put(List.of(II_OPCODE, 0x0), List.of(
+      new MicroOp(OpType.ADD_I),
+      new MicroOp(OpType.EXEC_POST)
     ));
-    iiInstMap.put(0x4, List.of(
-      new MicroOp(OpType.XOR_I)
+    instTrie.put(List.of(II_OPCODE, 0x4), List.of(
+      new MicroOp(OpType.XOR_I),
+      new MicroOp(OpType.EXEC_POST)
     ));
-    iiInstMap.put(0x6, List.of(
-      new MicroOp(OpType.OR_I)
+    instTrie.put(List.of(II_OPCODE, 0x6), List.of(
+      new MicroOp(OpType.OR_I),
+      new MicroOp(OpType.EXEC_POST)
     ));
-    iiInstMap.put(0x7, List.of(
-      new MicroOp(OpType.AND_I)
+    instTrie.put(List.of(II_OPCODE, 0x7), List.of(
+      new MicroOp(OpType.AND_I),
+      new MicroOp(OpType.EXEC_POST)
     ));
-    iiInstMap.put(0x1, List.of(
-      new MicroOp(OpType.SLL_I)
+    instTrie.put(List.of(II_OPCODE, 0x1, 0x00), List.of(
+      new MicroOp(OpType.SLL_I),
+      new MicroOp(OpType.EXEC_POST)
     ));
-    iiInstMap.put(0x5, List.of(
-      new MicroOp(OpType.SRL_SRA_I)
+    instTrie.put(List.of(II_OPCODE, 0x5, 0x00), List.of(
+      new MicroOp(OpType.SRL_I),
+      new MicroOp(OpType.EXEC_POST)
     ));
-    iiInstMap.put(0x2, List.of(
-      new MicroOp(OpType.SLT_I)
+    instTrie.put(List.of(II_OPCODE, 0x5, 0x20), List.of(
+      new MicroOp(OpType.SRA_I),
+      new MicroOp(OpType.EXEC_POST)
     ));
-    iiInstMap.put(0x3, List.of(
-      new MicroOp(OpType.SLTU_I)
+    instTrie.put(List.of(II_OPCODE, 0x2), List.of(
+      new MicroOp(OpType.SLT_I),
+      new MicroOp(OpType.EXEC_POST)
     ));
-
-    // insert I format (immediate)
-    instMap.put(II_OPCODE, iiInstMap);
+    instTrie.put(List.of(II_OPCODE, 0x3), List.of(
+      new MicroOp(OpType.SLTU_I),
+      new MicroOp(OpType.EXEC_POST)
+    ));
 
     // I format (load)
-    Map<Integer, List<MicroOp>> ilInstMap = new HashMap();
-
-    // fill I format (load)
-    ilInstMap.put(0x0, List.of(
+    instTrie.put(List.of(IL_OPCODE, 0x0), List.of(
       new MicroOp(OpType.LOAD_BYTE),
-      new MicroOp(OpType.LOAD_POST)
+      new MicroOp(OpType.LOAD_POST),
+      new MicroOp(OpType.EXEC_POST)
     ));
-    ilInstMap.put(0x1, List.of(
+    instTrie.put(List.of(IL_OPCODE, 0x1), List.of(
       new MicroOp(OpType.LOAD_HALF),
-      new MicroOp(OpType.LOAD_POST)
+      new MicroOp(OpType.LOAD_POST),
+      new MicroOp(OpType.EXEC_POST)
     ));
-    ilInstMap.put(0x2, List.of(
+    instTrie.put(List.of(IL_OPCODE, 0x2), List.of(
       new MicroOp(OpType.LOAD_WORD),
-      new MicroOp(OpType.LOAD_POST)
+      new MicroOp(OpType.LOAD_POST),
+      new MicroOp(OpType.EXEC_POST)
     ));
-    ilInstMap.put(0x4, List.of(
+    instTrie.put(List.of(IL_OPCODE, 0x4), List.of(
       new MicroOp(OpType.LOAD_BYTE),
-      new MicroOp(OpType.LOAD_POST_U)
+      new MicroOp(OpType.LOAD_POST_U),
+      new MicroOp(OpType.EXEC_POST)
     ));
-    ilInstMap.put(0x5, List.of(
+    instTrie.put(List.of(IL_OPCODE, 0x5), List.of(
       new MicroOp(OpType.LOAD_HALF),
-      new MicroOp(OpType.LOAD_POST_U)
+      new MicroOp(OpType.LOAD_POST_U),
+      new MicroOp(OpType.EXEC_POST)
     ));
-
-    // insert I format (load)
-    instMap.put(IL_OPCODE, ilInstMap);
 
     // S format
-    Map<Integer, List<MicroOp>> sInstMap = new HashMap();
-
-    // fill S format
-    sInstMap.put(0x0, List.of(
-      new MicroOp(OpType.STORE_BYTE)
+    instTrie.put(List.of(S_OPCODE, 0x0), List.of(
+      new MicroOp(OpType.STORE_BYTE),
+      new MicroOp(OpType.EXEC_POST)
     ));
-    sInstMap.put(0x1, List.of(
-      new MicroOp(OpType.STORE_HALF)
+    instTrie.put(List.of(S_OPCODE, 0x1), List.of(
+      new MicroOp(OpType.STORE_HALF),
+      new MicroOp(OpType.EXEC_POST)
     ));
-    sInstMap.put(0x2, List.of(
-      new MicroOp(OpType.STORE_WORD)
+    instTrie.put(List.of(S_OPCODE, 0x2), List.of(
+      new MicroOp(OpType.STORE_WORD),
+      new MicroOp(OpType.EXEC_POST)
     ));
-
-    // insert S format
-    instMap.put(S_OPCODE, sInstMap);
 
     // B format
-    Map<Integer, List<MicroOp>> bInstMap = new HashMap();
-
-    // fill B format
-    bInstMap.put(0x0, List.of(
+    instTrie.put(List.of(B_OPCODE, 0x0), List.of(
       new MicroOp(OpType.BRANCH_EQ)
     ));
-    bInstMap.put(0x1, List.of(
+    instTrie.put(List.of(B_OPCODE, 0x1), List.of(
       new MicroOp(OpType.BRANCH_NE)
     ));
-    bInstMap.put(0x4, List.of(
+    instTrie.put(List.of(B_OPCODE, 0x4), List.of(
       new MicroOp(OpType.BRANCH_LT)
     ));
-    bInstMap.put(0x5, List.of(
+    instTrie.put(List.of(B_OPCODE, 0x5), List.of(
       new MicroOp(OpType.BRANCH_GE)
     ));
-    bInstMap.put(0x6, List.of(
+    instTrie.put(List.of(B_OPCODE, 0x6), List.of(
       new MicroOp(OpType.BRANCH_LTU)
     ));
-    bInstMap.put(0x7, List.of(
+    instTrie.put(List.of(B_OPCODE, 0x7), List.of(
       new MicroOp(OpType.BRANCH_GEU)
     ));
 
-    // insert B format
-    instMap.put(B_OPCODE, bInstMap);
-
     // J format
-    Map<Integer, List<MicroOp>> jInstMap = new HashMap();
-
-    // fill J format
-    jInstMap.put(0, List.of(
+    instTrie.put(List.of(J_OPCODE), List.of(
       new MicroOp(OpType.JAL)
     ));
 
-    // insert J format
-    instMap.put(J_OPCODE, jInstMap);
-
     // I format (jump)
-    Map<Integer, List<MicroOp>> ijInstMap = new HashMap();
-
-    // fill I format (jump)
-    ijInstMap.put(0x0, List.of(
+    instTrie.put(List.of(IJ_OPCODE, 0x0), List.of(
       new MicroOp(OpType.JAL_REG)
     ));
 
-    // insert I format (jump)
-    instMap.put(IJ_OPCODE, ijInstMap);
-
     // U format (load, add)
-    Map<Integer, List<MicroOp>> ulInstMap = new HashMap();
-    Map<Integer, List<MicroOp>> uaInstMap = new HashMap();
-
-    // fill U format (load, add)
-    ulInstMap.put(0, List.of(
-      new MicroOp(OpType.LUI)
+    instTrie.put(List.of(UL_OPCODE), List.of(
+      new MicroOp(OpType.LUI),
+      new MicroOp(OpType.EXEC_POST)
     ));
-    uaInstMap.put(0, List.of(
-      new MicroOp(OpType.AUIPC)
+    instTrie.put(List.of(UA_OPCODE), List.of(
+      new MicroOp(OpType.AUIPC),
+      new MicroOp(OpType.EXEC_POST)
     ));
-
-    // insert U format (load, add)
-    instMap.put(UL_OPCODE, ulInstMap);
-    instMap.put(UA_OPCODE, uaInstMap);
 
     // I format (environment)
-    Map<Integer, List<MicroOp>> ieFormat = new HashMap();
-
-    // fill I format
-    ieFormat.put(0x0, List.of(
+    instTrie.put(List.of(IE_OPCODE, 0x0), List.of(
       new MicroOp(OpType.ENV)
     ));
-
-    instMap.put(IE_OPCODE, ieFormat);
   }
 
   /**
@@ -420,12 +455,13 @@ public class Decoder {
    * @param inst instruction to decode
    */
   public static void decode(Processor proc, int inst) {
-    // get opcode, funct3 pair to query maps
+    // get opcode, funct3, funct7 keys to query trie
     int opcode = opcode(inst);
-    int funct3 = getFunct3(inst);
+    int funct3 = funct3(inst);
+    int funct7 = funct7(inst);
 
     // get microop
-    List<MicroOp> opList = instMap.get(opcode).get(funct3);
+    List<MicroOp> opList = instTrie.get(List.of(opcode, funct3, funct7));
 
     // iterate completing microops and pushing to processor queue
     for (MicroOp op : opList) {

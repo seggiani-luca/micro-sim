@@ -6,7 +6,8 @@ import microsim.simulation.event.*;
 
 /**
  * A component simulated within the {@link microsim.simulation.Simulation} class. Implements
- * functionality for stepping and raising {@link microsim.simulation.event.SimulationEvent} events.
+ * functionality for stepping on simulation cycles, and for raising
+ * {@link microsim.simulation.event.SimulationEvent} events.
  */
 public abstract class SimulationComponent {
 

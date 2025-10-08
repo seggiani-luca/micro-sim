@@ -6,11 +6,12 @@ import microsim.simulation.component.*;
 import microsim.simulation.component.Bus.ByteSelect;
 import microsim.simulation.component.processor.MicroOp.OpType;
 import microsim.simulation.event.DebugEvent;
-import microsim.ui.DebugShell;
 
 /**
- * A processor implementing the rv32i ISA. For more info, see the {@link
- * <a href="www.cs.sfu.ca/~ashriram/Courses/CS295/assets/notebooks/RISCV/RISCV_CARD.pdf">green
+ * A processor implementing the RISC-V RV32I ISA. This comprises basic memory movement, arithmetic
+ * and logic operations (except MULs and DIvs), and basic branching and stack management. For more
+ * info, see the {@link
+ * <a href="www.cs.sfu.ca/~ashriram/Courses/CS295/assets/notebooks/RISCV/RISCV_CARD.pdf"> green
  * card</a>}.
  */
 public class Processor extends SimulationComponent {
@@ -167,10 +168,9 @@ public class Processor extends SimulationComponent {
     bus.addressLine.drive(this, 0);
     bus.readEnable.drive(this, false);
     bus.writeEnable.drive(this, false);
-    bus.targetSpace.drive(this, false);
 
     // reset instruction pointer
-    pc = RESET_INSTRUCTION_ADDRESS - 4;
+    pc = RESET_INSTRUCTION_ADDRESS;
   }
 
   /**
@@ -201,8 +201,6 @@ public class Processor extends SimulationComponent {
    * Sets processor up for a fetch execute cycle, called when microop queue is empty.
    */
   private void fetchDecode() {
-    pc += 4;
-
     // read next instruction word and move
     BusInterface.doReadRoutine(this, pc, ByteSelect.WORD);
 

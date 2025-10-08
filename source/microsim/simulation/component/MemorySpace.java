@@ -9,10 +9,12 @@ import microsim.ui.DebugShell;
  * divided in three regions:
  * <ol>
  * <li>EPROM: contains program code and data at startup.</li>
- * <li>RAM: for general access. </li>
+ * <li>RAM: for general access.</li>
  * <li>VRAM: gets rendered to video on {@link microsim.simulation.component.VideoDevice#render()}
  * calls.</li>
  * </ol>
+ * Regions are defined by begin/end address pairs. End addresses are inclusive (0x000 to 0x0ff means
+ * 0x0ff is in the region and 0x100 isn't).
  */
 public class MemorySpace extends SimulationComponent {
 
@@ -65,7 +67,7 @@ public class MemorySpace extends SimulationComponent {
   }
 
   /**
-   * Holds EPROM data;
+   * Holds EPROM data.
    */
   private final byte[] eprom;
 
@@ -117,8 +119,6 @@ public class MemorySpace extends SimulationComponent {
   /**
    * Steps by handling read/write operations seen on bus. Bus protocol is the following:
    * <ul>
-   * <li>If {@link microsim.simulation.component.Bus#targetSpace} is not low, ignore any
-   * operation.</li>
    * <li>
    * If {@link microsim.simulation.component.Bus#readEnable} is high, start a read operation:
    * <ol>
@@ -141,11 +141,6 @@ public class MemorySpace extends SimulationComponent {
    */
   @Override
   public void step() {
-    if (bus.targetSpace.read() != false) {
-      // not targeting ram
-      return;
-    }
-
     // read control lines
     boolean readEnable = bus.readEnable.read();
     boolean writeEnable = bus.writeEnable.read();
@@ -172,8 +167,7 @@ public class MemorySpace extends SimulationComponent {
           data |= (readMemory(addr) & 0xff);
       }
 
-      // rebuild word
-      raiseEvent(new DebugEvent(this, "Memory saw read operation at addr "
+      raiseEvent(new DebugEvent(this, "memory saw read operation at addr "
         + DebugShell.int32ToString(addr) + " of data "
         + DebugShell.int32ToString(data)));
 
@@ -190,7 +184,7 @@ public class MemorySpace extends SimulationComponent {
       ByteSelect byteSelect = bus.byteSelect.read();
       int data = bus.dataLine.read();
 
-      raiseEvent(new DebugEvent(this, "memory saw read operation at addr "
+      raiseEvent(new DebugEvent(this, "memory saw write operation at addr "
         + DebugShell.int32ToString(addr) + " of data "
         + DebugShell.int32ToString(data)));
 
@@ -216,35 +210,68 @@ public class MemorySpace extends SimulationComponent {
   }
 
   /**
-   * Reads from memory space at a given address. This is not meant to be used by other simulation
-   * components, but by this class and {@link microsim.ui.DebugShell} objects displaying shells.
+   * Reads from memory space at a given address within simulation bounds. This means VRAM reads are
+   * forbidden. Implementation is done encapsulating {@link #readMemory(int, boolean)} with
+   * debugMode always false.
    *
    * @param addr address to read from
    * @return data read
    */
-  public byte readMemory(int addr) {
+  private byte readMemory(int addr) {
+    return readMemory(addr, false);
+  }
+
+  /**
+   * Reads from memory space at a given address. The debugMode flag specifies if forbidden behavior
+   * should be enforced: the {@link microsim.ui.DebugShell} class uses it to allow debug operations.
+   *
+   * @param addr address to read from
+   * @param debugMode enforce simulation correctness
+   * @return data read
+   */
+  public byte readMemory(int addr, boolean debugMode) {
     if (addr >= EPROM_BEG && addr <= EPROM_END) {
       return eprom[addr - EPROM_BEG];
     } else if (addr >= RAM_BEG && addr <= RAM_END) {
       return ram[addr - RAM_BEG];
     } else if (addr >= VRAM_BEG && addr <= VRAM_END) {
-      // return vram[addr - VRAM_BEG];
-      throw new RuntimeException("Memory read at VRAM");
+      if (debugMode) {
+        return vram[addr - VRAM_BEG];
+      } else {
+        throw new RuntimeException("Memory read at VRAM");
+      }
     }
 
     throw new RuntimeException("Memory read out of bounds");
   }
 
   /**
-   * Writes to memory space at a given address. Usage is same as {@link #readMemory(char)}.
+   * Writes to memory space at a given address within simulation bounds. This means EPROM reads are
+   * forbidden. Implementation is done encapsulating {@link #readMemory(int, boolean)} with
+   * debugMode always false.
    *
    * @param addr address to write to
    * @param data data to write
    */
-  public void writeMemory(int addr, byte data) {
+  private void writeMemory(int addr, byte data) {
+    writeMemory(addr, data, false);
+  }
+
+  /**
+   * Writes to memory space at a given address. The debugMode flag specifies if forbidden behavior
+   * should be enforced: usage is same as {@link #readMemory(int, boolean)}.
+   *
+   * @param addr address to write to
+   * @param data data to write
+   * @param debugMode enforce simulation correctness
+   */
+  public void writeMemory(int addr, byte data, boolean debugMode) {
     if (addr >= EPROM_BEG && addr <= EPROM_END) {
-      // eprom[addr - EPROM_BEG] = data;
-      throw new RuntimeException("Memory write at EPROM");
+      if (debugMode) {
+        eprom[addr - EPROM_BEG] = data;
+      } else {
+        throw new RuntimeException("Memory write at EPROM");
+      }
     } else if (addr >= RAM_BEG && addr <= RAM_END) {
       ram[addr - RAM_BEG] = data;
       return;

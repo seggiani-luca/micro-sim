@@ -11,6 +11,9 @@ import microsim.ui.*;
  */
 public class Main {
 
+  public static final String version = "0.0";
+  public static final String year = "2025";
+
   /**
    * Gets argument parameter following argument tag. With tag = "-t", from '-t "arg"' returns "arg".
    * If no argument is found, returns null.
@@ -53,6 +56,14 @@ public class Main {
     }
 
     return false;
+  }
+
+  /**
+   * Shows version and other basic info.
+   */
+  private static void greet() {
+    System.out.println("micro-sim simulator, version " + version);
+    System.out.println(year + " - Luca Seggiani\n");
   }
 
   /**
@@ -104,6 +115,8 @@ public class Main {
     }
 
     // load EPROM data
+    System.out.println("Reading EPROM data at " + epromDataPath);
+
     byte[] epromData = null;
     try {
       // read ELF file
@@ -130,13 +143,16 @@ public class Main {
    * @param simulation simulation instance to attach to
    */
   private static void initInterfaces(Simulation simulation) {
+    System.out.println("Initializing video window");
+
     // instantiate video window and attach it
     VideoWindow window = new VideoWindow(windowScale);
     simulation.addListener(window);
 
     // instantiate debug shell and attach it
-    DebugShell debugShell = new DebugShell();
     if (debugMode) {
+      System.out.println("Debug mode asked, attaching debug shell");
+      DebugShell debugShell = new DebugShell();
       debugShell.attachSimulation(simulation);
     }
   }
@@ -162,6 +178,8 @@ public class Main {
    * @param args program arguments
    */
   public static void main(String[] args) {
+    greet();
+
     // 1. get arguments: debugMode, windowScale, epromDataPath
     byte[] epromData = getSimulationData(args);
 
@@ -173,9 +191,11 @@ public class Main {
 
     // 4. begin simulation
     try {
+      System.out.println("Simulation powering on");
       simulation.run();
     } catch (RuntimeException e) {
       System.err.println("Simulation error. " + e.getMessage());
+      e.printStackTrace();
       System.exit(2);
     }
   }

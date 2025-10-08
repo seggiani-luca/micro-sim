@@ -217,8 +217,8 @@ class ElfHeader {
 }
 
 /**
- * Reads and represents an ELF header. Only values significant to error checking and segment access
- * are kept.
+ * Reads and represents an ELF program header. Only values significant to error checking and segment
+ * access are kept.
  */
 class ProgramHeader {
 

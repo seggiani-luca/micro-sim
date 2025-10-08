@@ -2,6 +2,7 @@ package microsim.ui;
 
 import java.nio.*;
 import java.util.Deque;
+import microsim.Main;
 import microsim.simulation.*;
 import microsim.simulation.component.*;
 import microsim.simulation.component.processor.*;
@@ -15,15 +16,21 @@ import microsim.simulation.event.*;
  * simulation cycles.</li>
  * </ol>
  */
+
 public class DebugShell implements SimulationListener {
 
   /**
-   * Next cycle to show shell at. Used with {@link #nextShellStep} to jump to specific cycle.
+   * Flag that signals whether the shell should greet the user.
+   */
+  boolean shouldGreet = true;
+
+  /**
+   * Next cycle to show shell at. Used with {@link #shouldShowShell} to jump to specific cycle.
    */
   private int nextShellCycle = 0;
 
   /**
-   * Signals whether shell should be shown or not. Used with {@link #nextShellStep} to jump to
+   * Signals whether shell should be shown or not. Used with {@link #nextShellCycle} to jump to
    * specific cycle.
    */
   private boolean shouldShowShell = true;
@@ -94,7 +101,7 @@ public class DebugShell implements SimulationListener {
     }
 
     System.out.println("\t" + DebugShell.int32ToString(lastPos) + ": "
-      + DebugShell.int32ToString(last));
+      + DebugShell.int32ToString(last) + "\n");
   }
 
   /**
@@ -164,7 +171,7 @@ public class DebugShell implements SimulationListener {
     }
 
     // read
-    byte data = memory.readMemory(numAddr);
+    byte data = memory.readMemory(numAddr, true);
 
     System.out.println("Read " + String.format("%02X", data & 0xff)
       + " from memory at address " + int32ToString(numAddr));
@@ -205,7 +212,7 @@ public class DebugShell implements SimulationListener {
     }
 
     // read
-    memory.writeMemory(numAddr, numData);
+    memory.writeMemory(numAddr, numData, true);
     System.out.println("Wrote " + String.format("%02X", numData & 0xff)
       + " to memory at address " + int32ToString(numAddr));
   }
@@ -252,6 +259,60 @@ public class DebugShell implements SimulationListener {
   }
 
   /**
+   * Greets the user and gives basic info.
+   */
+  private void greet() {
+    System.out.println("Welcome to the micro-sim debug shell, version " + Main.version);
+    System.out.println("Addresses are base-16, no 0x prefix.\n");
+    for (HelpPage page : HelpPage.values()) {
+      help(page);
+      System.out.println();
+    }
+
+    System.out.println("For more info see the documentation at docs/index.html. "
+      + "If not found build with make docs.\n");
+
+    shouldGreet = false;
+  }
+
+  /**
+   * Enum to index help pages.
+   */
+  private enum HelpPage {
+    GENERAL,
+    PROC,
+    MEM
+  }
+
+  /**
+   * Shows help info.
+   */
+  private void help(HelpPage page) {
+    switch (page) {
+      case GENERAL -> {
+        System.out.println("Available commands:");
+        System.out.println("\tstep: steps execution by 1 cycle or to specific cycle");
+        System.out.println("\tquit: halts executions and quits");
+        System.out.println("\tproc: offers processor information");
+        System.out.println("\tmem: offers memory information");
+        System.out.println("\trender: forces screen rendering");
+      }
+      case PROC -> {
+        System.out.println("Available proc options:");
+        System.out.println("\tregisters: prints all registers");
+        System.out.println("\tpipeline: prints pipeline information");
+      }
+      case MEM -> {
+        System.out.println("Available mem options:");
+        System.out.println("\tread: reads memory at address");
+        System.out.println("\twrite: reads memory at address");
+      }
+      default ->
+        throw new RuntimeException("Unkown help page");
+    }
+  }
+
+  /**
    * Displays a debug shell for the current simulation instance. The shell offers the following
    * commands:
    * <ul>
@@ -280,17 +341,16 @@ public class DebugShell implements SimulationListener {
   private void shell() {
     // enter debug shell loop
     while (true) {
+      if (shouldGreet) {
+        greet();
+      }
+
       System.out.print("debug> ");
       String cmd = new java.util.Scanner(System.in).nextLine().strip();
 
       // print help on empty commands
       if (cmd.isEmpty()) {
-        System.out.println("Available commands:");
-        System.out.println("\tstep: steps execution by 1 cycle or to specific cycle");
-        System.out.println("\tquit: halts executions and quits");
-        System.out.println("\tproc: offers processor information");
-        System.out.println("\tmem: offers memory information");
-        System.out.println("\trender: forces screen rendering");
+        help(HelpPage.GENERAL);
         continue;
       }
 
@@ -318,9 +378,7 @@ public class DebugShell implements SimulationListener {
         case "proc": {
           // print help on empty options
           if (tokens.length < 2) {
-            System.out.println("Available proc options:");
-            System.out.println("\tregisters: prints all registers");
-            System.out.println("\tpipeline: prints pipeline information");
+            help(HelpPage.PROC);
             continue;
           }
 
@@ -344,9 +402,7 @@ public class DebugShell implements SimulationListener {
         case "mem": {
           // print help on empty options
           if (tokens.length < 2) {
-            System.out.println("Available mem options:");
-            System.out.println("\tread: reads memory at address");
-            System.out.println("\twrite: reads memory at address");
+            help(HelpPage.MEM);
             continue;
           }
 

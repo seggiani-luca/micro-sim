@@ -17,7 +17,6 @@ package microsim.simulation.component;
  * <li>Word.</li>
  * </ol>
  * </li>
- * <li>Target space line. Low is memory, high is I/O space.</li>
  * </ul>
  * </li>
  * </ul>
@@ -30,9 +29,9 @@ public class Bus extends SimulationComponent {
    * Byte select modes.
    */
   public static enum ByteSelect {
-    BYTE,
-    HALF,
-    WORD
+    BYTE, // 8 bits
+    HALF, // 16 bits
+    WORD // 32 bits
   }
 
   /**
@@ -60,11 +59,6 @@ public class Bus extends SimulationComponent {
   public TSLine<ByteSelect> byteSelect;
 
   /**
-   * Target space control line. Low is memory, high is I/O space.
-   */
-  public TSLine<Boolean> targetSpace;
-
-  /**
    * Instantiates a bus by initializing address, data and control lines.
    */
   public Bus() {
@@ -74,23 +68,18 @@ public class Bus extends SimulationComponent {
     readEnable = new TSLine<>();
     writeEnable = new TSLine<>();
     byteSelect = new TSLine<>();
-
-    targetSpace = new TSLine<>();
   }
 
   /**
-   * Steps by stepping the 3-state lines.
+   * Steps by updating the 3-state lines.
    */
   @Override
   public void step() {
-    // stepping bus means stepping lines
     addressLine.step();
     dataLine.step();
 
     readEnable.step();
     writeEnable.step();
     byteSelect.step();
-
-    targetSpace.step();
   }
 }
