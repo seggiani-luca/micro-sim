@@ -73,4 +73,4 @@ clean_eprom:
 
 # documentation
 docs:
-	@$(JAVADOC) -d $(DOC) -private $(SRC)
+	@$(JAVADOC) -quiet -Xdoclint:none -d $(DOC) -private $(SRC)

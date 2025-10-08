@@ -26,6 +26,11 @@ public class FrameEvent extends SimulationEvent {
     this.frame = frame;
   }
 
+  /**
+   * Signals that frame was rendered.
+   *
+   * @return video debug string
+   */
   @Override
   public String getDebugMessage() {
     return "Video device rendered frame";

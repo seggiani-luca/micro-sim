@@ -1,16 +1,14 @@
 package microsim.simulation;
 
-import microsim.simulation.component.MemorySpace;
-import microsim.simulation.component.processor.*;
 import microsim.simulation.component.*;
+import microsim.simulation.component.processor.*;
 import microsim.simulation.event.*;
-import microsim.ui.*;
 
 /**
  * Represents a simulation instance. Contains references to simulated components and timing
  * constants. Pipes {@link microsim.simulation.event.FrameEvent} events from
  * {@link microsim.simulation.component.SimulationComponent} components to external
- * {@link microsim.simulation.event.SimulationListener} listeners.
+ * {@link microsim.simulation.event.SimulationListener} listeners (usually interfaces).
  */
 public class Simulation extends SimulationComponent implements SimulationListener {
 
@@ -37,22 +35,22 @@ public class Simulation extends SimulationComponent implements SimulationListene
   /**
    * Video refresh frequency in Hertz.
    */
-  static final int VIDEO_FREQ = 60;
+  static final long VIDEO_FREQ = 60;
 
   /**
    * CPU clock frequency in Hertz.
    */
-  static final int CPU_FREQ = 1000000; // 1 MHz
+  static final long CPU_FREQ = 1000000; // 1 MHz
 
   /**
-   * Frame update period in milliseconds.
+   * Frame update period in nanoseconds.
    */
-  static final int FRAME_TIME = 1000 / VIDEO_FREQ;
+  static final long FRAME_TIME = 1_000_000_000L / VIDEO_FREQ;
 
   /**
    * Number of CPU clock cycles per frame.
    */
-  static final int CYCLES_PER_FRAME = CPU_FREQ / VIDEO_FREQ;
+  static final long CYCLES_PER_FRAME = CPU_FREQ / VIDEO_FREQ;
 
   /**
    * Instantiates simulation, loading EPROM data in memory. Sets self as listener to the simulation
@@ -69,7 +67,7 @@ public class Simulation extends SimulationComponent implements SimulationListene
     memory = new MemorySpace(bus, epromData);
     video = new VideoDevice(bus, memory);
 
-    // set as listener
+    // set as listener. this is leaky but we don't expect listeners to use it before event is raised
     bus.addListener(this);
     proc.addListener(this);
     memory.addListener(this);
@@ -117,17 +115,20 @@ public class Simulation extends SimulationComponent implements SimulationListene
    * at the end of frames video updates, at {@link #VIDEO_FREQ} Hz.
    */
   public void run() {
-    // init cycle counters
-    long cycle = 1;
-    long nextFrameCycle = CYCLES_PER_FRAME;
+    // init cycle counter
+    long cycle = 0;
 
     // enter simulation loop
     while (true) {
+      // set next video update cycle
+      long nextFrameCycle = cycle + CYCLES_PER_FRAME;
+      long nextFrameTime = System.nanoTime() + FRAME_TIME;
+
       // step through simulation cycles
       while (cycle < nextFrameCycle) {
         raiseEvent(new CycleEvent(this, cycle));
 
-        // actually perform simulation
+        // actually perform simulation step
         step();
 
         cycle++;
@@ -136,17 +137,10 @@ public class Simulation extends SimulationComponent implements SimulationListene
       // perform video update
       video.render();
 
-      // set next video update cycle
-      nextFrameCycle = cycle + CYCLES_PER_FRAME;
-
-      // sleep until next video update
-      try {
-        Thread.sleep(FRAME_TIME);
-      } catch (InterruptedException e) {
-        System.out.println("Simulation interrupted");
-        break;
+      // busy wait until next video update
+      while (System.nanoTime() < nextFrameTime) {
+        Thread.yield();
       }
     }
   }
-
 }

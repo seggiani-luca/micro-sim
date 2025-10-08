@@ -317,12 +317,12 @@ public class Elf {
   /**
    * ELF header.
    */
-  ElfHeader header;
+  private ElfHeader header;
 
   /**
    * Array of ELF program headers.
    */
-  ProgramHeader[] programHeaders;
+  private ProgramHeader[] programHeaders;
 
   /**
    * EPROM data as byte array.
