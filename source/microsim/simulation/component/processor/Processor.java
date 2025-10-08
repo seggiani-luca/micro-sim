@@ -8,11 +8,11 @@ import microsim.simulation.component.processor.MicroOp.OpType;
 import microsim.simulation.event.DebugEvent;
 
 /**
- * A processor implementing the RISC-V RV32I ISA. This comprises basic memory movement, arithmetic
+ * A processor implementing the RISC-V rv32i ISA. This comprises basic memory movement, arithmetic
  * and logic operations (except MULs and DIvs), and basic branching and stack management. For more
- * info, see the {@link
- * <a href="www.cs.sfu.ca/~ashriram/Courses/CS295/assets/notebooks/RISCV/RISCV_CARD.pdf"> green
- * card</a>}.
+ * info, see the @link
+ * <a href="www.cs.sfu.ca/~ashriram/Courses/CS295/assets/notebooks/RISCV/RISCV_CARD.pdf">green
+ * card</a>.
  */
 public class Processor extends SimulationComponent {
 
@@ -22,7 +22,7 @@ public class Processor extends SimulationComponent {
   public static final int REGISTERS = 32;
 
   /**
-   * The reset value of {@link #ip}. This is set to EPROM_BEG from
+   * The reset value of program counter {@link #pc}. This is set to EPROM_BEG from
    * {@link microsim.simulation.component.MemorySpace}.
    */
   private static final int RESET_INSTRUCTION_ADDRESS = MemorySpace.EPROM_BEG;
@@ -111,7 +111,7 @@ public class Processor extends SimulationComponent {
    * </tr>
    * </table>
    */
-  private int[] registers = new int[REGISTERS - 1];
+  private int[] registers = new int[REGISTERS];
 
   /**
    * Gets register at index, ensuring zero register behavior.
@@ -123,7 +123,7 @@ public class Processor extends SimulationComponent {
     if (i == 0) {
       return 0;
     } else {
-      return registers[i - 1];
+      return registers[i];
     }
   }
 
@@ -137,7 +137,7 @@ public class Processor extends SimulationComponent {
     if (i == 0) {
       return;
     } else {
-      registers[i - 1] = val;
+      registers[i] = val;
     }
   }
 

@@ -28,6 +28,6 @@ public class DebugEvent extends SimulationEvent {
    */
   @Override
   public String getDebugMessage() {
-    return (message);
+    return message;
   }
 }

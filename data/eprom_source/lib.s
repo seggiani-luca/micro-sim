@@ -1,6 +1,8 @@
 	.section .start
-	.global _start
 
+/* start routine */
+
+	.global _start
 _start:
 	/* init stack to top */
 	la sp, __stack_top
@@ -25,7 +27,21 @@ _data_cpy_end:
 	call main
 
 	/* halt */
-	call _exit
+	call halt 
 
-_exit:
-	j _exit
+.section .text
+
+/* utility functions */
+
+	.global spin
+spin:
+	j spin
+	
+	.global halt
+halt:
+	ecall
+
+	.global debugger
+debugger:
+	ebreak
+	ret

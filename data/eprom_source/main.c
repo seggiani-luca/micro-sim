@@ -1,6 +1,5 @@
-#include <stdint.h>
+#include "lib.h"
 
-volatile uint8_t video[5120] __attribute__((section(".video"))); 
 int cur = 0;
 
 char mess[] = "Ciao RISC-V!\n";
@@ -16,6 +15,8 @@ void print(const char* str) {
 int main() {
 	mess[3] = 'u';
 	print(mess);
+
+	debugger();
 
 	return 0;
 }

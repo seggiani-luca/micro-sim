@@ -3,7 +3,7 @@ package microsim.simulation.component.processor;
 import microsim.simulation.component.Bus;
 import microsim.simulation.component.Bus.ByteSelect;
 import static microsim.simulation.component.processor.Decoder.*;
-import microsim.simulation.event.DebugEvent;
+import microsim.simulation.event.*;
 import microsim.ui.DebugShell;
 
 /**
@@ -158,6 +158,17 @@ public class MicroOp {
   }
 
   /**
+   * Get shift amount for immediate shift instructions. Processor instance not needed as its fully
+   * immediate.
+   *
+   * @param inst load instruction
+   * @return amount to shift by
+   */
+  static int getShamtImmediate(int inst) {
+    return immI(inst) & 0x1f;
+  }
+
+  /**
    * Executes a microop on a processor instance.
    *
    * @param proc processor instance to run on
@@ -225,15 +236,15 @@ public class MicroOp {
         proc.setRegister(rd(inst), proc.getRegister(rs1(inst)) & immI(inst));
       }
       case SLL_I -> {
-        int shamt = getShamt(proc, inst);
+        int shamt = getShamtImmediate(inst);
         proc.setRegister(rd(inst), proc.getRegister(rs1(inst)) << shamt);
       }
       case SRL_I -> {
-        int shamt = getShamt(proc, inst);
+        int shamt = getShamtImmediate(inst);
         proc.setRegister(rd(inst), proc.getRegister(rs1(inst)) >>> shamt);
       }
       case SRA_I -> {
-        int shamt = getShamt(proc, inst);
+        int shamt = getShamtImmediate(inst);
         proc.setRegister(rd(inst), proc.getRegister(rs1(inst)) >> shamt);
       }
       case SLT_I -> {
@@ -367,7 +378,7 @@ public class MicroOp {
 
           case 0x01 -> { // ebreak
             System.out.println("Environment break, launching debugger...");
-            System.exit(0); // TODO: eventually call debugger
+            proc.raiseEvent(new AttachEvent(proc));
           }
 
           default ->

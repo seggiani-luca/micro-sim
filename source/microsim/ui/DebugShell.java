@@ -13,16 +13,36 @@ import microsim.simulation.event.*;
  * <ol>
  * <li>Via the {@link #log(java.lang.String)} method, which prints event information mid-cycle.</li>
  * <li>Via the {@link #shell()} method, which offers interactive debugging at the beginning of
- * simulation cycles.</li>
+ * simulation cycles. This is automatically called on {@link microsim.simulation.event.CycleEvent}
+ * events.</li>
  * </ol>
  */
 
 public class DebugShell implements SimulationListener {
 
   /**
+   * Flag that signals whether the shell is active.
+   */
+  private boolean active = false;
+
+  /**
+   * Activates debug shell.
+   */
+  public void activate() {
+    active = true;
+  }
+
+  /**
+   * Deactivates debug shell.
+   */
+  public void deactivate() {
+    active = false;
+  }
+
+  /**
    * Flag that signals whether the shell should greet the user.
    */
-  boolean shouldGreet = true;
+  private boolean shouldGreet = true;
 
   /**
    * Next cycle to show shell at. Used with {@link #shouldShowShell} to jump to specific cycle.
@@ -226,23 +246,30 @@ public class DebugShell implements SimulationListener {
    */
   @Override
   public void onSimulationEvent(SimulationEvent e) {
-    if (e instanceof SimulationEvent simulationEvent) {
-      String message = simulationEvent.getDebugMessage();
-
-      // is there a debug message event?
-      if (message != null) {
-        log(message);
+    if (!active) {
+      if (e instanceof AttachEvent) {
+        activate();
+      } else {
+        return;
       }
+    }
 
-      // if it's a cycle, launch shell
-      if (e instanceof CycleEvent cycleEvent) {
-        if (shouldShowShell) {
+    // if we get here we are active, print message
+    String message = e.getDebugMessage();
+
+    // is there a debug message event?
+    if (message != null) {
+      log(message);
+    }
+
+    // if it's a cycle, launch shell
+    if (e instanceof CycleEvent cycleEvent) {
+      if (shouldShowShell) {
+        shell();
+      } else {
+        if (cycleEvent.cycle >= nextShellCycle) {
+          shouldShowShell = true;
           shell();
-        } else {
-          if (cycleEvent.cycle >= nextShellCycle) {
-            shouldShowShell = true;
-            shell();
-          }
         }
       }
     }
@@ -292,6 +319,7 @@ public class DebugShell implements SimulationListener {
       case GENERAL -> {
         System.out.println("Available commands:");
         System.out.println("\tstep: steps execution by 1 cycle or to specific cycle");
+        System.out.println("\tcontinue: resume normal execution");
         System.out.println("\tquit: halts executions and quits");
         System.out.println("\tproc: offers processor information");
         System.out.println("\tmem: offers memory information");
@@ -318,6 +346,7 @@ public class DebugShell implements SimulationListener {
    * <ul>
    * <li>step: steps execution by 1 cycle. Operand can be specified to specify at which step to
    * stop.</li>
+   * <li>continue: resume normal execution</li>
    * <li>quit: halts execution and quits.</li>
    * <li>
    * proc: offers processor information with following options:
@@ -368,6 +397,11 @@ public class DebugShell implements SimulationListener {
               continue;
             }
           }
+          return;
+
+        case "c":
+        case "continue":
+          deactivate();
           return;
 
         case "q":

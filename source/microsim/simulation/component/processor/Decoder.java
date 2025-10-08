@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import microsim.simulation.component.processor.MicroOp.OpType;
+import microsim.ui.DebugShell;
 
 /**
  * Defines a trie data structure used to query microop sequences from instruction encodings.
@@ -81,7 +82,8 @@ class Trie<T> {
 }
 
 /**
- * Decodes instruction into microop sequences through a static {@link #decode()} method, using the
+ * Decodes rv32i instructions into microop sequences through a static
+ * {@link #decode(microsim.simulation.component.processor.Processor, int)} method, using the
  * {@link microsim.simulation.component.processor.Trie} class to index.
  */
 public class Decoder {
@@ -444,7 +446,8 @@ public class Decoder {
 
     // I format (environment)
     instTrie.put(List.of(IE_OPCODE, 0x0), List.of(
-      new MicroOp(OpType.ENV)
+      new MicroOp(OpType.ENV),
+      new MicroOp(OpType.EXEC_POST)
     ));
   }
 
@@ -462,6 +465,9 @@ public class Decoder {
 
     // get microop
     List<MicroOp> opList = instTrie.get(List.of(opcode, funct3, funct7));
+    if (opList == null) {
+      throw new RuntimeException("Unknown instruction " + DebugShell.int32ToString(inst));
+    }
 
     // iterate completing microops and pushing to processor queue
     for (MicroOp op : opList) {

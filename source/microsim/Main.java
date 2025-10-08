@@ -150,12 +150,14 @@ public class Main {
     simulation.addListener(window);
 
     // instantiate debug shell and attach it
+    DebugShell debugShell = new DebugShell();
+    debugShell.attachSimulation(simulation);
+
     if (debugMode) {
-      System.out.println("Debug mode asked, attaching debug shell");
-      DebugShell debugShell = new DebugShell();
-      debugShell.attachSimulation(simulation);
+      debugShell.activate();
     }
   }
+
 
   /**
    * Program entry point. The program flow is:
@@ -195,7 +197,7 @@ public class Main {
       simulation.run();
     } catch (RuntimeException e) {
       System.err.println("Simulation error. " + e.getMessage());
-      e.printStackTrace();
+      e.printStackTrace(); // for now print stacktrace
       System.exit(2);
     }
   }
