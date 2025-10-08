@@ -56,28 +56,12 @@ public class Main {
   }
 
   /**
-   * Argument tag (boolean) that specifies whether a debug shell should be attached to the
-   * simulation instance.
-   */
-  private static final String DEBUG_TAG = "-d";
-
-  /**
-   * Argument tag that specifies integer display scale. If not given it defaults to 1.
-   */
-  private static final String SCALE_TAG = "-s";
-
-  /**
-   * Argument tag that specifies EPROM data file path. If not given halts execution.
-   */
-  private static final String EPROM_TAG = "-e";
-
-  /**
    * Signals whether a debug shell should be attached to the simulation instance.
    */
   private static boolean debugMode = false;
 
   /**
-   * Integer display scale.
+   * Integer display scale. If not given defaults to 1.
    */
   private static int windowScale = 1;
 
@@ -93,6 +77,10 @@ public class Main {
    * @return EPROM data array
    */
   private static byte[] getSimulationData(String[] args) {
+    final String DEBUG_TAG = "-d";
+    final String SCALE_TAG = "-s";
+    final String EPROM_TAG = "-e";
+
     // get debug mode
     debugMode = hasArgument(args, DEBUG_TAG);
 
@@ -119,7 +107,7 @@ public class Main {
     byte[] epromData = null;
     try {
       // read ELF file
-      Elf elf = Elf.readELF(epromDataPath, debugMode);
+      Elf elf = new Elf(epromDataPath, debugMode);
 
       // read object data segments into EPROM array
       epromData = elf.getEPROM();
