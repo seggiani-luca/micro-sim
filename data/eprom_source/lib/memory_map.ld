@@ -38,7 +38,6 @@ SECTIONS {
 	 */
 	.data (NOLOAD) : AT(__data_eprom_start) {
 		*(.bss*)
-		*(.sbss*)
 		*(COMMON)
 	} > RAM
 	

@@ -1,4 +1,5 @@
 	.section .start
+	.extern main
 
 /* start routine */
 

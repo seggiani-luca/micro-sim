@@ -235,11 +235,7 @@ public class MemorySpace extends SimulationComponent {
     } else if (addr >= RAM_BEG && addr <= RAM_END) {
       return ram[addr - RAM_BEG];
     } else if (addr >= VRAM_BEG && addr <= VRAM_END) {
-      if (debugMode) {
-        return vram[addr - VRAM_BEG];
-      } else {
-        throw new RuntimeException("Memory read at VRAM");
-      }
+      return vram[addr - VRAM_BEG];
     }
 
     throw new RuntimeException("Memory read out of bounds");
