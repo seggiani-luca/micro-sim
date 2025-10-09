@@ -1,8 +1,11 @@
 package microsim.simulation;
 
+import microsim.simulation.component.MemorySpace;
+import microsim.simulation.component.devices.VideoDevice;
 import microsim.simulation.component.*;
 import microsim.simulation.component.processor.*;
 import microsim.simulation.event.*;
+import microsim.ui.DebugShell;
 
 /**
  * Represents a simulation instance. Contains references to simulated components and timing
@@ -35,12 +38,12 @@ public class Simulation extends SimulationComponent implements SimulationListene
   /**
    * Video refresh frequency in Hertz.
    */
-  static final long VIDEO_FREQ = 60;
+  static final long VIDEO_FREQ = 25; // 25 fps
 
   /**
    * CPU clock frequency in Hertz.
    */
-  static final long CPU_FREQ = 1000000; // 1 MHz
+  static final long CPU_FREQ = 10_000_000; // 10 MHz
 
   /**
    * Frame update period in nanoseconds.
@@ -100,13 +103,16 @@ public class Simulation extends SimulationComponent implements SimulationListene
    * </ol>
    */
   @Override
-  public void step() {
+  public final void step() {
     // bus lines take their value
     bus.step();
 
     // components read and step
+    // local bus
     proc.step();
     memory.step();
+
+    // devices
     video.step();
   }
 
@@ -126,7 +132,9 @@ public class Simulation extends SimulationComponent implements SimulationListene
 
       // step through simulation cycles
       while (cycle < nextFrameCycle) {
-        raiseEvent(new CycleEvent(this, cycle));
+        if (DebugShell.active) {
+          raiseEvent(new CycleEvent(this, cycle));
+        }
 
         // actually perform simulation step
         step();

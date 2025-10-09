@@ -1,15 +1,17 @@
-package microsim.simulation.component;
+package microsim.simulation.component.devices;
 
+import microsim.simulation.component.MemorySpace;
 import java.awt.image.*;
 import java.io.*;
 import javax.imageio.*;
+import microsim.simulation.component.Bus;
 import microsim.simulation.event.*;
 
 /**
  * Implements a video device that renders a frame buffer by reading from VRAM. Functions in text
- * mode, with bitmap characters read from a file.
+ * mode, with bitmap characters read from a file and loaded into a buffered image cache.
  */
-public class VideoDevice extends SimulationComponent {
+public class VideoDevice extends IoDevice {
 
   /**
    * Number of columns in text mode.
@@ -40,22 +42,33 @@ public class VideoDevice extends SimulationComponent {
   /**
    * Character atlas, read from file "assets/charAtlas.bmp".
    */
-  private static BufferedImage charAtlas;
+  private static BufferedImage[][] charAtlas;
 
   // try to fetch charAtlas
   static {
     try {
-      charAtlas = ImageIO.read(new File("assets/charAtlas.bmp"));
+      // load full atlas
+      BufferedImage charAtlasBmp = ImageIO.read(new File("assets/charAtlas.bmp"));
+
+      // split atlas in characters for quicker lookup
+      charAtlas = new BufferedImage[ATLAS_SIZE][256 / ATLAS_SIZE];
+
+      for (int x = 0; x < ATLAS_SIZE; x++) {
+        for (int y = 0; y < 256 / ATLAS_SIZE; y++) {
+          charAtlas[x][y] = charAtlasBmp.getSubimage(
+            x * CHAR_WIDTH,
+            y * CHAR_HEIGHT,
+            CHAR_WIDTH,
+            CHAR_HEIGHT
+          );
+        }
+      }
     } catch (IOException e) {
       System.out.println("Error loading character atlas: " + e.getMessage());
       System.exit(1);
     }
   }
 
-  /**
-   * Reference to the communication bus the component is mounted on.
-   */
-  private final Bus bus;
   /**
    * Reference to memory space. Used to directly access VRAM via the
    * {@link microsim.simulation.component.MemorySpace#getVRAM()} method.
@@ -86,6 +99,31 @@ public class VideoDevice extends SimulationComponent {
   }
 
   /**
+   * Row of cursor.
+   */
+  private int cursorRow;
+
+  /**
+   * Column of cursor.
+   */
+  private int cursorColumn;
+
+  /**
+   * Used to keep track of cursor blink state.
+   */
+  private boolean blink;
+
+  /**
+   * Times consecutive blinks.
+   */
+  private int blinkTimer;
+
+  /**
+   * Frame updates between blink state changes.
+   */
+  private static final int BLINK_TIME = 10;
+
+  /**
    * Instantiates video device, taking a reference to the bus it's mounted on and the memory space
    * it should read VRAM from.
    *
@@ -93,7 +131,7 @@ public class VideoDevice extends SimulationComponent {
    * @param memory memory space to read from
    */
   public VideoDevice(Bus bus, MemorySpace memory) {
-    this.bus = bus;
+    super(bus, 0x00030000, 2);
     this.memory = memory;
 
     // init frame buffer
@@ -104,19 +142,34 @@ public class VideoDevice extends SimulationComponent {
     );
   }
 
-  /**
-   * Currently unused by video device. TODO: implement cursor functionality reading from ports.
-   */
   @Override
-  public void step() {
+  int getPort(int index) {
+    // nothing to return
+    return 0;
+  }
 
+  @Override
+  void setPort(int index, int data) {
+    switch (index) {
+      case 0 ->
+        cursorRow = data;
+      case 1 ->
+        cursorColumn = data;
+    }
   }
 
   /**
-   * Renders frame buffer from read VRAM. Characters in VRAM are comprised of 2 bytes, with higher
-   * byte representing extended ASCII code point, and lower byte representing style.
+   * Renders frame buffer from read VRAM. Characters in VRAM are comprised of a bytes representing
+   * extended ASCII code point.
    */
   public void render() {
+    // update blink
+    blinkTimer++;
+    if (blinkTimer == BLINK_TIME) {
+      blinkTimer = 0;
+      blink = !blink;
+    }
+
     // directly read VRAM
     byte[] vram = memory.getVRAM();
 
@@ -128,16 +181,23 @@ public class VideoDevice extends SimulationComponent {
     // step through VRAM and paint characters
     for (int r = 0; r < ROWS; r++) {
       for (int c = 0; c < COLS; c++) {
-        int addr = (r * COLS + c) * 2;
+        int addr = r * COLS + c;
 
-        // character codepoint
-        byte ch = vram[addr];
+        // char codepoint, underscore by default
+        byte ch = '_';
 
-        // character style attributes
-        byte st = vram[addr + 1];
+        if (r == cursorRow && c == cursorColumn) {
+          // blink
+          if (blink) {
+            ch = vram[addr];
+          }
+        } else {
+          // don't blink
+          ch = vram[addr];
+        }
 
         // get character and paint
-        BufferedImage charImage = getCharSprite(ch, st);
+        BufferedImage charImage = getCharSprite(ch);
         g.drawImage(charImage, c * CHAR_WIDTH, r * CHAR_HEIGHT, null);
       }
     }
@@ -149,34 +209,19 @@ public class VideoDevice extends SimulationComponent {
   }
 
   /**
-   * Gets a character from code point and style byte.
+   * Gets a character from code point.
    *
    * @param ch character code point
-   * @param st style byte
    * @return character image
    */
-  private BufferedImage getCharSprite(byte ch, byte st) {
+  private BufferedImage getCharSprite(byte ch) {
     // get character coordinates on charAtlas
     int x = ch % ATLAS_SIZE;
     int y = ch / ATLAS_SIZE;
 
     // get character from charAtlas
-    BufferedImage charImage = charAtlas.getSubimage(
-      x * CHAR_WIDTH,
-      y * CHAR_HEIGHT,
-      CHAR_WIDTH,
-      CHAR_HEIGHT
-    );
+    BufferedImage charImage = charAtlas[x][y];
 
-    // copy character to allow recoloring
-    BufferedImage charImageCopy = new BufferedImage(
-      CHAR_WIDTH,
-      CHAR_HEIGHT,
-      BufferedImage.TYPE_INT_RGB
-    );
-    charImageCopy.getGraphics().drawImage(charImage, 0, 0, null);
-
-    return charImageCopy;
+    return charImage;
   }
-
 }

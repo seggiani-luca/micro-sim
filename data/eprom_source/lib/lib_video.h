@@ -20,10 +20,20 @@ namespace vid {
 	#define TAB_SIZE 4
 
 	/*
-	 * Video array, points to the 5 KiB of video memory. Video characters are 2 bytes: first byte is 
-	 * character codepoint, second byte is style.
+	 * Video array, points to the 5 KiB of video memory. Video characters are 1 bytes representing 
+	 * character codepoint.
 	 */
-	volatile uint8_t video[5120] __attribute__((section(".video"))); 
+	volatile uint8_t video[3072] __attribute__((section(".video")));
+
+	/*
+	 * Port to specify cursor row.
+	 */
+	volatile uint32_t* cursor_row = (volatile uint32_t*) 0x00030000;
+
+	/*
+	 * Port to specify cursor column.
+	 */
+	volatile uint32_t* cursor_col = (volatile uint32_t*) 0x00030001;
 
 	/*
 	 * Column of video cursor.
@@ -36,50 +46,50 @@ namespace vid {
 	int row = 0;
 
 	/*
+	 * Updates cursor, also writing position to cursor ports.
+	 */
+	void set_cursor(int new_col, int new_row) {
+		col = new_col;
+		row = new_row;
+
+		*cursor_col = col;
+		*cursor_row = row;
+	}
+
+	/*
 	 * Get codepoint byte index in video array of given (col, row) pair.
 	 *
 	 * @param col codepoint byte column
 	 * @param row codepoint byte row
 	 */
 	inline int get_cp_idx(int col, int row) {
-		return (col + row * COLS) * 2;
-	}
-
-	/*
-	 * Get style byte index in video array of given (col, row) pair.
-	 *
-	 * @param col style byte column
-	 * @param row style byte row
-	 */
-	inline int get_st_idx(int col, int row) {
-		return get_cp_idx(col, row) + 1;
+		return col + row * COLS;
 	}
 
 	/*
 	 * Scrolls video memory up 1 line.
 	 */
 	void scroll() {
-		// copy video memory back
+		// copy video memory back one row
 		for(int r = 1; r < ROWS; r++) {
-			for(int c = 0; c < COLS * 2; c++) {
-				video[c + (r - 1) * COLS * 2] = video[c + r * COLS * 2];
+			for(int c = 0; c < COLS; c++) {
+				video[c + (r - 1) * COLS] = video[c + r * COLS];
 			}
 		}
 
 		// clean last line
-		for(int c = 0; c < COLS * 2; c++) {
-			video[c + (ROWS - 1)  * COLS * 2] = '\0';
+		for(int c = 0; c < COLS; c++) {
+			video[c + (ROWS - 1)  * COLS] = '\0';
 		}
 
-		if(row > 0) row--;
+		if(row > 0) set_cursor(col, row - 1);
 	}
 
 	/*
 	 * Moves cursor to new line, scrolling if needed.
 	 */
 	void newline() {
-		row++;
-		col = 0;
+		set_cursor(0, row + 1);
 
 		if(row == ROWS) {
 			scroll();
@@ -90,10 +100,9 @@ namespace vid {
 	 * Moves cursor forward by increasing column, returning to new line if needed. 
 	 */
 	void inc_cur() {
-		col++;
+		set_cursor(col + 1, row);
 
 		if(col == COLS) {
-			col = 0;
 			newline();
 		}
 	}
@@ -103,18 +112,20 @@ namespace vid {
 	 * beginning of memoyr.
 	 */
 	void dec_cur() {
-		col--;
+		int new_col = col - 1;
+		int new_row = row;
 
-		if(col == -1) {
-			col = COLS - 1;
-			
-			row--;
+		if(new_col == -1) {
+			new_col = COLS - 1;	
+			new_row--;
 
 			if(row == -1) {
-				row = 0;
-				col = 0;
+				new_col = 0;
+				new_row = 0;
 			}
 		}
+
+		set_cursor(new_col, new_row);
 	}
 
 	/*

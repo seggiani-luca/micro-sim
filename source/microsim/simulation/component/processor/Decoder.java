@@ -9,8 +9,6 @@ import microsim.ui.DebugShell;
 /**
  * Defines a trie data structure used to query microop sequences from instruction encodings.
  * Supports putting objects and retrieving them.
- *
- * @param <T> trie data type
  */
 class Trie<T> {
 
@@ -24,19 +22,19 @@ class Trie<T> {
     /**
      * Map of children trie nodes.
      */
-    Map<Integer, TrieNode<T>> children = new HashMap<>();
+    private final Map<Integer, TrieNode<T>> children = new HashMap<>();
 
     /**
      * Data held by node. Non leaf trie nodes are signaled by this field being null. Leafs can still
      * have children.
      */
-    T data;
+    private T data;
   }
 
   /**
    * Root of trie.
    */
-  private TrieNode<T> root = new TrieNode<>();
+  private final TrieNode<T> root = new TrieNode<>();
 
   /**
    * Put an item in the trie at the given key.
@@ -279,175 +277,175 @@ public class Decoder {
   /**
    * Trie from instruction encoding to microop list.
    */
-  static final Trie<List<MicroOp>> instTrie = new Trie<>();
+  static final Trie<List<OpType>> instTrie = new Trie<>();
 
   // setup trie
   static {
     // R format
     instTrie.put(List.of(R_OPCODE, 0x0, 0x00), List.of(
-      new MicroOp(OpType.ADD),
-      new MicroOp(OpType.EXEC_POST)
+      OpType.ADD,
+      OpType.EXEC_POST
     ));
     instTrie.put(List.of(R_OPCODE, 0x0, 0x20), List.of(
-      new MicroOp(OpType.SUB),
-      new MicroOp(OpType.EXEC_POST)
+      OpType.SUB,
+      OpType.EXEC_POST
     ));
     instTrie.put(List.of(R_OPCODE, 0x4, 0x00), List.of(
-      new MicroOp(OpType.XOR),
-      new MicroOp(OpType.EXEC_POST)
+      OpType.XOR,
+      OpType.EXEC_POST
     ));
     instTrie.put(List.of(R_OPCODE, 0x6, 0x00), List.of(
-      new MicroOp(OpType.OR),
-      new MicroOp(OpType.EXEC_POST)
+      OpType.OR,
+      OpType.EXEC_POST
     ));
     instTrie.put(List.of(R_OPCODE, 0x7, 0x00), List.of(
-      new MicroOp(OpType.AND),
-      new MicroOp(OpType.EXEC_POST)
+      OpType.AND,
+      OpType.EXEC_POST
     ));
     instTrie.put(List.of(R_OPCODE, 0x1, 0x00), List.of(
-      new MicroOp(OpType.SLL),
-      new MicroOp(OpType.EXEC_POST)
+      OpType.SLL,
+      OpType.EXEC_POST
     ));
     instTrie.put(List.of(R_OPCODE, 0x5, 0x00), List.of(
-      new MicroOp(OpType.SRL),
-      new MicroOp(OpType.EXEC_POST)
+      OpType.SRL,
+      OpType.EXEC_POST
     ));
     instTrie.put(List.of(R_OPCODE, 0x5, 0x20), List.of(
-      new MicroOp(OpType.SRA),
-      new MicroOp(OpType.EXEC_POST)
+      OpType.SRA,
+      OpType.EXEC_POST
     ));
     instTrie.put(List.of(R_OPCODE, 0x2, 0x00), List.of(
-      new MicroOp(OpType.SLT),
-      new MicroOp(OpType.EXEC_POST)
+      OpType.SLT,
+      OpType.EXEC_POST
     ));
     instTrie.put(List.of(R_OPCODE, 0x3, 0x00), List.of(
-      new MicroOp(OpType.SLTU),
-      new MicroOp(OpType.EXEC_POST)
+      OpType.SLTU,
+      OpType.EXEC_POST
     ));
 
     // I format (immediate)
     instTrie.put(List.of(II_OPCODE, 0x0), List.of(
-      new MicroOp(OpType.ADD_I),
-      new MicroOp(OpType.EXEC_POST)
+      OpType.ADD_I,
+      OpType.EXEC_POST
     ));
     instTrie.put(List.of(II_OPCODE, 0x4), List.of(
-      new MicroOp(OpType.XOR_I),
-      new MicroOp(OpType.EXEC_POST)
+      OpType.XOR_I,
+      OpType.EXEC_POST
     ));
     instTrie.put(List.of(II_OPCODE, 0x6), List.of(
-      new MicroOp(OpType.OR_I),
-      new MicroOp(OpType.EXEC_POST)
+      OpType.OR_I,
+      OpType.EXEC_POST
     ));
     instTrie.put(List.of(II_OPCODE, 0x7), List.of(
-      new MicroOp(OpType.AND_I),
-      new MicroOp(OpType.EXEC_POST)
+      OpType.AND_I,
+      OpType.EXEC_POST
     ));
     instTrie.put(List.of(II_OPCODE, 0x1, 0x00), List.of(
-      new MicroOp(OpType.SLL_I),
-      new MicroOp(OpType.EXEC_POST)
+      OpType.SLL_I,
+      OpType.EXEC_POST
     ));
     instTrie.put(List.of(II_OPCODE, 0x5, 0x00), List.of(
-      new MicroOp(OpType.SRL_I),
-      new MicroOp(OpType.EXEC_POST)
+      OpType.SRL_I,
+      OpType.EXEC_POST
     ));
     instTrie.put(List.of(II_OPCODE, 0x5, 0x20), List.of(
-      new MicroOp(OpType.SRA_I),
-      new MicroOp(OpType.EXEC_POST)
+      OpType.SRA_I,
+      OpType.EXEC_POST
     ));
     instTrie.put(List.of(II_OPCODE, 0x2), List.of(
-      new MicroOp(OpType.SLT_I),
-      new MicroOp(OpType.EXEC_POST)
+      OpType.SLT_I,
+      OpType.EXEC_POST
     ));
     instTrie.put(List.of(II_OPCODE, 0x3), List.of(
-      new MicroOp(OpType.SLTU_I),
-      new MicroOp(OpType.EXEC_POST)
+      OpType.SLTU_I,
+      OpType.EXEC_POST
     ));
 
     // I format (load)
     instTrie.put(List.of(IL_OPCODE, 0x0), List.of(
-      new MicroOp(OpType.LOAD_BYTE),
-      new MicroOp(OpType.LOAD_POST),
-      new MicroOp(OpType.EXEC_POST)
+      OpType.LOAD_BYTE,
+      OpType.LOAD_POST,
+      OpType.EXEC_POST
     ));
     instTrie.put(List.of(IL_OPCODE, 0x1), List.of(
-      new MicroOp(OpType.LOAD_HALF),
-      new MicroOp(OpType.LOAD_POST),
-      new MicroOp(OpType.EXEC_POST)
+      OpType.LOAD_HALF,
+      OpType.LOAD_POST,
+      OpType.EXEC_POST
     ));
     instTrie.put(List.of(IL_OPCODE, 0x2), List.of(
-      new MicroOp(OpType.LOAD_WORD),
-      new MicroOp(OpType.LOAD_POST),
-      new MicroOp(OpType.EXEC_POST)
+      OpType.LOAD_WORD,
+      OpType.LOAD_POST,
+      OpType.EXEC_POST
     ));
     instTrie.put(List.of(IL_OPCODE, 0x4), List.of(
-      new MicroOp(OpType.LOAD_BYTE),
-      new MicroOp(OpType.LOAD_POST_U),
-      new MicroOp(OpType.EXEC_POST)
+      OpType.LOAD_BYTE,
+      OpType.LOAD_POST_U,
+      OpType.EXEC_POST
     ));
     instTrie.put(List.of(IL_OPCODE, 0x5), List.of(
-      new MicroOp(OpType.LOAD_HALF),
-      new MicroOp(OpType.LOAD_POST_U),
-      new MicroOp(OpType.EXEC_POST)
+      OpType.LOAD_HALF,
+      OpType.LOAD_POST_U,
+      OpType.EXEC_POST
     ));
 
     // S format
     instTrie.put(List.of(S_OPCODE, 0x0), List.of(
-      new MicroOp(OpType.STORE_BYTE),
-      new MicroOp(OpType.EXEC_POST)
+      OpType.STORE_BYTE,
+      OpType.EXEC_POST
     ));
     instTrie.put(List.of(S_OPCODE, 0x1), List.of(
-      new MicroOp(OpType.STORE_HALF),
-      new MicroOp(OpType.EXEC_POST)
+      OpType.STORE_HALF,
+      OpType.EXEC_POST
     ));
     instTrie.put(List.of(S_OPCODE, 0x2), List.of(
-      new MicroOp(OpType.STORE_WORD),
-      new MicroOp(OpType.EXEC_POST)
+      OpType.STORE_WORD,
+      OpType.EXEC_POST
     ));
 
     // B format
     instTrie.put(List.of(B_OPCODE, 0x0), List.of(
-      new MicroOp(OpType.BRANCH_EQ)
+      OpType.BRANCH_EQ
     ));
     instTrie.put(List.of(B_OPCODE, 0x1), List.of(
-      new MicroOp(OpType.BRANCH_NE)
+      OpType.BRANCH_NE
     ));
     instTrie.put(List.of(B_OPCODE, 0x4), List.of(
-      new MicroOp(OpType.BRANCH_LT)
+      OpType.BRANCH_LT
     ));
     instTrie.put(List.of(B_OPCODE, 0x5), List.of(
-      new MicroOp(OpType.BRANCH_GE)
+      OpType.BRANCH_GE
     ));
     instTrie.put(List.of(B_OPCODE, 0x6), List.of(
-      new MicroOp(OpType.BRANCH_LTU)
+      OpType.BRANCH_LTU
     ));
     instTrie.put(List.of(B_OPCODE, 0x7), List.of(
-      new MicroOp(OpType.BRANCH_GEU)
+      OpType.BRANCH_GEU
     ));
 
     // J format
     instTrie.put(List.of(J_OPCODE), List.of(
-      new MicroOp(OpType.JAL)
+      OpType.JAL
     ));
 
     // I format (jump)
     instTrie.put(List.of(IJ_OPCODE, 0x0), List.of(
-      new MicroOp(OpType.JAL_REG)
+      OpType.JAL_REG
     ));
 
     // U format (load, add)
     instTrie.put(List.of(UL_OPCODE), List.of(
-      new MicroOp(OpType.LUI),
-      new MicroOp(OpType.EXEC_POST)
+      OpType.LUI,
+      OpType.EXEC_POST
     ));
     instTrie.put(List.of(UA_OPCODE), List.of(
-      new MicroOp(OpType.AUIPC),
-      new MicroOp(OpType.EXEC_POST)
+      OpType.AUIPC,
+      OpType.EXEC_POST
     ));
 
     // I format (environment)
     instTrie.put(List.of(IE_OPCODE, 0x0), List.of(
-      new MicroOp(OpType.ENV),
-      new MicroOp(OpType.EXEC_POST)
+      OpType.ENV,
+      OpType.EXEC_POST
     ));
   }
 
@@ -464,14 +462,14 @@ public class Decoder {
     int funct7 = funct7(inst);
 
     // get microop
-    List<MicroOp> opList = instTrie.get(List.of(opcode, funct3, funct7));
+    List<OpType> opList = instTrie.get(List.of(opcode, funct3, funct7));
     if (opList == null) {
       throw new RuntimeException("Unknown instruction " + DebugShell.int32ToString(inst));
     }
 
     // iterate completing microops and pushing to processor queue
-    for (MicroOp op : opList) {
-      op.setInst(inst);
+    for (OpType opType : opList) {
+      MicroOp op = new MicroOp(opType, inst);
       proc.opQueue.add(op);
     }
   }

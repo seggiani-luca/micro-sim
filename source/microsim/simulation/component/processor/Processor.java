@@ -1,11 +1,13 @@
 package microsim.simulation.component.processor;
 
+import microsim.simulation.component.MemorySpace;
 import java.util.Deque;
 import java.util.LinkedList;
 import microsim.simulation.component.*;
 import microsim.simulation.component.Bus.ByteSelect;
 import microsim.simulation.component.processor.MicroOp.OpType;
 import microsim.simulation.event.DebugEvent;
+import microsim.ui.DebugShell;
 
 /**
  * A processor implementing the RISC-V rv32i ISA. This comprises basic memory movement, arithmetic
@@ -111,7 +113,7 @@ public class Processor extends SimulationComponent {
    * </tr>
    * </table>
    */
-  private int[] registers = new int[REGISTERS];
+  int[] registers = new int[REGISTERS];
 
   /**
    * Gets register at index, ensuring zero register behavior.
@@ -134,11 +136,7 @@ public class Processor extends SimulationComponent {
    * @param val value to set register to
    */
   void setRegister(int i, int val) {
-    if (i == 0) {
-      return;
-    } else {
-      registers[i] = val;
-    }
+    registers[i] = val; // don't check, nobody uses it anyway
   }
 
   /**
@@ -166,8 +164,8 @@ public class Processor extends SimulationComponent {
 
     // processor  takes control of all lines but data and byteSelect
     bus.addressLine.drive(this, 0);
-    bus.readEnable.drive(this, false);
-    bus.writeEnable.drive(this, false);
+    bus.readEnable.drive(this, 0);
+    bus.writeEnable.drive(this, 0);
 
     // reset instruction pointer
     pc = RESET_INSTRUCTION_ADDRESS;
@@ -181,7 +179,7 @@ public class Processor extends SimulationComponent {
   /**
    * Temporary indicator of read/write byteSelect.
    */
-  ByteSelect byteSelect;
+  int byteSelect;
 
   /**
    * Queue of microops to execute, basically acts as a pipeline.
@@ -213,16 +211,20 @@ public class Processor extends SimulationComponent {
    * {@link #fetchDecode} if it's empty
    */
   @Override
-  public void step() {
+  public final void step() {
     MicroOp nextOp = opQueue.poll();
 
     if (nextOp == null) {
-      raiseEvent(new DebugEvent(this,
-        "Processor found empty pipeline and started fetch-decode cycle"));
+      if (DebugShell.active) {
+        raiseEvent(new DebugEvent(this,
+          "Processor found empty pipeline and started fetch-decode cycle"));
+      }
       fetchDecode();
     } else {
-      raiseEvent(new DebugEvent(this,
-        "Processor found microop " + nextOp.toString()));
+      if (DebugShell.active) {
+        raiseEvent(new DebugEvent(this,
+          "Processor found microop " + nextOp.toString()));
+      }
       nextOp.execute(this);
     }
   }

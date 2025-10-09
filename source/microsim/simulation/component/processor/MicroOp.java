@@ -69,18 +69,14 @@ public class MicroOp {
     // memory read routine
     MEM_READ0,
     MEM_READ1,
-    MEM_READ2,
     // memory write routine
     MEM_WRITE0,
-    MEM_WRITE1,
-    MEM_WRITE2,
-    MEM_WRITE3
   }
 
   /**
    * Type of microop.
    */
-  private OpType type;
+  private final OpType type;
 
   /**
    * Returns type of microop.
@@ -95,7 +91,7 @@ public class MicroOp {
    * Instruction this microop translates. Is used to fetch instruction-specific fields at execution
    * time.
    */
-  private int inst;
+  private final int inst;
 
   /**
    * Returns instruction microop translates.
@@ -107,11 +103,13 @@ public class MicroOp {
   }
 
   /**
-   * Sets the instruction this microop translates.
+   * Constructs a microop from its type and the associated instruction.
    *
-   * @param inst instruction to set to
+   * @param type type of microop
+   * @param inst instruction microop encodes
    */
-  public void setInst(int inst) {
+  public MicroOp(OpType type, int inst) {
+    this.type = type;
     this.inst = inst;
   }
 
@@ -122,6 +120,7 @@ public class MicroOp {
    */
   public MicroOp(OpType type) {
     this.type = type;
+    this.inst = 0;
   }
 
   /**
@@ -393,36 +392,30 @@ public class MicroOp {
 
       // memory read routine
       case MEM_READ0 -> {
-        proc.bus.readEnable.drive(proc, true);
+        proc.bus.readEnable.drive(proc, 0);
       }
       case MEM_READ1 -> {
-        proc.bus.readEnable.drive(proc, false);
-      }
-      case MEM_READ2 -> {
         proc.temp = proc.bus.dataLine.read();
 
-        proc.raiseEvent(new DebugEvent(proc, "Processor read routine finished and got value "
-          + DebugShell.int32ToString(proc.temp)));
+        if (DebugShell.active) {
+          proc.raiseEvent(new DebugEvent(proc, "Processor read routine finished and got value "
+            + DebugShell.int32ToString(proc.temp)));
+        }
       }
 
       // memory write routine
       case MEM_WRITE0 -> {
-        proc.bus.dataLine.drive(proc, proc.temp);
-      }
-      case MEM_WRITE1 -> {
-        proc.bus.writeEnable.drive(proc, true);
-      }
-      case MEM_WRITE2 -> {
-        proc.bus.writeEnable.drive(proc, false);
-      }
-      case MEM_WRITE3 -> {
+        proc.bus.writeEnable.drive(proc, 0);
         proc.bus.dataLine.release(proc);
 
-        proc.raiseEvent(new DebugEvent(proc, "Processor write routine finished"));
+        if (DebugShell.active) {
+          proc.raiseEvent(new DebugEvent(proc, "Processor write routine finished"));
+        }
       }
     }
   }
 
+  @Override
   public String toString() {
     return type.name() + " - (" + (inst == 0 ? "freestanding" : DebugShell.int32ToString(inst))
       + ")";

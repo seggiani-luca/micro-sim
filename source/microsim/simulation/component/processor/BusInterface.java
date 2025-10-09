@@ -1,7 +1,5 @@
 package microsim.simulation.component.processor;
 
-import microsim.simulation.component.Bus;
-import microsim.simulation.component.Bus.ByteSelect;
 import microsim.simulation.component.processor.MicroOp.OpType;
 import microsim.simulation.event.DebugEvent;
 import microsim.ui.DebugShell;
@@ -37,8 +35,9 @@ public class BusInterface {
         + DebugShell.int32ToString(addr)));
     }
 
-    proc.byteSelect = byteSelect;
+    proc.byteSelect = byteSelect; // keep track
 
+    // start driving address and control lines
     proc.bus.addressLine.drive(proc, addr);
     proc.bus.byteSelect.drive(proc, byteSelect);
     proc.bus.readEnable.drive(proc, 1);
@@ -62,6 +61,7 @@ public class BusInterface {
    *
    * @param proc processor instance that writes
    * @param addr address to write at
+   * @param data data to write
    * @param byteSelect format to write
    */
   public static void doWriteRoutine(
@@ -71,9 +71,9 @@ public class BusInterface {
         + DebugShell.int32ToString(addr) + " of data " + DebugShell.int32ToString(data)));
     }
 
-    // proc.temp = data;
-    proc.byteSelect = byteSelect;
+    proc.byteSelect = byteSelect; // keep track
 
+    // start driving data, address and control lines
     proc.bus.dataLine.drive(proc, data);
     proc.bus.addressLine.drive(proc, addr);
     proc.bus.byteSelect.drive(proc, byteSelect);

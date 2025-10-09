@@ -1,5 +1,6 @@
 package microsim.simulation.event;
 
+import microsim.simulation.component.devices.VideoDevice;
 import java.awt.image.*;
 import microsim.simulation.component.*;
 

@@ -1,12 +1,14 @@
 package microsim.simulation.component;
 
+import microsim.Main;
+
 /**
  * Models a 3-state logic line. Offers 2 main features: one driver/multiple readers functionality,
  * and step-synced buffering for received data.
  *
  * @param <T> type of data on line
  */
-public class TSLine<T> extends SimulationComponent {
+public class TSLine extends SimulationComponent {
 
   /**
    * Component that is currently driving this line.
@@ -17,18 +19,18 @@ public class TSLine<T> extends SimulationComponent {
    * Committed data (visible from reads), gets {@link #bufferedData}'s value when component is
    * stepped.
    */
-  private T committedData;
+  public int committedData;
 
   /**
    * Buffered data, gets updated the moment {@link #driver} calls {@link #drive}.
    */
-  private T bufferedData;
+  public int bufferedData;
 
   /**
    * Propagates {@link #bufferedData} to {@link #committedData}.
    */
   @Override
-  public void step() {
+  public final void step() {
     committedData = bufferedData;
   }
 
@@ -40,27 +42,19 @@ public class TSLine<T> extends SimulationComponent {
    * @param driver component requesting to become driver
    * @param data data to drive line with
    */
-  public void drive(SimulationComponent driver, T data) {
+  public void drive(SimulationComponent driver, int data) {
     // driver can't be null
     if (driver == null) {
       throw new RuntimeException("Null driver cannot drive TSLine");
     }
 
-    // trying to drive free line
-    if (this.driver == null) {
-      this.driver = driver;
-      this.bufferedData = data;
-
-      return;
-    }
-
     // trying to drive already driven line
-    if (driver != this.driver) {
+    if (this.driver != null && driver != this.driver) {
       throw new RuntimeException(driver.getClass().getName()
         + " trying to drive TSLine already driven by " + this.driver.getClass().getName());
     }
 
-    // already driving line
+    this.driver = driver; // reassert if already driving
     this.bufferedData = data;
   }
 
@@ -84,7 +78,6 @@ public class TSLine<T> extends SimulationComponent {
 
     // release line
     this.driver = null;
-    this.bufferedData = null;
   }
 
   /**
@@ -92,7 +85,7 @@ public class TSLine<T> extends SimulationComponent {
    *
    * @return committed data on line
    */
-  public T read() {
+  public int read() {
     return committedData;
   }
 }

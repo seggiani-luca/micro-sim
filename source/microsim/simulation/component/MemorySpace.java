@@ -1,6 +1,8 @@
 package microsim.simulation.component;
 
+import microsim.simulation.component.Bus;
 import microsim.simulation.component.Bus.ByteSelect;
+import microsim.simulation.component.SimulationComponent;
 import microsim.simulation.event.*;
 import microsim.ui.DebugShell;
 
@@ -46,7 +48,7 @@ public class MemorySpace extends SimulationComponent {
   /**
    * End of VRAM region.
    */
-  public static final int VRAM_END = 0x0002_1400;
+  public static final int VRAM_END = 0x0002_0c00;
 
   /**
    * Checks if given address is in memory bounds.
@@ -137,13 +139,21 @@ public class MemorySpace extends SimulationComponent {
    * </li>
    * </ul>
    * If both {@link microsim.simulation.component.Bus#readEnable} and
-   * {@link microsim.simulation.component.Bus#writeEnable} are high, raises an exception.
+   * {@link microsim.simulation.component.Bus#writeEnable} are high, raises an exception. If
+   * requested address is out of bounds, expect it to be a I/O operation and ignore.
    */
   @Override
-  public void step() {
+  public final void step() {
+    // read address lines to check if memory was queried
+    int addr = bus.addressLine.read();
+    if (!inBounds(addr)) {
+      return;
+    }
+
     // read control lines
-    boolean readEnable = bus.readEnable.read();
-    boolean writeEnable = bus.writeEnable.read();
+    boolean readEnable = bus.readEnable.read() == 1;
+    boolean writeEnable = bus.writeEnable.read() == 1;
+    int byteSelect = bus.byteSelect.read();
 
     if (readEnable && writeEnable) {
       throw new RuntimeException("Read Enable and Write Enable simultaneously high");
@@ -151,10 +161,12 @@ public class MemorySpace extends SimulationComponent {
 
     if (readEnable) {
       // read operation
-      int addr = bus.addressLine.read();
-      ByteSelect byteSelect = bus.byteSelect.read();
-
       int data = 0x0;
+
+      if (DebugShell.active) {
+        raiseEvent(new DebugEvent(this, "Memory saw read operation at addr "
+          + DebugShell.int32ToString(addr)));
+      }
 
       // get word in (max) four byte reads
       switch (byteSelect) {
@@ -167,9 +179,10 @@ public class MemorySpace extends SimulationComponent {
           data |= (readMemory(addr) & 0xff);
       }
 
-      raiseEvent(new DebugEvent(this, "memory saw read operation at addr "
-        + DebugShell.int32ToString(addr) + " of data "
-        + DebugShell.int32ToString(data)));
+      if (DebugShell.active) {
+        raiseEvent(new DebugEvent(this, "Memory read operation gave data "
+          + DebugShell.int32ToString(data)));
+      }
 
       // drive data line with word
       bus.dataLine.drive(this, data);
@@ -180,13 +193,13 @@ public class MemorySpace extends SimulationComponent {
 
     if (writeEnable) {
       // write operation
-      int addr = bus.addressLine.read();
-      ByteSelect byteSelect = bus.byteSelect.read();
       int data = bus.dataLine.read();
 
-      raiseEvent(new DebugEvent(this, "memory saw write operation at addr "
-        + DebugShell.int32ToString(addr) + " of data "
-        + DebugShell.int32ToString(data)));
+      if (DebugShell.active) {
+        raiseEvent(new DebugEvent(this, "Memory saw write operation at addr "
+          + DebugShell.int32ToString(addr) + " of data "
+          + DebugShell.int32ToString(data)));
+      }
 
       // set word in (max) four byte writes
       switch (byteSelect) {
@@ -210,9 +223,9 @@ public class MemorySpace extends SimulationComponent {
   }
 
   /**
-   * Reads from memory space at a given address within simulation bounds. This means VRAM reads are
-   * forbidden. Implementation is done encapsulating {@link #readMemory(int, boolean)} with
-   * debugMode always false.
+   * Reads from memory space at a given address within simulation bounds (nothing changes but the
+   * method is kept for symmetry). Implementation is done encapsulating
+   * {@link #readMemory(int, boolean)} with debugMode always false.
    *
    * @param addr address to read from
    * @return data read
@@ -238,7 +251,7 @@ public class MemorySpace extends SimulationComponent {
       return vram[addr - VRAM_BEG];
     }
 
-    throw new RuntimeException("Memory read out of bounds");
+    return 0; // never reached
   }
 
   /**
@@ -270,18 +283,14 @@ public class MemorySpace extends SimulationComponent {
       }
     } else if (addr >= RAM_BEG && addr <= RAM_END) {
       ram[addr - RAM_BEG] = data;
-      return;
     } else if (addr >= VRAM_BEG && addr <= VRAM_END) {
       vram[addr - VRAM_BEG] = data;
-      return;
     }
-
-    throw new RuntimeException("Memory write out of bounds");
   }
 
   /**
-   * Returns VRAM byte array. Used by {@link microsim.simulation.component.VideoDevice} for direct
-   * VRAM accesses when rendering to frame buffer.
+   * Returns VRAM byte array. Used by {@link microsim.simulation.component.devices.VideoDevice} for
+   * direct VRAM accesses when rendering to frame buffer.
    *
    * @return VRAM byte array
    */

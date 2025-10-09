@@ -38,10 +38,10 @@ all: $(OUT)
 	@$(JAVAC) -d $(OUT) $(SRC)
 
 run: all
-	@$(JAVA) -cp $(OUT) $(MAIN) -e $(EPROM) $(ARGS)
+	@$(JAVA) -server -XX:MaxInlineSize=200 -XX:InlineSmallCode=500 -cp $(OUT) $(MAIN) -e $(EPROM) $(ARGS) -s 2
 
 debug: all
-	@$(JAVA) -cp $(OUT) $(MAIN) -e $(EPROM) -d $(ARGS)
+	@$(JAVA) -cp $(OUT) $(MAIN) -e $(EPROM) -d $(ARGS) -s 2
 
 $(OUT):
 	@mkdir -p $(OUT)
@@ -52,7 +52,7 @@ clean:
 # eprom
 $(EPROM_OUT)/%.o: $(EPROM_SRC)/%.cpp | $(EPROM_OUT)
 	@mkdir -p $(dir $@)
-	@$(RISCV_C) -march=rv32i -mabi=ilp32 -O0 -ffreestanding -nostdlib -fno-exceptions -fno-rtti -mno-small-data-limit=0 -c $< -o $@
+	@$(RISCV_C) -march=rv32i -mabi=ilp32 -O2 -ffreestanding -nostdlib -fno-exceptions -fno-rtti -mno-small-data-limit=0 -c $< -o $@
 
 $(EPROM_OUT)/%.o: $(EPROM_SRC)/%.s | $(EPROM_OUT)
 	@mkdir -p $(dir $@)

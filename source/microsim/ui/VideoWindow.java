@@ -1,5 +1,6 @@
 package microsim.ui;
 
+import microsim.simulation.component.devices.VideoDevice;
 import java.awt.*;
 import java.awt.image.*;
 import javax.swing.*;

@@ -1,5 +1,6 @@
 package microsim.ui;
 
+import microsim.simulation.component.MemorySpace;
 import java.nio.*;
 import java.util.Deque;
 import microsim.Main;
@@ -23,7 +24,7 @@ public class DebugShell implements SimulationListener {
   /**
    * Flag that signals whether the shell is active.
    */
-  private boolean active = false;
+  public static boolean active = false;
 
   /**
    * Activates debug shell.
