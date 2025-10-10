@@ -131,7 +131,7 @@ public class Main {
 
     // if debugging, print EPROM data
     if (debugMode) {
-      DebugShell.printEPROM(epromData);
+      // DebugShell.printEPROM(epromData);
     }
 
     return epromData;
@@ -154,8 +154,13 @@ public class Main {
     debugShell.attachSimulation(simulation);
 
     if (debugMode) {
+      System.out.println("Debug mode requested, activating shell");
       debugShell.activate();
     }
+
+    // attach keyboard
+    System.out.println("Attaching keyboard to window panel");
+    simulation.keyboard.attachComponent(window.getPanel());
   }
 
 

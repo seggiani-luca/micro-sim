@@ -9,7 +9,8 @@ import microsim.simulation.event.*;
 
 /**
  * Implements a video device that renders a frame buffer by reading from VRAM. Functions in text
- * mode, with bitmap characters read from a file and loaded into a buffered image cache.
+ * mode, with bitmap characters read from a file and loaded into a buffered image cache. Device
+ * ports are 2 and used to set the cursor position.
  */
 public class VideoDevice extends IoDevice {
 
@@ -142,12 +143,24 @@ public class VideoDevice extends IoDevice {
     );
   }
 
+  /**
+   * Gets port (doesn't do anything for video device).
+   *
+   * @param index not significant
+   * @return always 0
+   */
   @Override
   int getPort(int index) {
     // nothing to return
     return 0;
   }
 
+  /**
+   * Sets cursor ports. Port 0 is row and port 1 is column.
+   *
+   * @param index index of port
+   * @param data value to give port
+   */
   @Override
   void setPort(int index, int data) {
     switch (index) {

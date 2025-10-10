@@ -119,7 +119,7 @@ namespace vid {
 			new_col = COLS - 1;	
 			new_row--;
 
-			if(row == -1) {
+			if(new_row == -1) {
 				new_col = 0;
 				new_row = 0;
 			}

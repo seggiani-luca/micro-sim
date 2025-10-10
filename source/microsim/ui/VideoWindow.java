@@ -4,7 +4,6 @@ import microsim.simulation.component.devices.VideoDevice;
 import java.awt.*;
 import java.awt.image.*;
 import javax.swing.*;
-import microsim.simulation.component.*;
 import microsim.simulation.event.*;
 
 /**
@@ -105,6 +104,15 @@ public class VideoWindow implements SimulationListener {
    * VideoPanel displaying frame buffer.
    */
   private final VideoPanel panel;
+
+  /**
+   * Returns panel, for attaching input.
+   *
+   * @return JPanel instance
+   */
+  public JPanel getPanel() {
+    return panel;
+  }
 
   /**
    * Instantiates window and VideoPanel. Window resizing is disabled so that window size is locked

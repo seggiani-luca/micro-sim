@@ -2,6 +2,7 @@
 #define LIB_H
 
 #include "lib_video.h"
+#include "lib_keyb.h"
 #include "lib_utils.h"
 
 #endif

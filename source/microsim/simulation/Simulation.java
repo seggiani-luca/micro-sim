@@ -1,7 +1,7 @@
 package microsim.simulation;
 
 import microsim.simulation.component.MemorySpace;
-import microsim.simulation.component.devices.VideoDevice;
+import microsim.simulation.component.devices.*;
 import microsim.simulation.component.*;
 import microsim.simulation.component.processor.*;
 import microsim.simulation.event.*;
@@ -34,6 +34,12 @@ public class Simulation extends SimulationComponent implements SimulationListene
    * Simulated video device component. Instantiated after bus, updated third in simulation cycles.
    */
   public VideoDevice video;
+
+  /**
+   * Simulated keyboard device component. Instantiated after bus, updated third in simulation
+   * cycles.
+   */
+  public KeyboardDevice keyboard;
 
   /**
    * Video refresh frequency in Hertz.
@@ -69,12 +75,14 @@ public class Simulation extends SimulationComponent implements SimulationListene
     proc = new Processor(bus);
     memory = new MemorySpace(bus, epromData);
     video = new VideoDevice(bus, memory);
+    keyboard = new KeyboardDevice(bus);
 
     // set as listener. this is leaky but we don't expect listeners to use it before event is raised
     bus.addListener(this);
     proc.addListener(this);
     memory.addListener(this);
     video.addListener(this);
+    keyboard.addListener(this);
   }
 
   /**
@@ -114,6 +122,7 @@ public class Simulation extends SimulationComponent implements SimulationListene
 
     // devices
     video.step();
+    keyboard.step();
   }
 
   /**
