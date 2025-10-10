@@ -12,8 +12,8 @@ import microsim.ui.DebugShell;
  * <ol>
  * <li>EPROM: contains program code and data at startup.</li>
  * <li>RAM: for general access.</li>
- * <li>VRAM: gets rendered to video on {@link microsim.simulation.component.VideoDevice#render()}
- * calls.</li>
+ * <li>VRAM: gets rendered to video on
+ * {@link microsim.simulation.component.device.VideoDevice#render()} calls.</li>
  * </ol>
  * Regions are defined by begin/end address pairs. End addresses are inclusive (0x000 to 0x0ff means
  * 0x0ff is in the region and 0x100 isn't).
@@ -289,7 +289,7 @@ public class MemorySpace extends SimulationComponent {
   }
 
   /**
-   * Returns VRAM byte array. Used by {@link microsim.simulation.component.devices.VideoDevice} for
+   * Returns VRAM byte array. Used by {@link microsim.simulation.component.device.VideoDevice} for
    * direct VRAM accesses when rendering to frame buffer.
    *
    * @return VRAM byte array

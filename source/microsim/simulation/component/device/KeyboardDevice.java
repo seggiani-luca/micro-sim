@@ -1,4 +1,4 @@
-package microsim.simulation.component.devices;
+package microsim.simulation.component.device;
 
 import java.awt.event.*;
 import java.util.LinkedList;
@@ -6,18 +6,35 @@ import java.util.Queue;
 import javax.swing.JComponent;
 import microsim.simulation.component.*;
 
+/**
+ * Implements a keyboard devices that mantains a character queue and returns them via a status and a
+ * data port.
+ */
 public class KeyboardDevice extends IoDevice {
 
+  /**
+   * Queue of characters pressed.
+   */
   Queue<Integer> keyQueue = new LinkedList<>();
 
+  /**
+   * Attaches keyboard device to a JComponent to grab keyboard input from.
+   *
+   * @param component JComponent to grab input from
+   */
   public void attachComponent(JComponent component) {
+    // should have focus to grab input
     component.setFocusable(true);
     component.requestFocusInWindow();
+
+    // tab needs to be captured
+    component.setFocusTraversalKeysEnabled(false);
+
     component.addKeyListener(new KeyAdapter() {
       @Override
       public void keyPressed(KeyEvent e) {
         synchronized (keyQueue) {
-          keyQueue.add(e.getKeyCode());
+          queueKey(e);
         }
       }
     });
@@ -30,6 +47,21 @@ public class KeyboardDevice extends IoDevice {
    */
   public KeyboardDevice(Bus bus) {
     super(bus, 0x00040000, 2);
+  }
+
+  /**
+   * Queues a character codepoint on the key queue, making sure it's a simple ASCII character.
+   *
+   * @param e event of key pressed
+   */
+  private void queueKey(KeyEvent e) {
+    int keyChar = e.getKeyChar();
+
+    // filter non basic ASCII characters
+    if (keyChar == (keyChar & 0x7f)) {
+      keyQueue.add(keyChar);
+      return;
+    }
   }
 
   /**

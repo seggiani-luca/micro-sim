@@ -1,4 +1,4 @@
-package microsim.simulation.component.devices;
+package microsim.simulation.component.device;
 
 import microsim.simulation.component.MemorySpace;
 import java.awt.image.*;

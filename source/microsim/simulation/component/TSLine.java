@@ -5,8 +5,6 @@ import microsim.Main;
 /**
  * Models a 3-state logic line. Offers 2 main features: one driver/multiple readers functionality,
  * and step-synced buffering for received data.
- *
- * @param <T> type of data on line
  */
 public class TSLine extends SimulationComponent {
 

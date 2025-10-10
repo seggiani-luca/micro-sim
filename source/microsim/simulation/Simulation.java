@@ -1,7 +1,8 @@
 package microsim.simulation;
 
+import microsim.simulation.component.device.KeyboardDevice;
+import microsim.simulation.component.device.VideoDevice;
 import microsim.simulation.component.MemorySpace;
-import microsim.simulation.component.devices.*;
 import microsim.simulation.component.*;
 import microsim.simulation.component.processor.*;
 import microsim.simulation.event.*;

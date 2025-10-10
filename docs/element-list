@@ -2,6 +2,7 @@ microsim
 microsim.elf
 microsim.simulation
 microsim.simulation.component
+microsim.simulation.component.device
 microsim.simulation.component.processor
 microsim.simulation.event
 microsim.ui

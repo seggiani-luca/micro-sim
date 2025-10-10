@@ -1,17 +1,17 @@
 package microsim.simulation.event;
 
-import microsim.simulation.component.devices.VideoDevice;
+import microsim.simulation.component.device.VideoDevice;
 import java.awt.image.*;
 import microsim.simulation.component.*;
 
 /**
- * SimulationEvent that signals a {@link microsim.simulation.component.VideoDevice} has finished
+ * SimulationEvent that signals a {@link microsim.simulation.component.device.VideoDevice} has finished
  * rendering to frame buffer
  */
 public class FrameEvent extends SimulationEvent {
 
   /**
-   * Frame buffer of the {@link microsim.simulation.component.VideoDevice} that finished rendering
+   * Frame buffer of the {@link microsim.simulation.component.device.VideoDevice} that finished rendering
    */
   public BufferedImage frame;
 
