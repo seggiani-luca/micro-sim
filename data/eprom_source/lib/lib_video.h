@@ -9,7 +9,7 @@ namespace utl {
 }
 namespace str {
 	int len(const char* s);
-	void* mcpy(void*, const void*, int);
+	void* mmove(void*, const void*, int);
 	void* mset(void*, char, int);
 }
 
@@ -130,11 +130,7 @@ namespace vid {
 	 */
 	void scroll() {
 		// copy video memory back one row
-		for(int r = 1; r < ROWS; r++) {
-			for(int c = 0; c < COLS; c++) {
-				video[c + (r - 1) * COLS] = video[c + r * COLS];
-			}
-		}
+		str::mmove((void*) video, (void*) (video + COLS), COLS * (ROWS - 1));
 		
 		// clean last line
 		str::mset((void*) (video + (ROWS - 1) * COLS), ' ', COLS);
