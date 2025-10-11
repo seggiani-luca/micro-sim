@@ -1,5 +1,5 @@
 	.section .start
-	.extern main
+	.extern main 
 
 /* start routine */
 
@@ -25,7 +25,7 @@ _data_cpy_loop:
 
 _data_cpy_end:
 	/* jump to entry point */
-	call main
+	call main 
 
 	/* halt */
 	call halt 
