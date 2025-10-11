@@ -119,6 +119,28 @@ public class MemorySpace extends SimulationComponent {
   }
 
   /**
+   * Checks if an address is aligned to the word size specified by byteSelect.
+   *
+   * @param addr address to check
+   * @param byteSelect word size
+   * @return boolean that signals whether alignment is respected
+   */
+  private boolean checkAlignment(int addr, int byteSelect) {
+    switch (byteSelect) {
+      case ByteSelect.WORD -> {
+        return (addr & 0x3) == 0;
+      }
+      case ByteSelect.HALF -> {
+        return (addr & 0x1) == 0;
+      }
+      case ByteSelect.BYTE -> {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
    * Steps by handling read/write operations seen on bus. Bus protocol is the following:
    * <ul>
    * <li>
@@ -154,6 +176,10 @@ public class MemorySpace extends SimulationComponent {
     boolean readEnable = bus.readEnable.read() == 1;
     boolean writeEnable = bus.writeEnable.read() == 1;
     int byteSelect = bus.byteSelect.read();
+
+    if (!checkAlignment(addr, byteSelect)) {
+      throw new RuntimeException("Unaligned memory access");
+    }
 
     if (readEnable && writeEnable) {
       throw new RuntimeException("Read Enable and Write Enable simultaneously high");

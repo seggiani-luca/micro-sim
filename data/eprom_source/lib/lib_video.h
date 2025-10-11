@@ -8,9 +8,9 @@ namespace utl {
 	extern "C" void debugger();
 }
 namespace str {
-	int len(const char* s);
-	void* mmove(void*, const void*, int);
-	void* mset(void*, char, int);
+	unsigned int len(const char* s);
+	void* mmove(void*, const void*, unsigned int);
+	void* mset(void*, char, unsigned int);
 }
 
 namespace vid {

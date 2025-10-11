@@ -26,10 +26,17 @@ namespace str {
 	 * Copies at most n characters from string src to string dest.
 	 */
 	char* ncpy(char* dest, const char* src, unsigned int n) {
-		
-
 		char* ret = dest;
-		while(n-- && (*dest++ = *src++));
+		while(n > 0 && (*dest++ = *src++)) {
+			n--;
+		}
+
+		// pad
+		while(n > 0) {
+			*dest++ = '\0';
+			n--;
+		}
+
 		return ret;
 	}
 	
