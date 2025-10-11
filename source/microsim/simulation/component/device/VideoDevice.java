@@ -227,7 +227,10 @@ public class VideoDevice extends IoDevice {
    * @param ch character code point
    * @return character image
    */
-  private BufferedImage getCharSprite(byte ch) {
+  private BufferedImage getCharSprite(int ch) {
+    // mask to get unsigned behavoir
+    ch &= 0xff;
+
     // get character coordinates on charAtlas
     int x = ch % ATLAS_SIZE;
     int y = ch / ATLAS_SIZE;

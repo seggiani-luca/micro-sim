@@ -1,7 +1,15 @@
 #ifndef LIB_UTILS
 #define LIB_UTILS
 
-#include "lib_keyb.h"
+namespace vid {
+	void print_str(const char*);
+	void print_strln(const char*);
+	void newline();
+}
+namespace keyb {
+	char get_char();
+}
+
 namespace utl {	
 	/*
 	 * Spins indefinitely.
@@ -27,6 +35,18 @@ namespace utl {
 		vid::newline();
 
 		return;
+	}
+
+	/*
+	 * Panics printing a message and quits.
+	 */
+	void panic(char* msg) {
+		vid::newline();
+		vid::print_strln("Panic!");
+		vid::print_strln(msg);
+		
+		wait();
+		halt();
 	}
 }
 

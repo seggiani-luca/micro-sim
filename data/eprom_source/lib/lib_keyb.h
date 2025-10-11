@@ -1,8 +1,13 @@
 #ifndef LIB_KEYB_H
 #define LIB_KEYB_H
 
-#include "lib_video.h"
 #include <cstdint>
+
+namespace vid {
+	void print_char(char);
+	void backspace();
+	void newline();
+}
 
 namespace keyb {
 	/*
