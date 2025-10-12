@@ -3,6 +3,10 @@
 
 #include <stdint.h>
 
+/*
+ * Namespace for string handling, including cstring functions + memory functions.
+ * TODO: include comparison functions
+ */
 namespace str {
 	/*
 	 * Returns length of string.

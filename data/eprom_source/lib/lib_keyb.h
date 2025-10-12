@@ -9,6 +9,10 @@ namespace vid {
 	void newline();
 }
 
+/*
+ * Namespace for handling keyboard, including character/string reading/getting.
+ * TODO: implement int get/read functions
+ */
 namespace keyb {
 	/*
 	 * Keyboard status register.

@@ -14,6 +14,10 @@ namespace str {
 	void* mset(void*, char, unsigned int);
 }
 
+/*
+ * Namespace for handling console graphics, including simple character/string/int printing/putting, 
+ * display cursor handling, simple geometric graphics and table drawing.
+ */
 namespace vid {
 	/*
 	 * Number of columns in text mode.
@@ -36,23 +40,34 @@ namespace vid {
 	const char SYM_SHADE_LIGHT = 0x80;
 	const char SYM_SHADE_MEDIUM = 0x81;
 	const char SYM_SHADE_DARK = 0x82;
-	const char SYM_TABLE_VERT = 0x90;
-	const char SYM_TABLE_HORIZ = 0x91;
-	const char SYM_TABLE_CORNER_TOP_RIGHT = 0x92;
-	const char SYM_TABLE_CORNER_TOP_LEFT = 0x93;
-	const char SYM_TABLE_CORNER_BOTTOM_LEFT = 0x94;
-	const char SYM_TABLE_CORNER_BOTTOM_RIGHT = 0x95;
-	const char SYM_TABLE_CROSS_RIGHT = 0x96;
-	const char SYM_TABLE_CROSS_LEFT = 0x97;
-	const char SYM_TABLE_CROSS_BOTTOM = 0x98;
-	const char SYM_TABLE_CROSS_TOP = 0x99;
-	const char SYM_TABLE_CROSS = 0x9a;
-	const char SYM_HEART = 0xa0;
-	const char SYM_DIAMOND = 0xa1;
-	const char SYM_CLUB = 0xa2;
-	const char SYM_SPADE = 0xa3;
-	const char SYM_NOTE = 0xa4;
-	const char SYM_NOTES = 0xa5;
+	const char SYM_HEART = 0x83;
+	const char SYM_DIAMOND = 0x84;
+	const char SYM_CLUB = 0x85;
+	const char SYM_SPADE = 0x86;
+	const char SYM_NOTE = 0x87;
+	const char SYM_NOTES = 0x88;
+
+	/*
+	 * Table character set
+	 */
+	const char SYM_TABLE_SOLID = 0x90;
+	const char SYM_TABLE_DOTTED = 0xa0;
+	const char SYM_TABLE_DOUBLE = 0xb0;
+
+	/*
+	 * Table character offsets to use different table styles.
+	 */
+	const char TABLE_VERT_OFF = 0;
+	const char TABLE_HORIZ_OFF = 1;
+	const char TABLE_CORNER_TOP_RIGHT_OFF = 2;
+	const char TABLE_CORNER_TOP_LEFT_OFF = 3;
+	const char TABLE_CORNER_BOTTOM_LEFT_OFF = 4;
+	const char TABLE_CORNER_BOTTOM_RIGHT_OFF = 5;
+	const char TABLE_CROSS_RIGHT_OFF = 6;
+	const char TABLE_CROSS_LEFT_OFF = 7;
+	const char TABLE_CROSS_TOP_OFF = 8;
+	const char TABLE_CROSS_BOTTOM_OFF = 9;
+	const char TABLE_CROSS_OFF = 10;
 
 	/*
 	 * Video array, points to the 5 KiB of video memory. Video characters are 1 bytes representing 
@@ -200,9 +215,9 @@ namespace vid {
 	/*
 	 * Inserts enough space to reach the next TAB_SIZE column multiple.
 	 */
-	void tabulate() {
+	void tabulate(char c = ' ') {
 		do {
-			video[cur.get_idx()] = ' ';
+			video[cur.get_idx()] = c;
 			
 			inc_cur();
 		} while(cur.col % TAB_SIZE);
@@ -352,146 +367,268 @@ namespace vid {
 	}
 
 	/*
-	 * Draws a filled box from top left (tl) to bottom right (br) coordinates.
+	 * Namespace that includes functions for simple geometric shape drawing.
 	 */
-	void draw_rect(Coords tl, Coords br, char fill = SYM_SHADE_DARK) {
-		if(!tl.validate() || !br.validate()) {
-			utl::panic("Coordinate non valide per draw_rect()");
-		}
+	namespace graph {
 
-		for(int c = tl.col; c <= br.col; c++) {
-			for(int r = tl.row; r <= br.row; r++) {
-				put_char(Coords(c, r), fill);
+		/*
+		 * Draws a filled box from top left (tl) to bottom right (br) coordinates.
+		 */
+		void rect(Coords tl, Coords br, char fill = SYM_SHADE_DARK) {
+			if(!tl.validate() || !br.validate()) {
+				utl::panic("Coordinate non valide per draw_rect()");
 			}
-		}
-	}
-	
-	/*
-	 * Draws an outlined box from top left (tl) to bottom right (br) coordinates.
-	 */
-	void draw_orect(Coords tl, Coords br, char line = SYM_SHADE_DARK) {
-		if(!tl.validate() || !br.validate()) {
-			utl::panic("Coordinate non valide per draw_orect()");
-		}
 
-		// top
-		for(int c = tl.col; c <= br.col; c++) {
-				put_char(Coords(c, tl.row), line);
-		}
-
-		// bottom
-		for(int c = tl.col; c <= br.col; c++) {
-				put_char(Coords(c, br.row), line);
-		}
-
-		// left
-		for(int r = tl.row + 1; r <= br.row - 1; r++) {
-				put_char(Coords(tl.col, r), line);
+			for(int c = tl.col; c <= br.col; c++) {
+				for(int r = tl.row; r <= br.row; r++) {
+					put_char(Coords(c, r), fill);
+				}
+			}
 		}
 		
-		// right
-		for(int r = tl.row + 1; r <= br.row - 1; r++) {
-				put_char(Coords(br.col, r), line);
-		}
-	}
+		/*
+		 * Draws an outlined box from top left (tl) to bottom right (br) coordinates.
+		 */
+		void orect(Coords tl, Coords br, char line = SYM_SHADE_DARK) {
+			if(!tl.validate() || !br.validate()) {
+				utl::panic("Coordinate non valide per draw_orect()");
+			}
 
-	/*
-	 * Draws a circle from the center (c) of radius (r), using a modified version of the midpoint 
-	 * algorithm. Because of quantization error, adjacent odd-even pairs look similar if not equal.
-	 */
-	void draw_circ(Coords c, int r, char line = SYM_SHADE_DARK) {
-		if(r == 0) return;
+			// top
+			for(int c = tl.col; c <= br.col; c++) {
+					put_char(Coords(c, tl.row), line);
+			}
 
-		// we are trying to approximate:
-		// x^2 + 4 * (y^2) = r^2
-		// this is because screen characters are 8x16, hence we "squash" by a factor of 2 on the 
-		// vertical axis to retain square proportions.
+			// bottom
+			for(int c = tl.col; c <= br.col; c++) {
+					put_char(Coords(c, br.row), line);
+			}
 
-		// higher octant, choose x as the dominant direction
-		int x = 0;
-		int y = -(r + 1) / 2; // prefer approximating away from zero
-		int p = -2 * r + 1; 
-
-		while(x < - 4 * y) {
-			for(int i = -x; i <= x; i++) {
-				put_char(Coords(c.col + i, c.row + y), line);
-				put_char(Coords(c.col + i, c.row - y), line);
+			// left
+			for(int r = tl.row + 1; r <= br.row - 1; r++) {
+					put_char(Coords(tl.col, r), line);
 			}
 			
-			if(p > 0) {
-				y++;
-				p += 2 * x + 8 * y + 1;
-			} else {
-				p += 2 * x + 1;
+			// right
+			for(int r = tl.row + 1; r <= br.row - 1; r++) {
+					put_char(Coords(br.col, r), line);
 			}
-
-			x++;
 		}
 
-		// lower octant, choose y as the dominant direction
-		while(y <= 0) {
-			for(int i = -x; i <= x; i++) {
-				put_char(Coords(c.col + i, c.row + y), line);
-				put_char(Coords(c.col + i, c.row - y), line);
-			}
-			
-			if(p > 0) {
+		/*
+		 * Draws a circle from the center (c) of radius (r), using a modified version of the midpoint 
+		 * algorithm. Because of quantization error, adjacent odd-even pairs look similar if not equal.
+		 */
+		void circ(Coords c, int r, char line = SYM_SHADE_DARK) {
+			if(r == 0) return;
+
+			// we are trying to approximate:
+			// x^2 + 4 * (y^2) = r^2
+			// this is because screen characters are 8x16, hence we "squash" by a factor of 2 on the 
+			// vertical axis to retain square proportions.
+
+			// higher octant, choose x as the dominant direction
+			int x = 0;
+			int y = -(r + 1) / 2; // prefer approximating away from zero
+			int p = -2 * r + 1; 
+
+			while(x < - 4 * y) {
+				for(int i = -x; i <= x; i++) {
+					put_char(Coords(c.col + i, c.row + y), line);
+					put_char(Coords(c.col + i, c.row - y), line);
+				}
+				
+				if(p > 0) {
+					y++;
+					p += 2 * x + 8 * y + 1;
+				} else {
+					p += 2 * x + 1;
+				}
+
 				x++;
-				p += 8 * y - 2 * x + 4;
-			} else {
-				p += 8 * y + 4;
 			}
 
-			y++;
-		}
-	}
+			// lower octant, choose y as the dominant direction
+			while(y <= 0) {
+				for(int i = -x; i <= x; i++) {
+					put_char(Coords(c.col + i, c.row + y), line);
+					put_char(Coords(c.col + i, c.row - y), line);
+				}
+				
+				if(p > 0) {
+					x++;
+					p += 8 * y - 2 * x + 4;
+				} else {
+					p += 8 * y + 4;
+				}
 
-	/*
-	 * Draws an outlined circle from the center (c) of radius (r), using the same algorithm as 
-	 * draw_circ(). 
-	 */
-	void draw_ocirc(Coords c, int r, char line = SYM_SHADE_DARK) {
-		if(r == 0) return;
-
-		// higher octant
-		int x = 0;
-		int y = -(r + 1) / 2; // prefer approximating away from zero
-
-		int p = -2 * r + 1;
-
-		while(x < - 4 * y) {
-			put_char(Coords(c.col + x, c.row + y), line);
-			put_char(Coords(c.col + x, c.row - y), line);
-			put_char(Coords(c.col - x, c.row + y), line);
-			put_char(Coords(c.col - x, c.row - y), line);
-			
-			if(p > 0) {
 				y++;
-				p += 2 * x + 8 * y + 1;
-			} else {
-				p += 2 * x + 1;
 			}
-
-			x++;
 		}
 
-		// lower octant
-		while(y <= 0) {
-			put_char(Coords(c.col + x, c.row + y), line);
-			put_char(Coords(c.col + x, c.row - y), line);
-			put_char(Coords(c.col - x, c.row + y), line);
-			put_char(Coords(c.col - x, c.row - y), line);
-			
-			if(p > 0) {
+		/*
+		 * Draws an outlined circle from the center (c) of radius (r), using the same algorithm as 
+		 * draw_circ(). 
+		 */
+		void ocirc(Coords c, int r, char line = SYM_SHADE_DARK) {
+			if(r == 0) return;
+
+			// higher octant
+			int x = 0;
+			int y = -(r + 1) / 2; // prefer approximating away from zero
+
+			int p = -2 * r + 1;
+
+			while(x < - 4 * y) {
+				put_char(Coords(c.col + x, c.row + y), line);
+				put_char(Coords(c.col + x, c.row - y), line);
+				put_char(Coords(c.col - x, c.row + y), line);
+				put_char(Coords(c.col - x, c.row - y), line);
+				
+				if(p > 0) {
+					y++;
+					p += 2 * x + 8 * y + 1;
+				} else {
+					p += 2 * x + 1;
+				}
+
 				x++;
-				p += 8 * y - 2 * x + 4;
-			} else {
-				p += 8 * y + 4;
 			}
 
-			y++;
+			// lower octant
+			while(y <= 0) {
+				put_char(Coords(c.col + x, c.row + y), line);
+				put_char(Coords(c.col + x, c.row - y), line);
+				put_char(Coords(c.col - x, c.row + y), line);
+				put_char(Coords(c.col - x, c.row - y), line);
+				
+				if(p > 0) {
+					x++;
+					p += 8 * y - 2 * x + 4;
+				} else {
+					p += 8 * y + 4;
+				}
+
+				y++;
+			}
 		}
-	}
-}
+
+	} // vid::graph::
+	
+	/*
+	 * Namespace for table drawing.
+	 */
+	namespace tab {
+
+		/*
+		 * Draws a table from top left (tl) to bottom right (br) coordinates.
+		 */
+		void draw(Coords tl, Coords br, char base_char = SYM_TABLE_SOLID) {
+			if(!tl.validate() || !br.validate()) {
+				utl::panic("Coordinate non valide per draw_table()");
+			}
+
+			// corners
+			put_char(tl, base_char + TABLE_CORNER_BOTTOM_RIGHT_OFF);
+			put_char(br, base_char + TABLE_CORNER_TOP_LEFT_OFF);
+			put_char(Coords(tl.col, br.row), base_char + TABLE_CORNER_TOP_RIGHT_OFF);
+			put_char(Coords(br.col, tl.row), base_char + TABLE_CORNER_BOTTOM_LEFT_OFF);
+
+			// top
+			for(int c = tl.col + 1; c <= br.col - 1; c++) {
+					put_char(Coords(c, tl.row), base_char + TABLE_HORIZ_OFF);
+			}
+
+			// bottom
+			for(int c = tl.col + 1; c <= br.col - 1; c++) {
+					put_char(Coords(c, br.row), base_char + TABLE_HORIZ_OFF);
+			}
+
+			// left
+			for(int r = tl.row + 1; r <= br.row - 1; r++) {
+					put_char(Coords(tl.col, r), base_char + TABLE_VERT_OFF);
+			}
+			
+			// right
+			for(int r = tl.row + 1; r <= br.row - 1; r++) {
+					put_char(Coords(br.col, r), base_char + TABLE_VERT_OFF);
+			}
+		}
+
+		/*
+		 * Draws an horizontal table line from left coordinate (l) of length len, properly intersecting 
+		 * edges.
+		 */
+		void horiz_line(Coords l, int len, char base_char = SYM_TABLE_SOLID) {
+			if(!l.validate() || l.col + len >= COLS) {
+				utl::panic("Coordinate non valide per horiz_line()");
+			}
+
+			int l_idx = l.get_idx();
+
+			// start
+			if(video[l_idx] == base_char + TABLE_VERT_OFF) {
+				video[l_idx] = base_char + TABLE_CROSS_RIGHT_OFF;
+			} else {
+				video[l_idx] = base_char + TABLE_HORIZ_OFF;
+			}
+
+			// line body
+			int i = 1;
+			for(; i < len; i++) {
+				if(video[l_idx + i] == base_char + TABLE_VERT_OFF) {
+					video[l_idx + i] = base_char + TABLE_CROSS_OFF;
+				} else {
+					video[l_idx + i] = base_char + TABLE_HORIZ_OFF;
+				}
+			}
+
+			// end
+			if(video[l_idx + i] == base_char + TABLE_VERT_OFF) {
+				video[l_idx + i] = base_char + TABLE_CROSS_LEFT_OFF;
+			} else {
+				video[l_idx + i] = base_char + TABLE_HORIZ_OFF;
+			}
+		}
+		
+		/*
+		 * Draws a vertical table line from top coordinate (t) of length len, properly intersecting 
+		 * edges.
+		 */
+		void vert_line(Coords t, int len, char base_char = SYM_TABLE_SOLID) {
+			if(!t.validate() || t.row + len >= ROWS) {
+				utl::panic("Coordinate non valide per horiz_line()");
+			}
+
+			int t_idx = t.get_idx();
+
+			// start
+			if(video[t_idx] == base_char + TABLE_HORIZ_OFF) {
+				video[t_idx] = base_char + TABLE_CROSS_BOTTOM_OFF;
+			} else {
+				video[t_idx] = base_char + TABLE_VERT_OFF;
+			}
+
+			// line body
+			int i = 1;
+			for(; i < len; i++) {
+				if(video[t_idx + i * COLS] == base_char + TABLE_HORIZ_OFF) {
+					video[t_idx + i * COLS] = base_char + TABLE_CROSS_OFF;
+				} else {
+					video[t_idx + i * COLS] = base_char + TABLE_VERT_OFF;
+				}
+			}
+
+			// end
+			if(video[t_idx + i * COLS] == base_char + TABLE_HORIZ_OFF) {
+				video[t_idx + i * COLS] = base_char + TABLE_CROSS_TOP_OFF;
+			} else {
+				video[t_idx + i * COLS] = base_char + TABLE_VERT_OFF;
+			}
+		}
+
+	} // vid::tab::
+
+} // vid::
 
 #endif

@@ -10,6 +10,10 @@ namespace keyb {
 	char get_char();
 }
 
+/*
+ * Namespace for general utility functions, including program exiting, waiting on input, debugging
+ * and error reporting.
+ */
 namespace utl {	
 	/*
 	 * Spins indefinitely.
