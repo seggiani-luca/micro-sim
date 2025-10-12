@@ -40,7 +40,7 @@ namespace utl {
 	/*
 	 * Panics printing a message and quits.
 	 */
-	void panic(char* msg) {
+	void panic(const char* msg) {
 		vid::newline();
 		vid::print_strln("Panic!");
 		vid::print_strln(msg);

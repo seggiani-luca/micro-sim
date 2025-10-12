@@ -1,4 +1,4 @@
-// these are helpers needed by the compiler to implement functions not implemented by the ISA
+// these are helpers needed by the compiler to implement functions not present in the ISA
 
 /*
  * Signed/unsigned multiplication.
@@ -41,19 +41,18 @@ extern "C" unsigned int __udivsi3(unsigned int a, unsigned int b) {
 extern "C" int __divsi3(int a, int b) {
 	bool neg = false;
 
-	if(a < 0 && b > 0) {
+	if(a < 0) {
 		a = -a;
-		neg = true;
+		neg = !neg;
 	}
-	if(a > 0 && b < 0) {
+	if(b < 0) {
 		b = -b;
-		neg = true;
+		neg = !neg;
 	}
 
-	a = __udivsi3(a, b);
+	unsigned int res = __udivsi3((unsigned int) a, (unsigned int) b);
 
-	if(neg) a = -a;
-	return a;
+	return neg ? - (int) res : (int) res;
 }
 
 /*
@@ -90,8 +89,7 @@ extern "C" int __modsi3(int a, int b) {
 		b = -b;
 	}
 
-	a = __umodsi3(a, b);	
+	unsigned int res = __umodsi3((unsigned int) a, (unsigned int) b);	
 
-	if(neg) a = -a;
-	return a;
+	return neg ? - (int) res : (int) res;
 }

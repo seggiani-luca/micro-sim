@@ -13,12 +13,12 @@ namespace keyb {
 	/*
 	 * Keyboard status register.
 	 */
-	volatile uint32_t*	keyb_status = (volatile uint32_t*) 0x00040000;
+	inline volatile uint32_t*	keyb_status = (volatile uint32_t*) 0x00040000;
 
 	/*
 	 * Keyboard data register.
 	 */
-	volatile uint32_t*	keyb_data = (volatile uint32_t*) 0x00040001;
+	inline volatile uint32_t*	keyb_data = (volatile uint32_t*) 0x00040001;
 
 	/*
 	 * Gets a char without echo.
@@ -26,19 +26,6 @@ namespace keyb {
 	char get_char() {
 		while(*keyb_status != 1); // busy wait
 		return *keyb_data;
-	}
-	
-	/*
-	 * Reads a char with echo. Doesn't echo control characters (\b and \n)
-	 */
-	char read_char() {
-		char c = get_char();
-
-		if(c != '\b' && c != '\n') { 
-			vid::print_char(c);
-		}	
-
-		return c;
 	}
 
 	/*
@@ -78,6 +65,19 @@ namespace keyb {
 			}
 
 		}
+	}
+
+	/*
+	 * Reads a char with echo. Doesn't echo control characters (\b and \n)
+	 */
+	char read_char() {
+		char c = get_char();
+
+		if(c != '\b' && c != '\n') { 
+			vid::print_char(c);
+		}	
+
+		return c;
 	}
 
 	/*

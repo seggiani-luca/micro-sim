@@ -4,8 +4,9 @@
 #include <stdint.h>
 
 namespace utl {
-	void panic(char*);
+	void panic(const char*);
 	extern "C" void debugger();
+	void wait();
 }
 namespace str {
 	unsigned int len(const char* s);
@@ -57,29 +58,29 @@ namespace vid {
 	 * Video array, points to the 5 KiB of video memory. Video characters are 1 bytes representing 
 	 * character codepoint.
 	 */
-	volatile uint8_t video[3072] __attribute__((section(".video")));
-
-	/*
-	 * Port to specify cursor row.
-	 */
-	volatile uint32_t* cursor_row = (volatile uint32_t*) 0x00030000;
+	inline volatile uint8_t video[3072] __attribute__((section(".video")));
 
 	/*
 	 * Port to specify cursor column.
 	 */
-	volatile uint32_t* cursor_col = (volatile uint32_t*) 0x00030001;
+	inline volatile uint32_t* cursor_col = (volatile uint32_t*) 0x00030001;
+	
+	/*
+	 * Port to specify cursor row.
+	 */
+	inline volatile uint32_t* cursor_row = (volatile uint32_t*) 0x00030000;
 
 	/*
 	 * Defines coordinates on screen and allows conversion to video array index and validation. 
 	 */
-	struct coords {
+	struct Coords {
 		int col;
 		int row;
 
 		/*
 		 * Constructs a coordinate pair from column and row indices.
 		 */
-		coords(int col, int row) {
+		Coords(int col, int row) {
 			this->col = col;
 			this->row = row;
 		}
@@ -87,9 +88,9 @@ namespace vid {
 		/*
 		 * Constructs a coordinate pair from a video array index.
 		 */
-		coords(int idx) {
+		Coords(int idx) {
 			this->col = idx % COLS;
-			this->row = idx / ROWS;
+			this->row = idx / COLS;
 		}
 
 	 /*
@@ -110,20 +111,26 @@ namespace vid {
 	/*
 	 * Cursor coordinates.
 	 */
-	coords cur = coords(0, 0); 
+	Coords cur = Coords(0, 0); 
 
 	/*
 	 * Updates cursor, also writing position to cursor ports.
 	 */
-	void set_cursor(coords new_coords) {
-		cur.col = new_coords.col;
-		cur.row = new_coords.row;
+	void set_cursor(Coords new_Coords) {
+		cur.col = new_Coords.col;
+		cur.row = new_Coords.row;
 
 		*cursor_col = cur.col;
 		*cursor_row = cur.row;
 	}
 
-	void print_str(const char*);
+	/*
+	 * Clears video buffer.
+	 */
+	void clear() {
+		str::mset((void*) video, '\0', ROWS * COLS);
+		set_cursor(Coords(0, 0));
+	}
 
 	/*
 	 * Scrolls video memory up 1 line.
@@ -135,14 +142,14 @@ namespace vid {
 		// clean last line
 		str::mset((void*) (video + (ROWS - 1) * COLS), ' ', COLS);
 				
-		if(cur.row > 0) set_cursor(coords(cur.col, cur.row - 1));
+		if(cur.row > 0) set_cursor(Coords(cur.col, cur.row - 1));
 	}
 
 	/*
 	 * Moves cursor to new line, scrolling if needed.
 	 */
 	void newline() {
-		set_cursor(coords(0, cur.row + 1));
+		set_cursor(Coords(0, cur.row + 1));
 
 		if(cur.row == ROWS) {
 			scroll();
@@ -153,7 +160,7 @@ namespace vid {
 	 * Moves cursor forward by increasing column, returning to new line if needed. 
 	 */
 	void inc_cur() {
-		set_cursor(coords(cur.col + 1, cur.row));
+		set_cursor(Coords(cur.col + 1, cur.row));
 
 		if(cur.col == COLS) {
 			newline();
@@ -178,7 +185,7 @@ namespace vid {
 			}
 		}
 
-		set_cursor(coords(new_col, new_row));
+		set_cursor(Coords(new_col, new_row));
 	}
 
 	/*
@@ -187,20 +194,18 @@ namespace vid {
 	void backspace() {
 		dec_cur();
 
-		int idx = cur.get_idx();
-		video[idx] = '\0';
+		video[cur.get_idx()] = '\0';
 	}
 
 	/*
-	 * Inserts TAB_SIZE spaces.
+	 * Inserts enough space to reach the next TAB_SIZE column multiple.
 	 */
 	void tabulate() {
-		for(int i = 0; i < TAB_SIZE; i++) {
-			int idx = cur.get_idx();
-			video[idx] = ' ';
+		do {
+			video[cur.get_idx()] = ' ';
 			
 			inc_cur();
-		}
+		} while(cur.col % TAB_SIZE);
 	}
 
 	/*
@@ -221,11 +226,39 @@ namespace vid {
 				break;
 
 			default:
-				int idx = cur.get_idx();
-				video[idx] = c;
+				video[cur.get_idx()] = c;
 
 				inc_cur();
 		}
+	}
+
+	/*
+	 * Prints an unsigned integer on the screen.
+	 */
+	void print_uint(unsigned int n) {
+		char temp[10];
+		int i = 0;
+
+		do {
+			temp[i++] = n % 10 + '0';
+			n /= 10;
+		} while (n > 0);
+	
+		while(i > 0) {
+			print_char(temp[--i]);
+		}
+	}
+
+	/*
+	 * Prints an integer on the screen.
+	 */
+	void print_int(int n) {
+		if(n < 0) {
+			n = -n;
+			print_char('-');
+		}
+
+		print_uint((unsigned int) n);
 	}
 
 	/*
@@ -250,24 +283,67 @@ namespace vid {
 	/*
 	 * Puts a character on screen at the given coordinates.
 	 */
-	void put_char(coords pos, char c) {
+	void put_char(Coords pos, char c) {
 		if(!pos.validate()) {
-			utl::panic("Coordinate invalide per put_char()");
+			utl::panic("Coordinate non valide per put_char()");
 		}
 
 		video[pos.get_idx()] = c;
+	}
+	
+	/*
+	 * Puts an unsigned integer on the screen at the given coordinates.
+	 */
+	void put_uint(Coords pos, unsigned int n) {
+		int pos_idx = pos.get_idx();
+		Coords last_pos = Coords(pos_idx + 10);
+
+		if(!pos.validate() || !last_pos.validate()) {
+			utl::panic("Coordinate non valide per put_uint() (il numero puo' occupare 10 caratteri)");
+		}
+
+		char temp[10];
+		int i = 0;
+
+		do {
+			temp[i++] = n % 10 + '0';
+			n /= 10;
+		} while (n > 0);
+	
+		int j = 0;
+		while(i > 0) {
+			video[pos_idx + j++] = temp[--i];
+		}
+	}
+
+	/*
+	 * Puts an integer on the screen at the given coordinates.
+	 */
+	void put_int(Coords pos, int n) {
+		if(!pos.validate()) {
+			utl::panic("Coordinate non valide per put_int()");
+		}
+
+		int pos_idx = pos.get_idx();
+
+		if(n < 0) {
+			n = -n;
+			video[pos_idx] = '-';
+		}
+
+		put_uint(Coords(pos_idx + 1), (unsigned int) n);
 	}
 
 	/*
 	 * Puts a string on screen at the given coordinates.
 	 */
-	void put_str(coords pos, const char* s) {
+	void put_str(Coords pos, const char* s) {
 		int len = str::len(s);
 		int pos_idx = pos.get_idx();
-		coords last_pos = coords(pos_idx + len);
+		Coords last_pos = Coords(pos_idx + len);
 
 		if(!pos.validate() || !last_pos.validate()) {
-			utl::panic("Coordinate invalide per put_string() (forse la stringa e' troppo lunga?)");
+			utl::panic("Coordinate non valide per put_string() (forse la stringa e' troppo lunga?)");
 		}
 
 		for(int i = 0; i < len; i++) {
@@ -275,6 +351,147 @@ namespace vid {
 		}
 	}
 
+	/*
+	 * Draws a filled box from top left (tl) to bottom right (br) coordinates.
+	 */
+	void draw_rect(Coords tl, Coords br, char fill = SYM_SHADE_DARK) {
+		if(!tl.validate() || !br.validate()) {
+			utl::panic("Coordinate non valide per draw_rect()");
+		}
+
+		for(int c = tl.col; c <= br.col; c++) {
+			for(int r = tl.row; r <= br.row; r++) {
+				put_char(Coords(c, r), fill);
+			}
+		}
+	}
+	
+	/*
+	 * Draws an outlined box from top left (tl) to bottom right (br) coordinates.
+	 */
+	void draw_orect(Coords tl, Coords br, char line = SYM_SHADE_DARK) {
+		if(!tl.validate() || !br.validate()) {
+			utl::panic("Coordinate non valide per draw_orect()");
+		}
+
+		// top
+		for(int c = tl.col; c <= br.col; c++) {
+				put_char(Coords(c, tl.row), line);
+		}
+
+		// bottom
+		for(int c = tl.col; c <= br.col; c++) {
+				put_char(Coords(c, br.row), line);
+		}
+
+		// left
+		for(int r = tl.row + 1; r <= br.row - 1; r++) {
+				put_char(Coords(tl.col, r), line);
+		}
+		
+		// right
+		for(int r = tl.row + 1; r <= br.row - 1; r++) {
+				put_char(Coords(br.col, r), line);
+		}
+	}
+
+	/*
+	 * Draws a circle from the center (c) of radius (r), using a modified version of the midpoint 
+	 * algorithm. Because of quantization error, adjacent odd-even pairs look similar if not equal.
+	 */
+	void draw_circ(Coords c, int r, char line = SYM_SHADE_DARK) {
+		if(r == 0) return;
+
+		// we are trying to approximate:
+		// x^2 + 4 * (y^2) = r^2
+		// this is because screen characters are 8x16, hence we "squash" by a factor of 2 on the 
+		// vertical axis to retain square proportions.
+
+		// higher octant, choose x as the dominant direction
+		int x = 0;
+		int y = -(r + 1) / 2; // prefer approximating away from zero
+		int p = -2 * r + 1; 
+
+		while(x < - 4 * y) {
+			for(int i = -x; i <= x; i++) {
+				put_char(Coords(c.col + i, c.row + y), line);
+				put_char(Coords(c.col + i, c.row - y), line);
+			}
+			
+			if(p > 0) {
+				y++;
+				p += 2 * x + 8 * y + 1;
+			} else {
+				p += 2 * x + 1;
+			}
+
+			x++;
+		}
+
+		// lower octant, choose y as the dominant direction
+		while(y <= 0) {
+			for(int i = -x; i <= x; i++) {
+				put_char(Coords(c.col + i, c.row + y), line);
+				put_char(Coords(c.col + i, c.row - y), line);
+			}
+			
+			if(p > 0) {
+				x++;
+				p += 8 * y - 2 * x + 4;
+			} else {
+				p += 8 * y + 4;
+			}
+
+			y++;
+		}
+	}
+
+	/*
+	 * Draws an outlined circle from the center (c) of radius (r), using the same algorithm as 
+	 * draw_circ(). 
+	 */
+	void draw_ocirc(Coords c, int r, char line = SYM_SHADE_DARK) {
+		if(r == 0) return;
+
+		// higher octant
+		int x = 0;
+		int y = -(r + 1) / 2; // prefer approximating away from zero
+
+		int p = -2 * r + 1;
+
+		while(x < - 4 * y) {
+			put_char(Coords(c.col + x, c.row + y), line);
+			put_char(Coords(c.col + x, c.row - y), line);
+			put_char(Coords(c.col - x, c.row + y), line);
+			put_char(Coords(c.col - x, c.row - y), line);
+			
+			if(p > 0) {
+				y++;
+				p += 2 * x + 8 * y + 1;
+			} else {
+				p += 2 * x + 1;
+			}
+
+			x++;
+		}
+
+		// lower octant
+		while(y <= 0) {
+			put_char(Coords(c.col + x, c.row + y), line);
+			put_char(Coords(c.col + x, c.row - y), line);
+			put_char(Coords(c.col - x, c.row + y), line);
+			put_char(Coords(c.col - x, c.row - y), line);
+			
+			if(p > 0) {
+				x++;
+				p += 8 * y - 2 * x + 4;
+			} else {
+				p += 8 * y + 4;
+			}
+
+			y++;
+		}
+	}
 }
 
 #endif

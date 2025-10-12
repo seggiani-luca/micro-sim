@@ -34,7 +34,7 @@ JAVADOC := javadoc
 
 # -- targets --
 # program
-all: $(OUT)
+all: $(OUT) eprom_clean eprom
 	@$(JAVAC) -d $(OUT) $(SRC)
 
 run: all
