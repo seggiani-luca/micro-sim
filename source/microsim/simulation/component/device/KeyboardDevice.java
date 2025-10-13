@@ -18,7 +18,8 @@ public class KeyboardDevice extends IoDevice {
   Queue<Integer> keyQueue = new LinkedList<>();
 
   /**
-   * Attaches keyboard device to a JComponent to grab keyboard input from.
+   * Attaches keyboard device to a JComponent to grab keyboard input from. TODO: should attach something
+	 * more general than a JComponent, ideally should be able to read from user AND input buffers
    *
    * @param component JComponent to grab input from
    */

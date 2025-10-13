@@ -40,12 +40,13 @@ namespace vid {
 	const char SYM_SHADE_LIGHT = 0x80;
 	const char SYM_SHADE_MEDIUM = 0x81;
 	const char SYM_SHADE_DARK = 0x82;
-	const char SYM_HEART = 0x83;
-	const char SYM_DIAMOND = 0x84;
-	const char SYM_CLUB = 0x85;
-	const char SYM_SPADE = 0x86;
-	const char SYM_NOTE = 0x87;
-	const char SYM_NOTES = 0x88;
+
+	const char SYM_HEART = 0xf0;
+	const char SYM_DIAMOND = 0xf1;
+	const char SYM_CLUB = 0xf2;
+	const char SYM_SPADE = 0xf3;
+	const char SYM_NOTE = 0xf4;
+	const char SYM_NOTES = 0xf5;
 
 	/*
 	 * Table character set

@@ -8,7 +8,8 @@ import microsim.ui.DebugShell;
 
 /**
  * Defines a trie data structure used to query microop sequences from instruction encodings.
- * Supports putting objects and retrieving them.
+ * Supports putting objects and retrieving them. TODO: should retrieve extracting fields from
+ * a single int
  */
 class Trie<T> {
 

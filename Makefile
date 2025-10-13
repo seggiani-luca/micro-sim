@@ -38,7 +38,7 @@ all: $(OUT) eprom_clean eprom
 	@$(JAVAC) -d $(OUT) $(SRC)
 
 run: all
-	@$(JAVA) -server -XX:MaxInlineSize=200 -XX:InlineSmallCode=500 -cp $(OUT) $(MAIN) -e $(EPROM) $(ARGS) -s 2
+	@$(JAVA) -server -XX:MaxInlineSize=200 -XX:InlineSmallCode=500 -cp $(OUT) $(MAIN) -e $(EPROM) $(ARGS) -s 1
 
 debug: all
 	@$(JAVA) -cp $(OUT) $(MAIN) -e $(EPROM) -d $(ARGS) -s 2
