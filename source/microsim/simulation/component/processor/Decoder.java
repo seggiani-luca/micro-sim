@@ -8,46 +8,45 @@ import microsim.ui.DebugShell;
 
 /**
  * Defines a trie data structure used to query microop sequences from instruction encodings.
- * Supports putting objects and retrieving them. TODO: should retrieve extracting fields from
- * a single int
+ * Supports putting objects and retrieving them.
  */
-class Trie<T> {
+class Trie {
 
   /**
    * Trie node. Holds a hash map to children and a (possibly null) data field.
-   *
-   * @param <T> trie data type
    */
-  class TrieNode<T> {
+  class TrieNode {
 
     /**
      * Map of children trie nodes.
      */
-    private final Map<Integer, TrieNode<T>> children = new HashMap<>();
+    private final Map<Integer, TrieNode> children = new HashMap<>();
 
     /**
      * Data held by node. Non leaf trie nodes are signaled by this field being null. Leafs can still
      * have children.
      */
-    private T data;
+    private List<OpType> data;
   }
 
   /**
    * Root of trie.
    */
-  private final TrieNode<T> root = new TrieNode<>();
+  private final TrieNode root = new TrieNode();
 
   /**
-   * Put an item in the trie at the given key.
+   * Put an item in the trie at the given key. Fields of interest used as keys are given as lists
+   * (instead of plain ints).
    *
-   * @param keys key to put item at
+   * @param keys inst key to put item at
    * @param data item to put
    */
-  public void put(List<Integer> keys, T data) {
+  public void put(List<Integer> keys, List<OpType> data) {
     // traverse trie to data
-    TrieNode<T> child = root;
-    for (Integer key : keys) {
-      child.children.putIfAbsent(key, new TrieNode<>());
+    TrieNode child = root;
+
+    for (int key : keys) {
+      child.children.putIfAbsent(key, new TrieNode());
       child = child.children.get(key);
     }
 
@@ -56,16 +55,30 @@ class Trie<T> {
   }
 
   /**
-   * Get an item from the trie at the given key. Returns null if no such item is found. Shorcircuits
-   * at the first valid data node if key is longer than available path (keys are expected to be).
+   * Get an item from the trie at the given key. Fields of interest are converted from the keys
+   * argument (opcode, funct3 and funct7), which is expected to be a valid rv32i opcode. This is
+   * mainly done for performance (extracting from an int should be faster than constructing and
+   * passing an int). Returns null if no such item is found. Shorcircuits at the first valid data
+   * node.
    *
    * @param keys key to search item at
    * @return item, if found
    */
-  public T get(List<Integer> keys) {
+  public List<OpType> get(int keys) {
     // traverse trie to data
-    TrieNode<T> child = root;
-    for (Integer key : keys) {
+    TrieNode child = root;
+
+    for (int i = 0; i < 3; i++) {
+      int key = 0;
+      switch (i) {
+        case 0 ->
+          key = Decoder.opcode(keys);
+        case 1 ->
+          key = Decoder.funct3(keys);
+        case 2 ->
+          key = Decoder.funct7(keys);
+      }
+
       // shortcircuit
       if (child.children.get(key) == null) {
         break;
@@ -278,7 +291,7 @@ public class Decoder {
   /**
    * Trie from instruction encoding to microop list.
    */
-  static final Trie<List<OpType>> instTrie = new Trie<>();
+  static final Trie instTrie = new Trie();
 
   // setup trie
   static {
@@ -457,13 +470,8 @@ public class Decoder {
    * @param inst instruction to decode
    */
   public static void decode(Processor proc, int inst) {
-    // get opcode, funct3, funct7 keys to query trie
-    int opcode = opcode(inst);
-    int funct3 = funct3(inst);
-    int funct7 = funct7(inst);
-
     // get microop
-    List<OpType> opList = instTrie.get(List.of(opcode, funct3, funct7));
+    List<OpType> opList = instTrie.get(inst);
     if (opList == null) {
       throw new RuntimeException("Unknown instruction " + DebugShell.int32ToString(inst));
     }

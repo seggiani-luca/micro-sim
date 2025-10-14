@@ -1,8 +1,7 @@
 package microsim.simulation.component.device;
 
-import microsim.simulation.component.Bus;
+import microsim.simulation.component.bus.*;
 import microsim.simulation.component.SimulationComponent;
-
 
 /**
  * Implements a device that exposes ports on the bus from a certain address. Memory and devices are
@@ -60,7 +59,7 @@ public abstract class IoDevice extends SimulationComponent {
    * @param index index of port
    * @return value port should return
    */
-  abstract int getPort(int index);
+  public abstract int getPort(int index);
 
   /**
    * Sets port at index.
@@ -68,7 +67,7 @@ public abstract class IoDevice extends SimulationComponent {
    * @param index index of port
    * @param data value to give port
    */
-  abstract void setPort(int index, int data);
+  public abstract void setPort(int index, int data);
 
   /**
    * Steps by handling port read/write operations seen on bus and calling {@link #getPort(int)} and

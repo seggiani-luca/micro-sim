@@ -1,4 +1,6 @@
-package microsim.simulation.component;
+package microsim.simulation.component.bus;
+
+import microsim.simulation.component.SimulationComponent;
 
 /**
  * Represents a communication bus for a simulation. A bus is comprised of:
@@ -20,9 +22,9 @@ package microsim.simulation.component;
  * </ul>
  * </li>
  * </ul>
- * Lines are implemented by {@link microsim.simulation.component.TSLine} objects, modeling 3-state
- * logic. Only int lines are defined for performance reasons, byte selection is done through an enum
- * class, while booleans use the usual 0 = false, 1 = true convention.
+ * Lines are implemented by {@link microsim.simulation.component.bus.TSLine} objects, modeling
+ * 3-state logic. Only int lines are defined for performance reasons, byte selection is done through
+ * an enum class, while booleans use the usual 0 = false, 1 = true convention.
  */
 public class Bus extends SimulationComponent {
 
@@ -56,7 +58,7 @@ public class Bus extends SimulationComponent {
   public TSLine writeEnable;
 
   /**
-   * Byte select mode control line (thorugh {@link microsim.simulation.component.Bus.ByteSelect}
+   * Byte select mode control line (thorugh {@link microsim.simulation.component.bus.Bus.ByteSelect}
    * enum).
    */
   public TSLine byteSelect;

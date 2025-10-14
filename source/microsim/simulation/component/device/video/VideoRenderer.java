@@ -1,18 +1,18 @@
-package microsim.simulation.component.device;
+package microsim.simulation.component.device.video;
 
-import microsim.simulation.component.MemorySpace;
-import java.awt.image.*;
-import java.io.*;
-import javax.imageio.*;
-import microsim.simulation.component.Bus;
-import microsim.simulation.event.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import javax.imageio.ImageIO;
+import microsim.simulation.component.memory.*;
 
 /**
- * Implements a video device that renders a frame buffer by reading from VRAM. Functions in text
- * mode, with bitmap characters read from a file and loaded into a buffered image cache. Device
- * ports are 2 and used to set the cursor position.
+ * Implements a rendering component for the
+ * {@link microsim.simulation.component.device.video.VideoDevice} device, responsible of keeping a
+ * frame buffer and rendering to it. Functions in text mode, with bitmap characters read from a file
+ * and loaded into a buffered image cache. Also handles cursor drawing and blinking.
  */
-public class VideoDevice extends IoDevice {
+public class VideoRenderer {
 
   /**
    * Number of columns in text mode.
@@ -72,7 +72,7 @@ public class VideoDevice extends IoDevice {
 
   /**
    * Reference to memory space. Used to directly access VRAM via the
-   * {@link microsim.simulation.component.MemorySpace#getVRAM()} method.
+   * {@link microsim.simulation.component.memory.MemorySpace#getVRAM()} method.
    */
   private final MemorySpace memory;
 
@@ -80,6 +80,13 @@ public class VideoDevice extends IoDevice {
    * Frame buffer to render on.
    */
   private final BufferedImage frame;
+
+  /*
+   * Gets the held frame buffer.
+   */
+  public BufferedImage getFrame() {
+    return frame;
+  }
 
   /**
    * Calculates and returns frame buffer width.
@@ -105,9 +112,27 @@ public class VideoDevice extends IoDevice {
   private int cursorRow;
 
   /**
+   * Sets the row of the cursor.
+   *
+   * @param val row to update to
+   */
+  public void setCursorRow(int val) {
+    cursorRow = val;
+  }
+
+  /**
    * Column of cursor.
    */
   private int cursorColumn;
+
+  /**
+   * Sets the column of the cursor.
+   *
+   * @param val column to update to
+   */
+  public void setCursorColumn(int val) {
+    cursorColumn = val;
+  }
 
   /**
    * Used to keep track of cursor blink state.
@@ -125,14 +150,11 @@ public class VideoDevice extends IoDevice {
   private static final int BLINK_TIME = 10;
 
   /**
-   * Instantiates video device, taking a reference to the bus it's mounted on and the memory space
-   * it should read VRAM from.
+   * Instantiates video renderer, taking a reference to the memory space it should read VRAM from.
    *
-   * @param bus bus the component is mounted on
    * @param memory memory space to read from
    */
-  public VideoDevice(Bus bus, MemorySpace memory) {
-    super(bus, 0x00030000, 2);
+  public VideoRenderer(MemorySpace memory) {
     this.memory = memory;
 
     // init frame buffer
@@ -144,36 +166,9 @@ public class VideoDevice extends IoDevice {
   }
 
   /**
-   * Gets port (doesn't do anything for video device).
-   *
-   * @param index not significant
-   * @return always 0
-   */
-  @Override
-  int getPort(int index) {
-    // nothing to return
-    return 0;
-  }
-
-  /**
-   * Sets cursor ports. Port 0 is row and port 1 is column.
-   *
-   * @param index index of port
-   * @param data value to give port
-   */
-  @Override
-  void setPort(int index, int data) {
-    switch (index) {
-      case 0 ->
-        cursorRow = data;
-      case 1 ->
-        cursorColumn = data;
-    }
-  }
-
-  /**
    * Renders frame buffer from read VRAM. Characters in VRAM are comprised of a bytes representing
-   * extended ASCII code point.
+   * extended ASCII code points. If the cursor coordinates are within the frame buffer, it is drawn
+   * or not depending on the current blink timer.
    */
   public void render() {
     // update blink
@@ -216,13 +211,10 @@ public class VideoDevice extends IoDevice {
     }
 
     g.dispose();
-
-    // raise frame event to notify interfaces
-    raiseEvent(new FrameEvent(this, frame));
   }
 
   /**
-   * Gets a character from code point.
+   * Gets a buffered image representing a character from its extended ASCII code point.
    *
    * @param ch character code point
    * @return character image

@@ -1,7 +1,7 @@
 package microsim.simulation.component.processor;
 
+import microsim.simulation.event.*;
 import microsim.simulation.component.processor.MicroOp.OpType;
-import microsim.simulation.event.DebugEvent;
 import microsim.ui.DebugShell;
 
 /**

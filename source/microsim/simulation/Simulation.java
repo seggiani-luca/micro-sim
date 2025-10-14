@@ -1,11 +1,12 @@
 package microsim.simulation;
 
-import microsim.simulation.component.device.KeyboardDevice;
-import microsim.simulation.component.device.VideoDevice;
-import microsim.simulation.component.MemorySpace;
-import microsim.simulation.component.*;
-import microsim.simulation.component.processor.*;
 import microsim.simulation.event.*;
+import microsim.simulation.component.*;
+import microsim.simulation.component.bus.*;
+import microsim.simulation.component.device.video.*;
+import microsim.simulation.component.device.keyboard.*;
+import microsim.simulation.component.memory.*;
+import microsim.simulation.component.processor.*;
 import microsim.ui.DebugShell;
 
 /**
@@ -41,26 +42,6 @@ public class Simulation extends SimulationComponent implements SimulationListene
    * cycles.
    */
   public KeyboardDevice keyboard;
-
-  /**
-   * Video refresh frequency in Hertz.
-   */
-  static final long VIDEO_FREQ = 25; // 25 fps
-
-  /**
-   * CPU clock frequency in Hertz.
-   */
-  static final long CPU_FREQ = 10_000_000; // 10 MHz
-
-  /**
-   * Frame update period in nanoseconds.
-   */
-  static final long FRAME_TIME = 1_000_000_000L / VIDEO_FREQ;
-
-  /**
-   * Number of CPU clock cycles per frame.
-   */
-  static final long CYCLES_PER_FRAME = CPU_FREQ / VIDEO_FREQ;
 
   /**
    * Instantiates simulation, loading EPROM data in memory. Sets self as listener to the simulation
@@ -127,38 +108,29 @@ public class Simulation extends SimulationComponent implements SimulationListene
   }
 
   /**
-   * Executes simulation. All components on bus do {@link #CYCLES_PER_FRAME} cycles per frame, and
-   * at the end of frames video updates, at {@link #VIDEO_FREQ} Hz.
+   * Executes simulation. All components on local bus update as fast as possible. Video and timer
+   * TODO: add timer run on separate threads at fixed frequency.
    */
-  public void run() {
+  public void begin() {
+    // start other threads
+    video.begin();
+    // timer.run();
+
     // init cycle counter
     long cycle = 0;
 
     // enter simulation loop
     while (true) {
-      // set next video update cycle
-      long nextFrameCycle = cycle + CYCLES_PER_FRAME;
-      long nextFrameTime = System.nanoTime() + FRAME_TIME;
-
-      // step through simulation cycles
-      while (cycle < nextFrameCycle) {
-        if (DebugShell.active) {
-          raiseEvent(new CycleEvent(this, cycle));
-        }
-
-        // actually perform simulation step
-        step();
-
-        cycle++;
+      // if debugging signal cycle to show debug shell
+      if (DebugShell.active) {
+        raiseEvent(new CycleEvent(this, cycle));
       }
 
-      // perform video update
-      video.render();
+      // actually perform simulation step
+      step();
 
-      // busy wait until next video update
-      while (System.nanoTime() < nextFrameTime) {
-        Thread.yield();
-      }
+      // increase cycle
+      cycle++;
     }
   }
 }

@@ -1,6 +1,6 @@
 package microsim.ui;
 
-import microsim.simulation.component.device.VideoDevice;
+import microsim.simulation.component.device.video.*;
 import java.awt.*;
 import java.awt.image.*;
 import javax.swing.*;
@@ -8,7 +8,7 @@ import microsim.simulation.event.*;
 
 /**
  * Extends JPanel to display frame buffers rendered by
- * {@link microsim.simulation.component.device.VideoDevice} components.
+ * {@link microsim.simulation.component.device.video.VideoDevice} components.
  */
 class VideoPanel extends JPanel {
 
@@ -19,13 +19,13 @@ class VideoPanel extends JPanel {
 
   /**
    * The frame buffer to display. Gets updated on FrameEvents raised by
-   * {@link microsim.simulation.component.device.VideoDevice} components.
+   * {@link microsim.simulation.component.device.video.VideoDevice} components.
    */
   private BufferedImage frame;
 
   /**
    * Instantiates panel, setting preferred size to scaled frame buffer size. Frame buffer size is
-   * obtained from {@link microsim.simulation.component.device.VideoDevice}.
+   * obtained from {@link microsim.simulation.component.device.video.VideoDevice}.
    *
    * @param scale scale factor of the frame buffer
    */
@@ -34,8 +34,8 @@ class VideoPanel extends JPanel {
 
     // init placeholder frame
     frame = new BufferedImage(
-      VideoDevice.getFrameWidth(),
-      VideoDevice.getFrameHeight(),
+      VideoRenderer.getFrameWidth(),
+      VideoRenderer.getFrameHeight(),
       BufferedImage.TYPE_INT_RGB
     );
 
@@ -47,8 +47,8 @@ class VideoPanel extends JPanel {
 
     // set preferred size
     setPreferredSize(new Dimension(
-      VideoDevice.getFrameWidth() * scale,
-      VideoDevice.getFrameHeight() * scale
+      VideoRenderer.getFrameWidth() * scale,
+      VideoRenderer.getFrameHeight() * scale
     ));
   }
 

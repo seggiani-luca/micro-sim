@@ -1,6 +1,6 @@
 package microsim.ui;
 
-import microsim.simulation.component.MemorySpace;
+import microsim.simulation.component.memory.MemorySpace;
 import java.nio.*;
 import java.util.Deque;
 import microsim.Main;

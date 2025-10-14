@@ -3,6 +3,7 @@ package microsim;
 import java.io.*;
 import microsim.elf.*;
 import microsim.simulation.*;
+import microsim.simulation.component.device.keyboard.JComponentKeyboardSource;
 import microsim.ui.*;
 
 /**
@@ -160,7 +161,8 @@ public class Main {
 
     // attach keyboard
     System.out.println("Attaching keyboard to window panel");
-    simulation.keyboard.attachComponent(window.getPanel());
+    JComponentKeyboardSource keyboardSource = new JComponentKeyboardSource(window.getPanel());
+    simulation.keyboard.attachSource(keyboardSource);
   }
 
 
@@ -199,7 +201,7 @@ public class Main {
     // 4. begin simulation
     try {
       System.out.println("Simulation powering on");
-      simulation.run();
+      simulation.begin();
     } catch (RuntimeException e) {
       System.err.println("Simulation error. " + e.getMessage());
       e.printStackTrace(); // for now print stacktrace

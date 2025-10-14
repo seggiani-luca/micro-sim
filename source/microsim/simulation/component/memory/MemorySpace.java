@@ -1,10 +1,10 @@
-package microsim.simulation.component;
+package microsim.simulation.component.memory;
 
-import microsim.simulation.component.Bus;
-import microsim.simulation.component.Bus.ByteSelect;
-import microsim.simulation.component.SimulationComponent;
 import microsim.simulation.event.*;
 import microsim.ui.DebugShell;
+import microsim.simulation.component.bus.Bus;
+import microsim.simulation.component.bus.Bus.ByteSelect;
+import microsim.simulation.component.SimulationComponent;
 
 /**
  * Implements a memory space as a (to outside users) contiguous array of byte locations. Memory is
@@ -13,7 +13,7 @@ import microsim.ui.DebugShell;
  * <li>EPROM: contains program code and data at startup.</li>
  * <li>RAM: for general access.</li>
  * <li>VRAM: gets rendered to video on
- * {@link microsim.simulation.component.device.VideoDevice#render()} calls.</li>
+ * {@link microsim.simulation.component.device.video.VideoRenderer#render()} calls.</li>
  * </ol>
  * Regions are defined by begin/end address pairs. End addresses are inclusive (0x000 to 0x0ff means
  * 0x0ff is in the region and 0x100 isn't).
@@ -144,24 +144,24 @@ public class MemorySpace extends SimulationComponent {
    * Steps by handling read/write operations seen on bus. Bus protocol is the following:
    * <ul>
    * <li>
-   * If {@link microsim.simulation.component.Bus#readEnable} is high, start a read operation:
+   * If {@link microsim.simulation.component.bus.Bus#readEnable} is high, start a read operation:
    * <ol>
-   * <li>Read address from {@link microsim.simulation.component.Bus#addressLine}.</li>
+   * <li>Read address from {@link microsim.simulation.component.bus.Bus#addressLine}.</li>
    * <li>Read data at address.</li>
-   * <li>Drive {@link microsim.simulation.component.Bus#dataLine} for 1 simulation step.</li>
+   * <li>Drive {@link microsim.simulation.component.bus.Bus#dataLine} for 1 simulation step.</li>
    * </ol>
    * </li>
    * <li>
-   * If {@link microsim.simulation.component.Bus#writeEnable} is high, start a write operation:
+   * If {@link microsim.simulation.component.bus.Bus#writeEnable} is high, start a write operation:
    * <ol>
-   * <li>Read address from {@link microsim.simulation.component.Bus#addressLine} and data from
-   * {@link microsim.simulation.component.Bus#dataLine}.</li>
+   * <li>Read address from {@link microsim.simulation.component.bus.Bus#addressLine} and data from
+   * {@link microsim.simulation.component.bus.Bus#dataLine}.</li>
    * <li>Write data at address.</li>
    * </ol>
    * </li>
    * </ul>
-   * If both {@link microsim.simulation.component.Bus#readEnable} and
-   * {@link microsim.simulation.component.Bus#writeEnable} are high, raises an exception. If
+   * If both {@link microsim.simulation.component.bus.Bus#readEnable} and
+   * {@link microsim.simulation.component.bus.Bus#writeEnable} are high, raises an exception. If
    * requested address is out of bounds, expect it to be a I/O operation and ignore.
    */
   @Override
@@ -315,8 +315,9 @@ public class MemorySpace extends SimulationComponent {
   }
 
   /**
-   * Returns VRAM byte array. Used by {@link microsim.simulation.component.device.VideoDevice} for
-   * direct VRAM accesses when rendering to frame buffer.
+   * Returns VRAM byte array. Used by
+   * {@link microsim.simulation.component.device.video.VideoRenderer} for direct VRAM accesses when
+   * rendering to frame buffer.
    *
    * @return VRAM byte array
    */

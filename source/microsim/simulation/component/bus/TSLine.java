@@ -1,6 +1,6 @@
-package microsim.simulation.component;
+package microsim.simulation.component.bus;
 
-import microsim.Main;
+import microsim.simulation.component.SimulationComponent;
 
 /**
  * Models a 3-state logic line. Offers 2 main features: one driver/multiple readers functionality,

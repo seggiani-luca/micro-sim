@@ -1,12 +1,11 @@
 package microsim.simulation.component.processor;
 
-import microsim.simulation.component.MemorySpace;
 import java.util.Deque;
 import java.util.LinkedList;
+import microsim.simulation.event.*;
 import microsim.simulation.component.*;
-import microsim.simulation.component.Bus.ByteSelect;
-import microsim.simulation.component.processor.MicroOp.OpType;
-import microsim.simulation.event.DebugEvent;
+import microsim.simulation.component.memory.*;
+import microsim.simulation.component.bus.*;
 import microsim.ui.DebugShell;
 
 /**
@@ -25,7 +24,7 @@ public class Processor extends SimulationComponent {
 
   /**
    * The reset value of program counter {@link #pc}. This is set to EPROM_BEG from
-   * {@link microsim.simulation.component.MemorySpace}.
+   * {@link microsim.simulation.component.memory.MemorySpace}.
    */
   private static final int RESET_INSTRUCTION_ADDRESS = MemorySpace.EPROM_BEG;
 
@@ -200,10 +199,10 @@ public class Processor extends SimulationComponent {
    */
   private void fetchDecode() {
     // read next instruction word and move
-    BusInterface.doReadRoutine(this, pc, ByteSelect.WORD);
+    BusInterface.doReadRoutine(this, pc, Bus.ByteSelect.WORD);
 
     // decode instruction word
-    opQueue.add(new MicroOp(OpType.DECODE));
+    opQueue.add(new MicroOp(MicroOp.OpType.DECODE));
   }
 
   /**

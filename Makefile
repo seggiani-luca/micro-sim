@@ -32,16 +32,19 @@ RISCV_RELF := readelf
 # documentation
 JAVADOC := javadoc
 
+# --- variables ---
+SCALE := 2
+
 # -- targets --
 # program
 all: $(OUT) eprom_clean eprom
 	@$(JAVAC) -d $(OUT) $(SRC)
 
 run: all
-	@$(JAVA) -server -XX:MaxInlineSize=200 -XX:InlineSmallCode=500 -cp $(OUT) $(MAIN) -e $(EPROM) $(ARGS) -s 1
+	@$(JAVA) -server -XX:MaxInlineSize=200 -XX:InlineSmallCode=500 -cp $(OUT) $(MAIN) -e $(EPROM) $(ARGS) -s $(SCALE)
 
 debug: all
-	@$(JAVA) -cp $(OUT) $(MAIN) -e $(EPROM) -d $(ARGS) -s 2
+	@$(JAVA) -cp $(OUT) $(MAIN) -e $(EPROM) -d $(ARGS) -s $(SCALE)
 
 $(OUT):
 	@mkdir -p $(OUT)
