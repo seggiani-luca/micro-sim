@@ -51,6 +51,21 @@ public class MemorySpace extends SimulationComponent {
   public static final int VRAM_END = 0x0002_0c00;
 
   /**
+   * Position of video interface in addressing space.
+   */
+  public static final int VIDEO_BASE = 0x0003_0000;
+
+  /**
+   * Position of keyboard interface in addressing space.
+   */
+  public static final int KEYBOARD_BASE = 0x0004_0000;
+
+  /**
+   * Position of timer interface in addressing space.
+   */
+  public static final int TIMER_BASE = 0x0005_0000;
+
+  /**
    * Checks if given address is in memory bounds.
    *
    * @param addr address to check

@@ -31,9 +31,10 @@ public class KeyboardDevice extends IoDevice {
    * Instantiates keyboard device, taking a reference to the bus it's mounted on.
    *
    * @param bus bus the component is mounted on
+   * @param base base memory offset
    */
-  public KeyboardDevice(Bus bus) {
-    super(bus, 0x00040000, 2);
+  public KeyboardDevice(Bus bus, int base) {
+    super(bus, base, 2);
   }
 
   /**

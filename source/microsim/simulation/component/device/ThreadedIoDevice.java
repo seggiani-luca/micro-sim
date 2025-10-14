@@ -1,11 +1,12 @@
 package microsim.simulation.component.device;
 
+import java.util.concurrent.locks.LockSupport;
 import microsim.simulation.component.bus.Bus;
 
 /**
  * Implements a device that should be simulated on a thread alongside the main simulation loop. This
  * is done via a Runnable subclass which gets instantiated by the constructor and kept private. This
- * class just hooks into the abstract method {@link #deviceThread()}. All device implementations
+ * class just hooks into the abstract method {@link #deviceThread()}. All the device implementations
  * need to do is implement this method, and it will be run on its own thread.
  */
 public abstract class ThreadedIoDevice extends IoDevice {
@@ -48,6 +49,24 @@ public abstract class ThreadedIoDevice extends IoDevice {
    * Function that implements the actual device thread. To be implemented by subclass.
    */
   protected abstract void deviceThread();
+
+  /**
+   * Spins the thread until the given time, parking it if remaining time is over a millisecond.
+   *
+   * @param time time to wait to
+   */
+  protected void smartSpin(long time) {
+    long now = System.nanoTime();
+    long remaining = time - now;
+
+    if (remaining > 1_000_000) { // over 1 ms
+      LockSupport.parkNanos(remaining - 500_000);
+    }
+    while (System.nanoTime() < time) {
+      // more granular wait
+      Thread.onSpinWait();
+    }
+  }
 
   /**
    * Begins executing device thread.

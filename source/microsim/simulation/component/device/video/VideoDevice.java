@@ -20,7 +20,7 @@ public class VideoDevice extends ThreadedIoDevice {
   /**
    * Period of video updates.
    */
-  public static final long FRAME_TIME = 1_000_000_000L / 25;
+  public static final long FRAME_TIME = 1_000_000_000L / FRAME_FREQ;
 
   /**
    * The component in charge of actually holding and rendering a framebuffer.
@@ -32,10 +32,11 @@ public class VideoDevice extends ThreadedIoDevice {
    * it should read VRAM from.
    *
    * @param bus bus the component is mounted on
+   * @param base base memory offset
    * @param memory memory space to read from
    */
-  public VideoDevice(Bus bus, MemorySpace memory) {
-    super(bus, 0x00030000, 2);
+  public VideoDevice(Bus bus, int base, MemorySpace memory) {
+    super(bus, base, 2);
 
     // init renderer
     renderer = new VideoRenderer(memory);
@@ -74,15 +75,14 @@ public class VideoDevice extends ThreadedIoDevice {
    */
   @Override
   protected void deviceThread() {
+    long frameTime = System.nanoTime();
     while (true) {
       // render to buffer
       render();
 
       // wait for frame time
-      double waitTime = System.nanoTime() + FRAME_TIME;
-      while (System.nanoTime() < waitTime) {
-        Thread.yield();
-      }
+      frameTime += FRAME_TIME;
+      smartSpin(frameTime);
     }
   }
 

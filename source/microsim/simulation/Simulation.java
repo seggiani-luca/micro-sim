@@ -5,6 +5,7 @@ import microsim.simulation.component.*;
 import microsim.simulation.component.bus.*;
 import microsim.simulation.component.device.video.*;
 import microsim.simulation.component.device.keyboard.*;
+import microsim.simulation.component.device.timer.*;
 import microsim.simulation.component.memory.*;
 import microsim.simulation.component.processor.*;
 import microsim.ui.DebugShell;
@@ -38,10 +39,15 @@ public class Simulation extends SimulationComponent implements SimulationListene
   public VideoDevice video;
 
   /**
-   * Simulated keyboard device component. Instantiated after bus, updated third in simulation
+   * Simulated keyboard device component. Instantiated after bus, updated third in simulation.
    * cycles.
    */
   public KeyboardDevice keyboard;
+
+  /**
+   * Simulated timer component. Instantiated after bus, updated third in simulation.
+   */
+  public TimerDevice timer;
 
   /**
    * Instantiates simulation, loading EPROM data in memory. Sets self as listener to the simulation
@@ -56,8 +62,9 @@ public class Simulation extends SimulationComponent implements SimulationListene
     // init components on bus
     proc = new Processor(bus);
     memory = new MemorySpace(bus, epromData);
-    video = new VideoDevice(bus, memory);
-    keyboard = new KeyboardDevice(bus);
+    video = new VideoDevice(bus, MemorySpace.VIDEO_BASE, memory);
+    keyboard = new KeyboardDevice(bus, MemorySpace.KEYBOARD_BASE);
+    timer = new TimerDevice(bus, MemorySpace.TIMER_BASE);
 
     // set as listener. this is leaky but we don't expect listeners to use it before event is raised
     bus.addListener(this);
@@ -65,6 +72,7 @@ public class Simulation extends SimulationComponent implements SimulationListene
     memory.addListener(this);
     video.addListener(this);
     keyboard.addListener(this);
+    timer.addListener(this);
   }
 
   /**
@@ -105,16 +113,17 @@ public class Simulation extends SimulationComponent implements SimulationListene
     // devices
     video.step();
     keyboard.step();
+    timer.step();
   }
 
   /**
    * Executes simulation. All components on local bus update as fast as possible. Video and timer
-   * TODO: add timer run on separate threads at fixed frequency.
+   * run on separate threads at fixed frequency.
    */
   public void begin() {
     // start other threads
     video.begin();
-    // timer.run();
+    timer.begin();
 
     // init cycle counter
     long cycle = 0;

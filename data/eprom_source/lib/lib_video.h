@@ -22,22 +22,22 @@ namespace vid {
 	/*
 	 * Number of columns in text mode.
 	 */
-	#define COLS 80
+	const int COLS = 80;
 
 	/*
 	 * Number of rows in text mode.
 	 */
-	#define ROWS 30
+	const int ROWS = 30;
 
 	/*
 	 * Size of tabulation.
 	 */
-	#define TAB_SIZE 4
+	const int TAB_SIZE = 4;
 
 	/*
 	 * Special character set.
 	 */
-	const char SYM_SHADE_LIGHT = 0x80;
+	const char SYM_SHADE = 0x80;
 	const char SYM_SHADE_MEDIUM = 0x81;
 	const char SYM_SHADE_DARK = 0x82;
 
