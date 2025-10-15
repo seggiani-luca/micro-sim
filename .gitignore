@@ -1,2 +1,10 @@
-out/
-result.txt
+#  objects
+emulator/target/
+eprom/out/
+*.elf
+
+# GIMP files (used for charset.bmp)
+*.xcf
+
+# NetBeans configuration
+nb-configuration.xml
