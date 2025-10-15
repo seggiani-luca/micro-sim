@@ -1,17 +1,16 @@
 package microsim.ui;
 
-import microsim.simulation.component.device.video.*;
-import java.awt.*;
-import java.awt.image.*;
-import javax.swing.*;
-<<<<<<< HEAD:emulator/src/main/java/microsim/ui/VideoWindow.java
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
+import java.awt.image.BufferedImage;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
 import microsim.simulation.component.device.video.VideoRenderer;
 import microsim.simulation.event.FrameEvent;
 import microsim.simulation.event.SimulationEvent;
 import microsim.simulation.event.SimulationListener;
-=======
-import microsim.simulation.event.*;
->>>>>>> parent of b9e08b9 (Inizio sviluppo interfaccia audio):source/microsim/ui/VideoWindow.java
 
 /**
  * Extends JPanel to display frame buffers rendered by

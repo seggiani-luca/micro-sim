@@ -7,49 +7,30 @@
   <groupId>luca</groupId>
   <artifactId>micro-sim</artifactId>
   <version>0.0</version>
-  
-  <build>
-    <plugins>
+
+	<build>
+    <finalName>micro-sim</finalName>
+		<plugins>
       
-      <plugin>
-        <!-- builds an executable .jar archive -->
-        <artifactId>maven-jar-plugin</artifactId>
-        <version>3.4.0</version>
-        <configuration>
-          <archive>
-            <manifest>
-              <mainClass>microsim.Main</mainClass>
-            </manifest>
-          </archive>
-        </configuration>
-      </plugin>
+			<plugin>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>3.4.0</version>
+				<configuration>
+					<archive>
+						<manifest>
+							<mainClass>microsim.Main</mainClass>
+              <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+						</manifest>
+					</archive>
+				</configuration>
+			</plugin>
       
-      <plugin>
-        <!-- copies data and conf directories into target directory -->
-        <artifactId>maven-assembly-plugin</artifactId>
-        <version>3.7.1</version>
-        <configuration>
-          <descriptors>
-            <descriptor>src/assembly/app.xml</descriptor>
-          </descriptors>
-        </configuration>
-        <executions>
-          <execution>
-            <id>package-app</id>
-            <phase>package</phase>
-            <goals>
-              <goal>single</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-      
-    </plugins>
-  </build>
-  
+		</plugins>
+	</build>
+
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.release>21</maven.compiler.release>
-  </properties>
+	</properties>
   
 </project>

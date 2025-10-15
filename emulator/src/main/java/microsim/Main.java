@@ -13,21 +13,17 @@ import microsim.ui.VideoWindow;
  */
 public class Main {
 
-<<<<<<< HEAD:emulator/src/main/java/microsim/Main.java
   /**
    * Version of emulator.
    */
   public static final String VERSION;
+  public static final String YEAR = "2025";
 
   // get version
   static {
     Package pkg = Main.class.getPackage();
     VERSION = pkg.getImplementationVersion();
   }
-=======
-  public static final String version = "0.0";
-  public static final String year = "2025";
->>>>>>> parent of b9e08b9 (Inizio sviluppo interfaccia audio):source/microsim/Main.java
 
   /**
    * Gets argument parameter following argument tag. With tag = "-t", from '-t "arg"' returns "arg".
@@ -77,12 +73,8 @@ public class Main {
    * Shows version and other basic info.
    */
   private static void greet() {
-<<<<<<< HEAD:emulator/src/main/java/microsim/Main.java
-    System.out.println("micro-sim simulator, version " + VERSION);
-=======
-    System.out.println("micro-sim simulator, version " + version);
-    System.out.println(year + " - Luca Seggiani\n");
->>>>>>> parent of b9e08b9 (Inizio sviluppo interfaccia audio):source/microsim/Main.java
+    System.out.println("micro-sim simulator " + VERSION);
+    System.out.println(YEAR + " - Luca Seggiani\n");
   }
 
   /**
