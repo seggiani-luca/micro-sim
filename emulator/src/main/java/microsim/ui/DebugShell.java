@@ -1,8 +1,10 @@
 package microsim.ui;
 
+import microsim.simulation.component.memory.MemorySpace;
 import java.nio.*;
 import java.util.Deque;
 import microsim.Main;
+<<<<<<< HEAD:emulator/src/main/java/microsim/ui/DebugShell.java
 import microsim.simulation.Simulation;
 import microsim.simulation.component.memory.MemorySpace;
 import microsim.simulation.component.processor.MicroOp;
@@ -11,6 +13,12 @@ import microsim.simulation.event.AttachEvent;
 import microsim.simulation.event.CycleEvent;
 import microsim.simulation.event.SimulationEvent;
 import microsim.simulation.event.SimulationListener;
+=======
+import microsim.simulation.*;
+import microsim.simulation.component.*;
+import microsim.simulation.component.processor.*;
+import microsim.simulation.event.*;
+>>>>>>> parent of b9e08b9 (Inizio sviluppo interfaccia audio):source/microsim/ui/DebugShell.java
 
 /**
  * Handles the shell shown in debug mode. Debug information is shown in 2 ways:
@@ -292,7 +300,7 @@ public class DebugShell implements SimulationListener {
    * Greets the user and gives basic info.
    */
   private void greet() {
-    System.out.println("Welcome to the micro-sim debug shell, version " + Main.VERSION);
+    System.out.println("Welcome to the micro-sim debug shell, version " + Main.version);
     System.out.println("Addresses are base-16, no 0x prefix.\n");
     for (HelpPage page : HelpPage.values()) {
       help(page);

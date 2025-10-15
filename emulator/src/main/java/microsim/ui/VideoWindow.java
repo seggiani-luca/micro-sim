@@ -1,12 +1,17 @@
 package microsim.ui;
 
+import microsim.simulation.component.device.video.*;
 import java.awt.*;
 import java.awt.image.*;
 import javax.swing.*;
+<<<<<<< HEAD:emulator/src/main/java/microsim/ui/VideoWindow.java
 import microsim.simulation.component.device.video.VideoRenderer;
 import microsim.simulation.event.FrameEvent;
 import microsim.simulation.event.SimulationEvent;
 import microsim.simulation.event.SimulationListener;
+=======
+import microsim.simulation.event.*;
+>>>>>>> parent of b9e08b9 (Inizio sviluppo interfaccia audio):source/microsim/ui/VideoWindow.java
 
 /**
  * Extends JPanel to display frame buffers rendered by
@@ -17,7 +22,7 @@ class VideoPanel extends JPanel {
   /**
    * Scale of the panel. 1x matches to display pixels, 2x looks better on most displays.
    */
-  private final int scale;
+  private int scale;
 
   /**
    * The frame buffer to display. Gets updated on FrameEvents raised by
@@ -142,8 +147,8 @@ public class VideoWindow implements SimulationListener {
   @Override
   public void onSimulationEvent(SimulationEvent e) {
     // check for FrameEvent
-    if (e instanceof FrameEvent frameEvent) {
-      panel.updateFrame(frameEvent.frame);
+    if (e instanceof FrameEvent) {
+      panel.updateFrame(((FrameEvent) e).frame);
       panel.repaint();
     }
   }

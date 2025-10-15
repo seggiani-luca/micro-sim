@@ -1,9 +1,16 @@
 package microsim.simulation.component.device.video;
 
+<<<<<<< HEAD:emulator/src/main/java/microsim/simulation/component/device/video/VideoDevice.java
 import microsim.simulation.component.bus.Bus;
 import microsim.simulation.component.device.ThreadedIoDevice;
 import microsim.simulation.component.memory.MemorySpace;
 import microsim.simulation.event.FrameEvent;
+=======
+import microsim.simulation.component.bus.*;
+import microsim.simulation.component.memory.*;
+import microsim.simulation.event.*;
+import microsim.simulation.component.device.ThreadedIoDevice;
+>>>>>>> parent of b9e08b9 (Inizio sviluppo interfaccia audio):source/microsim/simulation/component/device/video/VideoDevice.java
 
 /**
  * Implements a video device that renders a frame buffer by reading from VRAM. Actual rendering is
@@ -20,7 +27,7 @@ public class VideoDevice extends ThreadedIoDevice {
   /**
    * Period of video updates.
    */
-  public static final long FRAME_TIME = 1_000_000_000L / FRAME_FREQ; // ns
+  public static final long FRAME_TIME = 1_000_000_000L / FRAME_FREQ;
 
   /**
    * The component in charge of actually holding and rendering a framebuffer.
