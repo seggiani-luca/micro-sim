@@ -14,14 +14,15 @@ import microsim.ui.VideoWindow;
 public class Main {
 
   /**
-   * Version of the simulator.
+   * Version of emulator.
    */
-  public static final String VERSION = "0.0";
+  public static final String VERSION;
 
-  /**
-   * Year of this simulator release.
-   */
-  public static final String YEAR = "2025";
+  // get version
+  static {
+    Package pkg = Main.class.getPackage();
+    VERSION = pkg.getImplementationVersion();
+  }
 
   /**
    * Gets argument parameter following argument tag. With tag = "-t", from '-t "arg"' returns "arg".
@@ -72,7 +73,6 @@ public class Main {
    */
   private static void greet() {
     System.out.println("micro-sim simulator, version " + VERSION);
-    System.out.println(YEAR + " - Luca Seggiani\n");
   }
 
   /**

@@ -2,6 +2,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" 
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  
   <modelVersion>4.0.0</modelVersion>
   <groupId>luca</groupId>
   <artifactId>micro-sim</artifactId>
@@ -9,6 +10,7 @@
   
   <build>
     <plugins>
+      
       <plugin>
         <!-- builds an executable .jar archive -->
         <artifactId>maven-jar-plugin</artifactId>
@@ -21,6 +23,7 @@
           </archive>
         </configuration>
       </plugin>
+      
       <plugin>
         <!-- copies data and conf directories into target directory -->
         <artifactId>maven-assembly-plugin</artifactId>
@@ -40,6 +43,7 @@
           </execution>
         </executions>
       </plugin>
+      
     </plugins>
   </build>
   
@@ -47,4 +51,5 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.release>21</maven.compiler.release>
   </properties>
-</project>    
+  
+</project>
