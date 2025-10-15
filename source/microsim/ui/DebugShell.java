@@ -1,11 +1,10 @@
 package microsim.ui;
 
-import microsim.simulation.component.memory.MemorySpace;
 import java.nio.*;
 import java.util.Deque;
 import microsim.Main;
 import microsim.simulation.*;
-import microsim.simulation.component.*;
+import microsim.simulation.component.memory.*;
 import microsim.simulation.component.processor.*;
 import microsim.simulation.event.*;
 
@@ -290,7 +289,7 @@ public class DebugShell implements SimulationListener {
    * Greets the user and gives basic info.
    */
   private void greet() {
-    System.out.println("Welcome to the micro-sim debug shell, version " + Main.version);
+    System.out.println("Welcome to the micro-sim debug shell, version " + Main.VERSION);
     System.out.println("Addresses are base-16, no 0x prefix.\n");
     for (HelpPage page : HelpPage.values()) {
       help(page);

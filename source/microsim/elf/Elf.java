@@ -375,8 +375,9 @@ public class Elf {
       // 2) text + rodata
       // 3) data (to be loaded in RAM by _start routine)
       // 4) bss (ignored)
-      // 5) video (ignored)
-      // 6) gnu stack (ignored)
+      // 5) init array (ignored for now) TODO: load and call constructors
+      // 6) video (ignored)
+      // 7) gnu stack (ignored)
       if (programHeaders.length < 3) {
         throw new IOException("Not enough program headers in ELF");
       }

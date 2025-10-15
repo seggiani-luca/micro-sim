@@ -1,9 +1,9 @@
 package microsim.ui;
 
-import microsim.simulation.component.device.video.*;
 import java.awt.*;
 import java.awt.image.*;
 import javax.swing.*;
+import microsim.simulation.component.device.video.*;
 import microsim.simulation.event.*;
 
 /**
@@ -15,7 +15,7 @@ class VideoPanel extends JPanel {
   /**
    * Scale of the panel. 1x matches to display pixels, 2x looks better on most displays.
    */
-  private int scale;
+  private final int scale;
 
   /**
    * The frame buffer to display. Gets updated on FrameEvents raised by
@@ -141,8 +141,8 @@ public class VideoWindow implements SimulationListener {
   @Override
   public void onSimulationEvent(SimulationEvent e) {
     // check for FrameEvent
-    if (e instanceof FrameEvent) {
-      panel.updateFrame(((FrameEvent) e).frame);
+    if (e instanceof FrameEvent frameEvent) {
+      panel.updateFrame(frameEvent.frame);
       panel.repaint();
     }
   }
