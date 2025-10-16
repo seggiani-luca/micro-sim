@@ -44,7 +44,7 @@ $ mvn package
 ```
 Questo creerà due pacchetti `.jar` in `emulator/target`:
 - `micro-sim.jar`, che contiene il pacchetto `microsim` come libreria Java, e non può essere eseguito;
-- `micro-sim-app.jar`, che contiene tutte le dipendenze e definisce un entry point, e può essere eseguito.
+- `micro-sim-app.jar`, che contiene tutte le dipendenze, definisce un entry point, e può essere eseguito.
 
 ```shell
 # esegui il pacchetto dell'emulatore

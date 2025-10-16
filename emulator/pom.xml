@@ -8,13 +8,22 @@
   <artifactId>micro-sim</artifactId>
   <version>0.0</version>
 
-  <dependencies>
+	<dependencies>
+
     <dependency>
       <!-- for elf parsing -->
       <groupId>net.fornwall</groupId>
       <artifactId>jelf</artifactId>
       <version>0.10.0</version>
-    </dependency>
+		</dependency>
+
+		<dependency>
+      <!-- for json parsing -->
+			<groupId>org.json</groupId>
+			<artifactId>json</artifactId>
+			<version>20250517</version>
+		</dependency>
+
   </dependencies>
 
 	<build>

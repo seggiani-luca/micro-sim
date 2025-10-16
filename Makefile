@@ -9,7 +9,7 @@ all: run
 
 run: emulator eprom
 	@echo ">> Running emulator..."
-	@cd $(EMULATOR) && java -jar $(EXECUTABLE) -s 2
+	@cd $(EMULATOR) && java -jar $(EXECUTABLE)
 
 emulator:
 	@echo ">> Building emulator..."
