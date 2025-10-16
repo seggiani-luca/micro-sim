@@ -43,8 +43,10 @@ Dalla directory `emulator`, per compilare inserire:
 $ mvn package
 ```
 Questo creerà due pacchetti `.jar` in `emulator/target`:
-- `micro-sim.jar`, che contiene il pacchetto `microsim` come libreria Java, e non può essere eseguito;
-- `micro-sim-app.jar`, che contiene tutte le dipendenze, definisce un entry point, e può essere eseguito.
+-   `micro-sim.jar`, che contiene il pacchetto `microsim` come libreria Java, e non può essere 
+    eseguito;
+-   `micro-sim-app.jar`, che contiene tutte le dipendenze, definisce un entry point, e può essere 
+    eseguito.
 
 ```shell
 # esegui il pacchetto dell'emulatore
@@ -52,7 +54,11 @@ $ java -jar target/micro-sim-app.jar
 ```
 
 La configurazione di default è cercata in `emulator/conf`. Si possono specificare altri file di 
-configurazione attraverso l'opzione `-c <file-di-configurazione>`.
+configurazione attraverso le opzioni:
+-   `-ci <configurazione-interfacce`: definisce il modo in cui vengono gestite le interfacce con 
+    l'utente (finestra video, tastiera, ecc...);
+-   `-cs <configurazione-simulazione>`: definisce la struttura del calcolatore simulato (mappa 
+    memoria, dispositivi montati, ecc...) ed alcune politiche (accesso all'EPROM, ecc...).
 
 ## Compilare il firmware
 Per eseguire, l'emulatore ha bisogno di un firmware da caricare nell'EPROM simulata. Questo è 
