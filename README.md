@@ -15,15 +15,19 @@ configurazione per la toolchain
 
 ## Guida rapida
 Sotto vengono descritte le procedure per compilare emulatore e firmware.
-Viene anche fornito un Makefile per automatizzarle.
+Nella directory base viene fornito anche un Makefile per automatizzarle.
 
-Dalla directory base, per compilare firmware, emulatore e quindi eseguire, inserire:
+L'utilizzo è il seguente:
 ```shell
-make
-```
+# compila tutto ed esegue (uguale a make run)
+$ make
 
-Si possono usare anche i comandi `make emulator` e `make eprom` per compilare separatamente le due 
-componenti.
+# compila solo l'emulatore
+$ make emulator
+
+# compila solo il firmware
+$ make eprom
+```
 
 ## Compilare l'emulatore 
 `emulator` contiene il sorgente dell'emulatore (`emulator/src`), file di configurazione 
@@ -56,10 +60,14 @@ richiede la toolchain [riscv-gnu-toolchain](https://github.com/riscv-collab/risc
 (su Arch Linux è disponibile 
 nell'[AUR](https://aur.archlinux.org/packages/riscv32-gnu-toolchain-elf-bin)).
 
-Dalla directory `eprom`, per compilare inserire:
+Dalla directory `eprom`, l'utilizzo è il seguente:
 ```shell
+# compila il firmware
 $ make
-```
 
-Sono disponibili anche altri comandi, fra cui `make dump` per visualizzare il contenuto dell'EPROM,
-e `make read` per stampare informazioni sugli header ELF.
+# stampa il dump del firmware
+$ make dump
+
+# stampa gli header dell'ELF generato
+$ make read
+```

@@ -73,7 +73,7 @@ public class Main {
    * Shows version and other basic info.
    */
   private static void greet() {
-    System.out.println("micro-sim simulator " + VERSION);
+    System.out.println("micro-sim emulator " + VERSION);
     System.out.println(YEAR + " - Luca Seggiani\n");
   }
 
