@@ -2,7 +2,7 @@
 MAKEFLAGS += --no-print-directory
 
 EMULATOR := emulator
-EXECUTABLE := target/micro-sim-jar-with-dependencies.jar
+EXECUTABLE := target/micro-sim-app.jar
 EPROM := eprom
 
 all: run

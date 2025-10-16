@@ -40,7 +40,9 @@
           </archive>
           <descriptorRefs>
             <descriptorRef>jar-with-dependencies</descriptorRef>
-          </descriptorRefs>
+					</descriptorRefs>
+					<appendAssemblyId>false</appendAssemblyId>
+					<finalName>micro-sim-app</finalName>
         </configuration>
       </plugin>
       

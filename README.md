@@ -9,13 +9,14 @@ Le componenti simulate sono:
 - Interfaccia timer.
 
 Il firmware (caricato nell'EPROM simulata) di sistema deve essere compilato o assemblato per 
-architettura RISC-V, ISA RV32I. Viene resa disponibile una libreria scritta in C++, e file di 
-configurazione per la toolchain 
+architettura RISC-V, ISA RV32I. Per compilare il proprio firmware iene resa disponibile una 
+libreria scritta in C++, e file di configurazione per la toolchain 
 [riscv-gnu-toolchain](https://github.com/riscv-collab/riscv-gnu-toolchain).
 
 ## Guida rapida
-Sotto vengono descritte le procedure per compilare emulatore e firmware.
-Nella directory base viene fornito anche un Makefile per automatizzarle.
+Nelle prossime sezioni verranno descritte le procedure per compilare emulatore e firmware.
+Nel caso si voglia eseguire subito, nella directory base viene fornito un Makefile che automatizza 
+tutto.
 
 L'utilizzo è il seguente:
 ```shell
@@ -30,19 +31,24 @@ $ make eprom
 ```
 
 ## Compilare l'emulatore 
-`emulator` contiene il sorgente dell'emulatore (`emulator/src`), file di configurazione 
-(`emulator/conf`) e dati relativi all'EPROM e ROM caratteri del sistema (`emulator/data`).
+La directory `emulator` contiene il sorgente dell'emulatore (`emulator/src`), i file di 
+configurazione (`emulator/conf`) e dati relativi all'EPROM e ROM caratteri del sistema 
+(`emulator/data`).
 
 Il progetto viene gestito attraverso [Maven](https://maven.apache.org/).
+
 Dalla directory `emulator`, per compilare inserire:
 ```shell
 # compila l'emulatore
 $ mvn package
 ```
-Questo creera un pacchetto `.jar` in `emulator/target`. Per eseguire inserire:
+Questo creerà due pacchetti `.jar` in `emulator/target`:
+- `micro-sim.jar`, che contiene il pacchetto `microsim` come libreria Java, e non può essere eseguito;
+- `micro-sim-app.jar`, che contiene tutte le dipendenze e definisce un entry point, e può essere eseguito.
+
 ```shell
 # esegui il pacchetto dell'emulatore
-$ java -jar target/micro-sim.jar
+$ java -jar target/micro-sim-app.jar
 ```
 
 La configurazione di default è cercata in `emulator/conf`. Si possono specificare altri file di 
@@ -72,4 +78,7 @@ $ make dump
 
 # stampa gli header dell'ELF generato
 $ make read
+
+# pulisce le directory degli oggetti e l'ELF generato
+$ make clean
 ```
