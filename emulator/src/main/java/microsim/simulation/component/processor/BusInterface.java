@@ -1,7 +1,7 @@
 package microsim.simulation.component.processor;
 
 import microsim.simulation.component.processor.MicroOp.OpType;
-import microsim.simulation.event.DebugEvent;
+import microsim.simulation.event.*;
 import microsim.ui.DebugShell;
 
 /**
@@ -17,7 +17,6 @@ public class BusInterface {
 
     static final MicroOp MEM_READ0 = new MicroOp(OpType.MEM_READ0);
     static final MicroOp MEM_READ1 = new MicroOp(OpType.MEM_READ1);
-
     static final MicroOp MEM_WRITE0 = new MicroOp(OpType.MEM_WRITE0);
 
   }

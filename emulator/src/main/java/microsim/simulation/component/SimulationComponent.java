@@ -2,13 +2,14 @@ package microsim.simulation.component;
 
 import java.util.ArrayList;
 import java.util.List;
-import microsim.simulation.event.SimulationEvent;
-import microsim.simulation.event.SimulationListener;
+import microsim.simulation.component.bus.*;
+import microsim.simulation.event.*;
 
 /**
  * A component simulated within the {@link microsim.simulation.Simulation} class. Implements
  * functionality for stepping on simulation cycles, and for raising
- * {@link microsim.simulation.event.SimulationEvent} events.
+ * {@link microsim.simulation.event.SimulationEvent} events. Components are expected to mount on a
+ * bus.
  */
 public abstract class SimulationComponent {
 
@@ -16,6 +17,20 @@ public abstract class SimulationComponent {
    * Array of event listeners.
    */
   private final List<SimulationListener> listeners = new ArrayList<>();
+
+  /**
+   * Reference to the communication bus the component is mounted on.
+   */
+  public Bus bus;
+
+  /**
+   * Instantiates component, taking a reference to the bus it's mounted to.
+   *
+   * @param bus bus the component is mounted on
+   */
+  public SimulationComponent(Bus bus) {
+    this.bus = bus;
+  }
 
   /**
    * Adds an event listener to {@link #listeners}.

@@ -1,11 +1,12 @@
 package microsim.simulation.component.processor;
 
+import microsim.simulation.info.SimulationInfo;
 import java.util.Deque;
 import java.util.LinkedList;
-import microsim.simulation.component.SimulationComponent;
-import microsim.simulation.component.bus.Bus;
-import microsim.simulation.component.memory.MemorySpace;
-import microsim.simulation.event.DebugEvent;
+import microsim.simulation.*;
+import microsim.simulation.component.*;
+import microsim.simulation.component.bus.*;
+import microsim.simulation.event.*;
 import microsim.ui.DebugShell;
 
 /**
@@ -18,15 +19,15 @@ import microsim.ui.DebugShell;
 public class Processor extends SimulationComponent {
 
   /**
+   * Processor info this component implements.
+   */
+  @SuppressWarnings("unused")
+  SimulationInfo.ProcessorInfo info; // currently unused
+
+  /**
    * Number of registers. Fixed to 32 according to ABI.
    */
   public static final int REGISTERS = 32;
-
-  /**
-   * The reset value of program counter {@link #pc}. This is set to EPROM_BEG from
-   * {@link microsim.simulation.component.memory.MemorySpace}.
-   */
-  private static final int RESET_INSTRUCTION_ADDRESS = MemorySpace.EPROM_BEG;
 
   /**
    * Program counter, separate from registers.
@@ -148,26 +149,25 @@ public class Processor extends SimulationComponent {
   }
 
   /**
-   * Reference to the communication bus the component is mounted on.
-   */
-  final Bus bus;
-
-  /**
-   * Instantiates processor, taking a reference to the bus it's mounted on. Resets instruction
-   * pointer to {@link #RESET_INSTRUCTION_ADDRESS}.
+   * Instantiates processor, taking a reference to the bus it's mounted on and configuration info.
+   * Resets instruction pointer to {@link #RESET_INSTRUCTION_ADDRESS}.
    *
    * @param bus bus the component is mounted on
+   * @param info info to build processor from
    */
-  public Processor(Bus bus) {
-    this.bus = bus;
+  @SuppressWarnings("LeakingThisInConstructor")
+  public Processor(Bus bus, SimulationInfo.ProcessorInfo info) {
+    super(bus);
+    this.info = info;
 
     // processor  takes control of all lines but data and byteSelect
+    // leaks this in constructor but we don't expect TSLine objects to do anything with it
     bus.addressLine.drive(this, 0);
     bus.readEnable.drive(this, 0);
     bus.writeEnable.drive(this, 0);
 
     // reset instruction pointer
-    pc = RESET_INSTRUCTION_ADDRESS;
+    pc = info.resetInstructionAddress;
   }
 
   /**

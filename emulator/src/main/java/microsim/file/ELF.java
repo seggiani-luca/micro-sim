@@ -1,19 +1,23 @@
-package microsim.elf;
+package microsim.file;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
-import microsim.ui.DebugShell;
+import java.nio.channels.*;
+import java.nio.file.*;
 import net.fornwall.jelf.*;
 
 /**
  * Uses the jelf library to parse an ELF and read the correct segments into an EPROM array.
  */
-public class Elf {
+public class ELF {
 
+  /**
+   * Checks if the ELF header is valid, otherwise throws an exception.
+   *
+   * @param elf ELF header
+   * @throws IOException if header is invalid
+   */
   private static void checkElf(ElfFile elf) throws IOException {
     if (elf.ei_class != 1) {
       throw new IOException("Not 32 bit");
@@ -36,6 +40,12 @@ public class Elf {
     }
   }
 
+  /**
+   * Checks if the rodata ELF segment is valid, otherwise throws an exception.
+   *
+   * @param data rodata ELF segment
+   * @throws IOException if segment is invalid
+   */
   private static void checkRodata(ElfSegment rodata) throws IOException {
     if (!rodata.isExecutable()) {
       throw new IOException("Expected rodata section (1) is not executable");
@@ -45,6 +55,12 @@ public class Elf {
     }
   }
 
+  /**
+   * Checks if the data ELF segment is valid, otherwise throws an exception.
+   *
+   * @param data data ELF segment
+   * @throws IOException if segment is invalid
+   */
   private static void checkData(ElfSegment data) throws IOException {
     if (!data.isWriteable()) {
       throw new IOException("Expected data section (2) is not writable");
@@ -54,7 +70,14 @@ public class Elf {
     }
   }
 
-  public static byte[] getEPROM(String path) throws IOException {
+  /**
+   * Takes a path string and returns the corresponding EPROM byte array.
+   *
+   * @param path path of EPROM data
+   * @return EPROM data array
+   * @throws IOException if fails to open file or parse ELF headers
+   */
+  public static byte[] readEPROM(String path) throws IOException {
     // open ELF
     File file = new File(path);
     ElfFile elf = ElfFile.from(file);

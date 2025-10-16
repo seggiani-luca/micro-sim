@@ -17,12 +17,11 @@ public class AudioDevice extends ThreadedIoDevice {
 
   private AudioChannel[] channels;
 
-  public AudioDevice(Bus bus, int base, AudioDeviceInfo deviceInfo) {
+  public AudioDevice(Bus bus, int base) {
     super(bus, base, 1);
 
     // initialize channels based on info
-    channels = deviceInfo.instantiate();
-
+    // channels = deviceInfo.instantiate(); TODO: fix this up
     // initialize line
     try {
       // initialize audio format: set sample rate, sample depth, 1 channel, signed, little-endian

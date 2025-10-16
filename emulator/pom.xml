@@ -45,6 +45,7 @@
           <archive>
             <manifest>
               <mainClass>microsim.Main</mainClass>
+              <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
             </manifest>
           </archive>
           <descriptorRefs>

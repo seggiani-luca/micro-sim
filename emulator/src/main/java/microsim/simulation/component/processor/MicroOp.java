@@ -1,10 +1,9 @@
 package microsim.simulation.component.processor;
 
-import microsim.simulation.component.bus.Bus;
+import microsim.simulation.component.bus.*;
 import microsim.simulation.component.bus.Bus.ByteSelect;
 import static microsim.simulation.component.processor.Decoder.*;
-import microsim.simulation.event.AttachEvent;
-import microsim.simulation.event.DebugEvent;
+import microsim.simulation.event.*;
 import microsim.ui.DebugShell;
 
 /**

@@ -1,9 +1,11 @@
 package microsim.simulation.component.memory;
 
-import microsim.simulation.component.SimulationComponent;
-import microsim.simulation.component.bus.Bus;
+import microsim.simulation.info.SimulationInfo;
+import microsim.simulation.*;
+import microsim.simulation.component.*;
+import microsim.simulation.component.bus.*;
 import microsim.simulation.component.bus.Bus.ByteSelect;
-import microsim.simulation.event.DebugEvent;
+import microsim.simulation.event.*;
 import microsim.ui.DebugShell;
 
 /**
@@ -21,49 +23,9 @@ import microsim.ui.DebugShell;
 public class MemorySpace extends SimulationComponent {
 
   /**
-   * Beginning of EPROM region.
+   * Memory space info this component implements.
    */
-  public static final int EPROM_BEG = 0x0000_0000;
-
-  /**
-   * End of EPROM region.
-   */
-  public static final int EPROM_END = 0x0000_ffff;
-
-  /**
-   * Beginning of RAM region.
-   */
-  public static final int RAM_BEG = 0x0001_0000;
-
-  /**
-   * End of RAM region.
-   */
-  public static final int RAM_END = 0x00001_ffff;
-
-  /**
-   * Beginning of VRAM region.
-   */
-  public static final int VRAM_BEG = 0x0002_0000;
-
-  /**
-   * End of VRAM region.
-   */
-  public static final int VRAM_END = 0x0002_0c00;
-
-  /**
-   * Position of video interface in addressing space.
-   */
-  public static final int VIDEO_BASE = 0x0003_0000;
-
-  /**
-   * Position of keyboard interface in addressing space.
-   */
-  public static final int KEYBOARD_BASE = 0x0004_0000;
-
-  /**
-   * Position of timer interface in addressing space.
-   */
-  public static final int TIMER_BASE = 0x0005_0000;
+  SimulationInfo.MemoryInfo info;
 
   /**
    * Checks if given address is in memory bounds.
@@ -71,12 +33,12 @@ public class MemorySpace extends SimulationComponent {
    * @param addr address to check
    * @return signals if address is in bounds
    */
-  public static boolean inBounds(int addr) {
-    if (addr >= EPROM_BEG && addr <= EPROM_END) {
+  public boolean inBounds(int addr) {
+    if (addr >= info.epromStart && addr <= info.epromEnd) {
       return true;
-    } else if (addr >= RAM_BEG && addr <= RAM_END) {
+    } else if (addr >= info.ramStart && addr <= info.ramEnd) {
       return true;
-    } else if (addr >= VRAM_BEG && addr <= VRAM_END) {
+    } else if (addr >= info.vramStart && addr <= info.vramEnd) {
       return true;
     }
 
@@ -99,38 +61,34 @@ public class MemorySpace extends SimulationComponent {
   private final byte[] vram;
 
   /**
-   * Reference to the communication bus the component is mounted on.
-   */
-  private final Bus bus;
-
-  /**
    * Signals that the memory space is driving the bus, and should release it at the next simulation
    * step.
    */
   private boolean driving;
 
   /**
-   * Instantiates memory space, taking a reference to the bus it's mounted on and the EPROM data it
-   * should load in the EPROM region.
+   * Instantiates memory space, taking a reference to the bus it's mounted on and configuration info
+   * (including the EPROM data it should load in the EPROM region).
    *
    * @param bus bus the component is mounted on
-   * @param epromData EPROM data to load in {@link #eprom}
+   * @param info info to build memory space from
    */
-  public MemorySpace(Bus bus, byte[] epromData) {
-    this.bus = bus;
+  public MemorySpace(Bus bus, SimulationInfo.MemoryInfo info) {
+    super(bus);
+    this.info = info;
 
     // setup memory arrays
-    eprom = new byte[EPROM_END - EPROM_BEG + 1];
-    ram = new byte[RAM_END - RAM_BEG + 1];
-    vram = new byte[VRAM_END - VRAM_BEG + 1];
+    eprom = new byte[info.epromEnd - info.epromStart + 1];
+    ram = new byte[info.ramEnd - info.ramStart + 1];
+    vram = new byte[info.vramEnd - info.vramStart + 1];
 
     // check if EPROM data fits
-    if (epromData.length > eprom.length) {
+    if (info.epromData.length > eprom.length) {
       throw new RuntimeException("Given EPROM data doesn't fit in EPROM");
     }
 
     // load EPROM data
-    System.arraycopy(epromData, 0, eprom, 0, epromData.length);
+    System.arraycopy(info.epromData, 0, eprom, 0, info.epromData.length);
   }
 
   /**
@@ -284,12 +242,15 @@ public class MemorySpace extends SimulationComponent {
    * @return data read
    */
   public byte readMemory(int addr, boolean debugMode) {
-    if (addr >= EPROM_BEG && addr <= EPROM_END) {
-      return eprom[addr - EPROM_BEG];
-    } else if (addr >= RAM_BEG && addr <= RAM_END) {
-      return ram[addr - RAM_BEG];
-    } else if (addr >= VRAM_BEG && addr <= VRAM_END) {
-      return vram[addr - VRAM_BEG];
+    if (addr >= info.epromStart && addr <= info.epromEnd) {
+      return eprom[addr - info.epromStart];
+    } else if (addr >= info.ramStart && addr <= info.ramEnd) {
+      return ram[addr - info.ramStart];
+    } else if (addr >= info.vramStart && addr <= info.vramEnd) {
+      if (!info.allowVramReads && !debugMode) {
+        throw new RuntimeException("VRAM reads are forbidden.");
+      }
+      return vram[addr - info.vramStart];
     }
 
     return 0; // never reached
@@ -316,16 +277,15 @@ public class MemorySpace extends SimulationComponent {
    * @param debugMode enforce simulation correctness
    */
   public void writeMemory(int addr, byte data, boolean debugMode) {
-    if (addr >= EPROM_BEG && addr <= EPROM_END) {
-      if (debugMode) {
-        eprom[addr - EPROM_BEG] = data;
-      } else {
-        throw new RuntimeException("Memory write at EPROM");
+    if (addr >= info.epromStart && addr <= info.epromEnd) {
+      if (!info.allowEpromWrites && !debugMode) {
+        throw new RuntimeException("EPROM writes are forbidden.");
       }
-    } else if (addr >= RAM_BEG && addr <= RAM_END) {
-      ram[addr - RAM_BEG] = data;
-    } else if (addr >= VRAM_BEG && addr <= VRAM_END) {
-      vram[addr - VRAM_BEG] = data;
+      eprom[addr - info.epromStart] = data;
+    } else if (addr >= info.ramStart && addr <= info.ramEnd) {
+      ram[addr - info.ramStart] = data;
+    } else if (addr >= info.vramStart && addr <= info.vramEnd) {
+      vram[addr - info.vramStart] = data;
     }
   }
 

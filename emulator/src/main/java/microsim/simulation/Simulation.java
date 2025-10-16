@@ -1,15 +1,18 @@
 package microsim.simulation;
 
-import microsim.simulation.component.SimulationComponent;
-import microsim.simulation.component.bus.Bus;
-import microsim.simulation.component.device.keyboard.KeyboardDevice;
-import microsim.simulation.component.device.timer.TimerDevice;
-import microsim.simulation.component.device.video.VideoDevice;
-import microsim.simulation.component.memory.MemorySpace;
-import microsim.simulation.component.processor.Processor;
-import microsim.simulation.event.CycleEvent;
-import microsim.simulation.event.SimulationEvent;
-import microsim.simulation.event.SimulationListener;
+import java.util.List;
+import microsim.simulation.component.*;
+import microsim.simulation.component.bus.*;
+import microsim.simulation.component.device.*;
+import microsim.simulation.component.device.video.*;
+import microsim.simulation.component.memory.*;
+import microsim.simulation.component.processor.*;
+import microsim.simulation.event.*;
+import microsim.simulation.info.SimulationInfo;
+import microsim.simulation.info.SimulationInfo.DeviceInfo;
+import microsim.simulation.info.SimulationInfo.KeyboardInfo;
+import microsim.simulation.info.SimulationInfo.TimerInfo;
+import microsim.simulation.info.SimulationInfo.VideoInfo;
 import microsim.ui.DebugShell;
 
 /**
@@ -21,60 +24,63 @@ import microsim.ui.DebugShell;
 public class Simulation extends SimulationComponent implements SimulationListener {
 
   /**
-   * Simulated bus component. Instantiated first, all components connect to it.
-   */
-  public Bus bus;
-
-  /**
-   * Simulated processor component. Instantiated after bus, updated first in simulation cycles.
+   * Simulated processor component. Instantiated after bus, updated first in simulation steps.
    */
   public Processor proc;
 
   /**
-   * Simulated memory component. Instantiated after bus, updated second in simulation cycles.
+   * Simulated memory component. Instantiated after bus, updated second in simulation steps.
    */
   public MemorySpace memory;
 
   /**
-   * Simulated video device component. Instantiated after bus, updated third in simulation cycles.
+   * List of simulated devices. Instantiated after bus, updatet third in simulation steps.
    */
-  public VideoDevice video;
+  public List<IoDevice> devices;
 
   /**
-   * Simulated keyboard device component. Instantiated after bus, updated third in simulation.
-   * cycles.
-   */
-  public KeyboardDevice keyboard;
-
-  /**
-   * Simulated timer component. Instantiated after bus, updated third in simulation.
-   */
-  public TimerDevice timer;
-
-  /**
-   * Instantiates simulation, loading EPROM data in memory. Sets self as listener to the simulation
-   * components involved.
+   * Instantiates simulation, loading EPROM data in memory and configuring devices and components.
+   * Sets self as listener to the simulation components involved.
    *
-   * @param epromData data to load in memory
+   * @param info simulation info for configuration
    */
-  public Simulation(byte[] epromData) {
+  @SuppressWarnings("LeakingThisInConstructor")
+  public Simulation(SimulationInfo info) {
+    // simulation instances don't attach to buses (they instead own one)
+    super(null);
+
     // init bus
     bus = new Bus();
 
     // init components on bus
-    proc = new Processor(bus);
-    memory = new MemorySpace(bus, epromData);
-    video = new VideoDevice(bus, MemorySpace.VIDEO_BASE, memory);
-    keyboard = new KeyboardDevice(bus, MemorySpace.KEYBOARD_BASE);
-    timer = new TimerDevice(bus, MemorySpace.TIMER_BASE);
+    proc = new Processor(bus, info.processorInfo);
+    memory = new MemorySpace(bus, info.memoryInfo);
+
+    for (DeviceInfo deviceInfo : info.devicesInfo) {
+      switch (deviceInfo) {
+        case VideoInfo videoInfo -> {
+          VideoDevice videoDevice = new VideoDevice(bus, memory, videoInfo); // TODO: fix this up
+          devices.add(videoDevice);
+        }
+        case KeyboardInfo keyboardInfo -> {
+
+        }
+        case TimerInfo timerInfo -> {
+
+        }
+        case null, default ->
+          throw new RuntimeException("Unkown device in device list");
+      }
+    }
 
     // set as listener. this is leaky but we don't expect listeners to use it before event is raised
     bus.addListener(this);
     proc.addListener(this);
     memory.addListener(this);
-    video.addListener(this);
-    keyboard.addListener(this);
-    timer.addListener(this);
+
+    for (IoDevice device : devices) {
+      device.addListener(this);
+    }
   }
 
   /**
@@ -113,9 +119,9 @@ public class Simulation extends SimulationComponent implements SimulationListene
     memory.step();
 
     // devices
-    video.step();
-    keyboard.step();
-    timer.step();
+    for (IoDevice device : devices) {
+      device.step();
+    }
   }
 
   /**
@@ -124,8 +130,11 @@ public class Simulation extends SimulationComponent implements SimulationListene
    */
   public void begin() {
     // start other threads
-    video.begin();
-    timer.begin();
+    for (IoDevice device : devices) {
+      if (device instanceof ThreadedIoDevice threadedDevice) {
+        threadedDevice.begin();
+      }
+    }
 
     // init cycle counter
     long cycle = 0;
