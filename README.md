@@ -36,10 +36,12 @@ $ make eprom
 Il progetto viene gestito attraverso [Maven](https://maven.apache.org/).
 Dalla directory `emulator`, per compilare inserire:
 ```shell
+# compila l'emulatore
 $ mvn package
 ```
 Questo creera un pacchetto `.jar` in `emulator/target`. Per eseguire inserire:
 ```shell
+# esegui il pacchetto dell'emulatore
 $ java -jar target/micro-sim.jar
 ```
 
