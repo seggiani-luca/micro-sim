@@ -8,22 +8,41 @@
   <artifactId>micro-sim</artifactId>
   <version>0.0</version>
 
+  <dependencies>
+    <dependency>
+      <!-- for elf parsing -->
+      <groupId>net.fornwall</groupId>
+      <artifactId>jelf</artifactId>
+      <version>0.10.0</version>
+    </dependency>
+  </dependencies>
+
 	<build>
     <finalName>micro-sim</finalName>
 		<plugins>
       
-			<plugin>
-				<artifactId>maven-jar-plugin</artifactId>
-				<version>3.4.0</version>
-				<configuration>
-					<archive>
-						<manifest>
-							<mainClass>microsim.Main</mainClass>
-              <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
-						</manifest>
-					</archive>
-				</configuration>
-			</plugin>
+      <plugin>
+        <!-- builds jar archive -->
+        <artifactId>maven-assembly-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <archive>
+            <manifest>
+              <mainClass>microsim.Main</mainClass>
+            </manifest>
+          </archive>
+          <descriptorRefs>
+            <descriptorRef>jar-with-dependencies</descriptorRef>
+          </descriptorRefs>
+        </configuration>
+      </plugin>
       
 		</plugins>
 	</build>

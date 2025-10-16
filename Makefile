@@ -2,14 +2,14 @@
 MAKEFLAGS += --no-print-directory
 
 EMULATOR := emulator
-EXECUTABLE := target/micro-sim.jar
+EXECUTABLE := target/micro-sim-jar-with-dependencies.jar
 EPROM := eprom
 
 all: run
 
 run: emulator eprom
 	@echo ">> Running emulator..."
-	@cd $(EMULATOR) && java -jar $(EXECUTABLE)
+	@cd $(EMULATOR) && java -jar $(EXECUTABLE) -s 2
 
 emulator:
 	@echo ">> Building emulator..."

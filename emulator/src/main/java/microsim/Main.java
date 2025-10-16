@@ -129,10 +129,7 @@ public class Main {
     byte[] epromData = null;
     try {
       // read ELF file
-      Elf elf = new Elf(epromDataPath, debugMode);
-
-      // read object data segments into EPROM array
-      epromData = elf.getEPROM();
+      epromData = Elf.getEPROM(epromDataPath);
     } catch (IOException e) {
       System.err.println("EPROM data couldn't be read. " + e.getMessage());
       System.exit(1);
