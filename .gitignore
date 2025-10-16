@@ -8,3 +8,8 @@ eprom/out/
 
 # NetBeans configuration
 emulator/nb-configuration.xml
+
+# other configs
+emulator/.settings/
+emulator/.classpath
+emulator/.project
