@@ -20,11 +20,14 @@ tutto.
 
 L'utilizzo è il seguente:
 ```shell
-# compila tutto ed esegue (uguale a make run)
-$ make
+# esegue
+$ make run
 
-# compila tutto ed esegue con la shell di debug attiva
+# esegue con la shell di debug attiva
 $ make debug
+
+# compila tutto
+$ make
 
 # compila solo l'emulatore
 $ make emulator
