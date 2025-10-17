@@ -5,6 +5,7 @@ import java.nio.ByteOrder;
 import java.util.Deque;
 import microsim.Main;
 import microsim.simulation.Simulation;
+import microsim.simulation.component.device.video.VideoDevice;
 import microsim.simulation.component.memory.MemorySpace;
 import microsim.simulation.component.processor.MicroOp;
 import microsim.simulation.component.processor.Processor;
@@ -478,7 +479,12 @@ public class DebugShell implements SimulationListener {
 
         case "r":
         case "render": {
-          simulationInstance.video.render();
+          VideoDevice videoDevice = simulationInstance.getDevice(VideoDevice.class);
+          if (videoDevice == null) {
+            System.out.println("Simulation doesn't have a video device mounted");
+          } else {
+            videoDevice.render();
+          }
           continue;
         }
 

@@ -1,18 +1,17 @@
 package microsim.simulation;
 
+import java.util.LinkedList;
 import java.util.List;
 import microsim.simulation.component.*;
 import microsim.simulation.component.bus.*;
 import microsim.simulation.component.device.*;
+import microsim.simulation.component.device.keyboard.*;
+import microsim.simulation.component.device.timer.*;
 import microsim.simulation.component.device.video.*;
 import microsim.simulation.component.memory.*;
 import microsim.simulation.component.processor.*;
 import microsim.simulation.event.*;
-import microsim.simulation.info.SimulationInfo;
-import microsim.simulation.info.SimulationInfo.DeviceInfo;
-import microsim.simulation.info.SimulationInfo.KeyboardInfo;
-import microsim.simulation.info.SimulationInfo.TimerInfo;
-import microsim.simulation.info.SimulationInfo.VideoInfo;
+import microsim.simulation.info.*;
 import microsim.ui.DebugShell;
 
 /**
@@ -34,9 +33,24 @@ public class Simulation extends SimulationComponent implements SimulationListene
   public MemorySpace memory;
 
   /**
-   * List of simulated devices. Instantiated after bus, updatet third in simulation steps.
+   * List of simulated devices. Instantiated after bus, updated third in simulation steps.
    */
-  public List<IoDevice> devices;
+  public List<IoDevice> devices = new LinkedList<>();
+
+  /**
+   * Returns first device by type in device list. If not found returns null.
+   *
+   * @param type type of device to find
+   */
+  public <T extends IoDevice> T getDevice(Class<T> type) {
+    for (IoDevice device : devices) {
+      if (type.isInstance(device)) {
+        return type.cast(device);
+      }
+    }
+
+    return null;
+  }
 
   /**
    * Instantiates simulation, loading EPROM data in memory and configuring devices and components.
@@ -59,14 +73,16 @@ public class Simulation extends SimulationComponent implements SimulationListene
     for (DeviceInfo deviceInfo : info.devicesInfo) {
       switch (deviceInfo) {
         case VideoInfo videoInfo -> {
-          VideoDevice videoDevice = new VideoDevice(bus, memory, videoInfo); // TODO: fix this up
+          VideoDevice videoDevice = new VideoDevice(bus, memory, videoInfo);
           devices.add(videoDevice);
         }
         case KeyboardInfo keyboardInfo -> {
-
+          KeyboardDevice keyboardDevice = new KeyboardDevice(bus, keyboardInfo);
+          devices.add(keyboardDevice);
         }
         case TimerInfo timerInfo -> {
-
+          TimerDevice timerDevice = new TimerDevice(bus, timerInfo);
+          devices.add(timerDevice);
         }
         case null, default ->
           throw new RuntimeException("Unkown device in device list");

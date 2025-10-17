@@ -7,7 +7,7 @@ import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
-import microsim.simulation.component.device.video.VideoRenderer;
+import microsim.simulation.component.device.video.VideoDevice;
 import microsim.simulation.event.FrameEvent;
 import microsim.simulation.event.SimulationEvent;
 import microsim.simulation.event.SimulationListener;
@@ -33,15 +33,19 @@ class VideoPanel extends JPanel {
    * Instantiates panel, setting preferred size to scaled frame buffer size. Frame buffer size is
    * obtained from {@link simulation.component.device.video.VideoDevice}.
    *
+   * @param video video device to render
    * @param scale scale factor of the frame buffer
    */
-  public VideoPanel(int scale) {
+  public VideoPanel(VideoDevice video, int scale) {
     this.scale = scale;
+
+    int panelWidth = video.getRenderer().getFrameWidth();
+    int panelHeight = video.getRenderer().getFrameHeight();
 
     // init placeholder frame
     frame = new BufferedImage(
-            VideoRenderer.getFrameWidth(),
-            VideoRenderer.getFrameHeight(),
+            panelWidth,
+            panelHeight,
             BufferedImage.TYPE_INT_RGB
     );
 
@@ -53,8 +57,8 @@ class VideoPanel extends JPanel {
 
     // set preferred size
     setPreferredSize(new Dimension(
-            VideoRenderer.getFrameWidth() * scale,
-            VideoRenderer.getFrameHeight() * scale
+            panelWidth * scale,
+            panelHeight * scale
     ));
   }
 
@@ -102,6 +106,11 @@ class VideoPanel extends JPanel {
 public class VideoWindow implements SimulationListener {
 
   /**
+   * Device this video window attaches to.
+   */
+  private VideoDevice video;
+
+  /**
    * Main window JFrame.
    */
   private final JFrame frame;
@@ -124,11 +133,14 @@ public class VideoWindow implements SimulationListener {
    * Instantiates window and VideoPanel. Window resizing is disabled so that window size is locked
    * to scaled frame buffer size.
    *
+   * @param video video device to render
    * @param scale scale factor of the frame buffer
    */
-  public VideoWindow(int scale) {
+  public VideoWindow(VideoDevice video, int scale) {
+    this.video = video;
+
     // setup panel
-    panel = new VideoPanel(scale);
+    panel = new VideoPanel(video, scale);
 
     // setup window
     frame = new JFrame("micro-sim");
@@ -146,8 +158,13 @@ public class VideoWindow implements SimulationListener {
   @Override
   public void onSimulationEvent(SimulationEvent e) {
     // check for FrameEvent
-    if (e instanceof FrameEvent) {
-      panel.updateFrame(((FrameEvent) e).frame);
+    if (e instanceof FrameEvent f) {
+      // ignore video devices this window wasn't built on
+      if (f.owner != video) {
+        return;
+      }
+
+      panel.updateFrame(f.frame);
       panel.repaint();
     }
   }

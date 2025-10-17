@@ -7,6 +7,10 @@ EPROM := eprom
 
 all: run
 
+debug: emulator eprom
+	@echo ">> Running emulator with debug shell..."
+	@cd $(EMULATOR) && java -jar $(EXECUTABLE) -d
+
 run: emulator eprom
 	@echo ">> Running emulator..."
 	@cd $(EMULATOR) && java -jar $(EXECUTABLE)

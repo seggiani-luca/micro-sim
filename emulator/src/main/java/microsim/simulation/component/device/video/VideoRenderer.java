@@ -4,7 +4,8 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import javax.imageio.ImageIO;
-import microsim.simulation.component.memory.MemorySpace;
+import microsim.simulation.component.memory.*;
+import microsim.simulation.info.VideoInfo;
 
 /**
  * Implements a rendering component for the
@@ -15,60 +16,14 @@ import microsim.simulation.component.memory.MemorySpace;
 public class VideoRenderer {
 
   /**
-   * Number of columns in text mode.
+   * Video device info this renderer implements (renderer is always part of a video device).
    */
-  static final int COLS = 80;
+  VideoInfo info;
 
   /**
-   * Number of rows in text mode.
-   */
-  static final int ROWS = 30;
-
-  /**
-   * Width of character in text mode.
-   */
-  static final int CHAR_WIDTH = 8;
-
-  /**
-   * Height of character in text mode.
-   */
-  static final int CHAR_HEIGHT = 16;
-
-  /**
-   * Width (in characters) of the character atlas. Height is not needed as we are targeting 256
-   * character extended ASCII.
-   */
-  private static final int ATLAS_SIZE = 16;
-
-  /**
-   * Character atlas, read from file "assets/charAtlas.bmp".
+   * Character atlas, read from file specified in configuration.
    */
   private static BufferedImage[][] charAtlas;
-
-  // try to fetch charAtlas
-  static {
-    try {
-      // load full atlas
-      BufferedImage charAtlasBmp = ImageIO.read(new File("data/charset.bmp"));
-
-      // split atlas in characters for quicker lookup
-      charAtlas = new BufferedImage[ATLAS_SIZE][256 / ATLAS_SIZE];
-
-      for (int x = 0; x < ATLAS_SIZE; x++) {
-        for (int y = 0; y < 256 / ATLAS_SIZE; y++) {
-          charAtlas[x][y] = charAtlasBmp.getSubimage(
-                  x * CHAR_WIDTH,
-                  y * CHAR_HEIGHT,
-                  CHAR_WIDTH,
-                  CHAR_HEIGHT
-          );
-        }
-      }
-    } catch (IOException e) {
-      System.out.println("Error loading character atlas. " + e.getMessage());
-      System.exit(1);
-    }
-  }
 
   /**
    * Reference to memory space. Used to directly access VRAM via the
@@ -93,8 +48,8 @@ public class VideoRenderer {
    *
    * @return frame buffer width
    */
-  public static int getFrameWidth() {
-    return COLS * CHAR_WIDTH;
+  public int getFrameWidth() {
+    return info.cols * info.charWidth;
   }
 
   /**
@@ -102,8 +57,8 @@ public class VideoRenderer {
    *
    * @return frame buffer height
    */
-  public static int getFrameHeight() {
-    return ROWS * CHAR_HEIGHT;
+  public int getFrameHeight() {
+    return info.rows * info.charHeight;
   }
 
   /**
@@ -154,8 +109,32 @@ public class VideoRenderer {
    *
    * @param memory memory space to read from
    */
-  public VideoRenderer(MemorySpace memory) {
+  public VideoRenderer(MemorySpace memory, VideoInfo info) {
     this.memory = memory;
+    this.info = info;
+
+    // fetch character atlas
+    try {
+      // load full atlas
+      BufferedImage charsetBmp = ImageIO.read(new File(info.charsetPath));
+
+      // split atlas in characters for quicker lookup
+      charAtlas = new BufferedImage[info.charsetSize][256 / info.charsetSize];
+
+      for (int x = 0; x < info.charsetSize; x++) {
+        for (int y = 0; y < 256 / info.charsetSize; y++) {
+          charAtlas[x][y] = charsetBmp.getSubimage(
+                  x * info.charWidth,
+                  y * info.charHeight,
+                  info.charWidth,
+                  info.charHeight
+          );
+        }
+      }
+    } catch (IOException e) {
+      System.out.println("Error loading character atlas. " + e.getMessage());
+      System.exit(1);
+    }
 
     // init frame buffer
     frame = new BufferedImage(
@@ -187,9 +166,9 @@ public class VideoRenderer {
     g.fillRect(0, 0, frame.getWidth(), frame.getHeight());
 
     // step through VRAM and paint characters
-    for (int r = 0; r < ROWS; r++) {
-      for (int c = 0; c < COLS; c++) {
-        int addr = r * COLS + c;
+    for (int r = 0; r < info.rows; r++) {
+      for (int c = 0; c < info.cols; c++) {
+        int addr = r * info.cols + c;
 
         // char codepoint, underscore by default
         byte ch = '_';
@@ -206,7 +185,7 @@ public class VideoRenderer {
 
         // get character and paint
         BufferedImage charImage = getCharSprite(ch);
-        g.drawImage(charImage, c * CHAR_WIDTH, r * CHAR_HEIGHT, null);
+        g.drawImage(charImage, c * info.charWidth, r * info.charHeight, null);
       }
     }
 
@@ -224,8 +203,8 @@ public class VideoRenderer {
     ch &= 0xff;
 
     // get character coordinates on charAtlas
-    int x = ch % ATLAS_SIZE;
-    int y = ch / ATLAS_SIZE;
+    int x = ch % info.charsetSize;
+    int y = ch / (256 / info.charsetSize);
 
     // get character from charAtlas
     BufferedImage charImage = charAtlas[x][y];

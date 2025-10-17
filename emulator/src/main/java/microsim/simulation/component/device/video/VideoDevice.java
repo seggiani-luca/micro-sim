@@ -1,9 +1,10 @@
 package microsim.simulation.component.device.video;
 
-import microsim.simulation.component.bus.Bus;
+import microsim.simulation.component.bus.*;
+import microsim.simulation.component.memory.*;
+import microsim.simulation.event.*;
+import microsim.simulation.info.VideoInfo;
 import microsim.simulation.component.device.ThreadedIoDevice;
-import microsim.simulation.component.memory.MemorySpace;
-import microsim.simulation.event.FrameEvent;
 
 /**
  * Implements a video device that renders a frame buffer by reading from VRAM. Actual rendering is
@@ -13,14 +14,14 @@ import microsim.simulation.event.FrameEvent;
 public class VideoDevice extends ThreadedIoDevice {
 
   /**
-   * Frequency of video updates
+   * Video device info this component implements.
    */
-  public static final long FRAME_FREQ = 25;
+  VideoInfo info;
 
   /**
-   * Period of video updates.
+   * Period of video updates (calculated from update frequency).
    */
-  public static final long FRAME_TIME = 1_000_000_000L / FRAME_FREQ;
+  public final long frameTime;
 
   /**
    * The component in charge of actually holding and rendering a framebuffer.
@@ -28,18 +29,28 @@ public class VideoDevice extends ThreadedIoDevice {
   private final VideoRenderer renderer;
 
   /**
+   * Gets this video device's renderer.
+   */
+  public VideoRenderer getRenderer() {
+    return renderer;
+  }
+
+  /**
    * Instantiates video device, taking a reference to the bus it's mounted on and the memory space
    * it should read VRAM from.
    *
    * @param bus bus the component is mounted on
-   * @param base base memory offset
+   * @param info info to build video device from
    * @param memory memory space to read from
    */
-  public VideoDevice(Bus bus, int base, MemorySpace memory) {
-    super(bus, base, 2);
+  public VideoDevice(Bus bus, MemorySpace memory, VideoInfo info) {
+    super(bus, info.base, 2);
+    this.info = info;
+
+    frameTime = 1_000_000_000 / info.frameFreq; // in ns
 
     // init renderer
-    renderer = new VideoRenderer(memory);
+    renderer = new VideoRenderer(memory, info);
   }
 
   /**
@@ -75,14 +86,14 @@ public class VideoDevice extends ThreadedIoDevice {
    */
   @Override
   protected void deviceThread() {
-    long frameTime = System.nanoTime();
+    long updateTime = System.nanoTime();
     while (true) {
       // render to buffer
       render();
 
       // wait for frame time
-      frameTime += FRAME_TIME;
-      smartSpin(frameTime);
+      updateTime += frameTime;
+      smartSpin(updateTime);
     }
   }
 

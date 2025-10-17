@@ -1,11 +1,10 @@
 package microsim.simulation.component.memory;
 
-import microsim.simulation.info.SimulationInfo;
-import microsim.simulation.*;
 import microsim.simulation.component.*;
 import microsim.simulation.component.bus.*;
 import microsim.simulation.component.bus.Bus.ByteSelect;
 import microsim.simulation.event.*;
+import microsim.simulation.info.MemoryInfo;
 import microsim.ui.DebugShell;
 
 /**
@@ -25,7 +24,7 @@ public class MemorySpace extends SimulationComponent {
   /**
    * Memory space info this component implements.
    */
-  SimulationInfo.MemoryInfo info;
+  MemoryInfo info;
 
   /**
    * Checks if given address is in memory bounds.
@@ -73,7 +72,7 @@ public class MemorySpace extends SimulationComponent {
    * @param bus bus the component is mounted on
    * @param info info to build memory space from
    */
-  public MemorySpace(Bus bus, SimulationInfo.MemoryInfo info) {
+  public MemorySpace(Bus bus, MemoryInfo info) {
     super(bus);
     this.info = info;
 

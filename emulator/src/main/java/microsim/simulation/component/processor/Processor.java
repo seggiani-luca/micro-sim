@@ -1,12 +1,11 @@
 package microsim.simulation.component.processor;
 
-import microsim.simulation.info.SimulationInfo;
 import java.util.Deque;
 import java.util.LinkedList;
-import microsim.simulation.*;
 import microsim.simulation.component.*;
 import microsim.simulation.component.bus.*;
 import microsim.simulation.event.*;
+import microsim.simulation.info.ProcessorInfo;
 import microsim.ui.DebugShell;
 
 /**
@@ -22,7 +21,7 @@ public class Processor extends SimulationComponent {
    * Processor info this component implements.
    */
   @SuppressWarnings("unused")
-  SimulationInfo.ProcessorInfo info; // currently unused
+  ProcessorInfo info; // currently unused
 
   /**
    * Number of registers. Fixed to 32 according to ABI.
@@ -156,7 +155,7 @@ public class Processor extends SimulationComponent {
    * @param info info to build processor from
    */
   @SuppressWarnings("LeakingThisInConstructor")
-  public Processor(Bus bus, SimulationInfo.ProcessorInfo info) {
+  public Processor(Bus bus, ProcessorInfo info) {
     super(bus);
     this.info = info;
 

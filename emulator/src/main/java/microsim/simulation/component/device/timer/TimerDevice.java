@@ -1,17 +1,41 @@
 package microsim.simulation.component.device.timer;
 
-import microsim.simulation.component.bus.Bus;
+import microsim.simulation.component.bus.*;
+import microsim.simulation.info.TimerInfo;
 import microsim.simulation.component.device.ThreadedIoDevice;
 
+/**
+ *
+ * @author luca
+ */
 public class TimerDevice extends ThreadedIoDevice {
 
-  public static final long MASTER_FREQ = 1_000; // 1 KHz
-  public static final long MASTER_TIME = 1_000_000_000L / MASTER_FREQ;
+  /**
+   * Timer info this component implements.
+   */
+  TimerInfo info;
 
+  /**
+   * Period of timer clock.
+   */
+  public long masterTime;
+
+  /**
+   * Signals if timer has ticked and hasn't been read yet.
+   */
   boolean ticked = false;
 
-  public TimerDevice(Bus bus, int base) {
-    super(bus, base, 1);
+  /**
+   * Instantiates timer device, taking a reference to the bus it's mounted on.
+   *
+   * @param bus bus the component is mounted on
+   * @param info info to build video device from
+   */
+  public TimerDevice(Bus bus, TimerInfo info) {
+    super(bus, info.base, 1);
+    this.info = info;
+
+    masterTime = 1_000_000_000 / info.masterFreq; // in ns
   }
 
   @Override
@@ -20,7 +44,7 @@ public class TimerDevice extends ThreadedIoDevice {
     while (true) {
       ticked = true;
 
-      waitTime += MASTER_TIME;
+      waitTime += masterTime;
       smartSpin(waitTime);
     }
   }

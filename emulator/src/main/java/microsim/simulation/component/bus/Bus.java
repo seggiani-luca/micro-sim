@@ -66,11 +66,14 @@ public class Bus extends SimulationComponent {
    * Instantiates a bus by initializing address, data and control lines.
    */
   public Bus() {
-    addressLine = new TSLine();
-    dataLine = new TSLine();
-    readEnable = new TSLine();
-    writeEnable = new TSLine();
-    byteSelect = new TSLine();
+    // buses aren't mounted to buses
+    super(null);
+
+    addressLine = new TSLine(this);
+    dataLine = new TSLine(this);
+    readEnable = new TSLine(this);
+    writeEnable = new TSLine(this);
+    byteSelect = new TSLine(this);
   }
 
   /**

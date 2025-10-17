@@ -25,6 +25,15 @@ public class TSLine extends SimulationComponent {
   public int bufferedData;
 
   /**
+   * Constructs a TSLine taking a reference to the bus it makes up.
+   *
+   * @param bus bus this line is part of
+   */
+  public TSLine(Bus bus) {
+    super(bus);
+  }
+
+  /**
    * Propagates {@link #bufferedData} to {@link #committedData}.
    */
   @Override

@@ -1,7 +1,7 @@
 package microsim.simulation.component.device;
 
 import microsim.simulation.component.SimulationComponent;
-import microsim.simulation.component.bus.Bus;
+import microsim.simulation.component.bus.*;
 
 /**
  * Implements a device that exposes ports on the bus from a certain address. Memory and devices are
@@ -20,11 +20,6 @@ public abstract class IoDevice extends SimulationComponent {
   private final int ports;
 
   /**
-   * Reference to the communication bus the component is mounted on.
-   */
-  private final Bus bus;
-
-  /**
    * Signals that the device is driving the bus, and should release it at the next simulation step.
    */
   private boolean driving;
@@ -38,7 +33,7 @@ public abstract class IoDevice extends SimulationComponent {
    * @param ports number of ports
    */
   public IoDevice(Bus bus, int base, int ports) {
-    this.bus = bus;
+    super(bus);
     this.base = base;
     this.ports = ports;
   }

@@ -15,7 +15,7 @@
 	"devices": [
 		{
 			"type": "video",
-			"base": "0x3000_0000",
+			"base": "0x0003_0000",
 			"frame_frequency": 25,
 			"columns": 80,
 			"rows": 30,
@@ -26,11 +26,11 @@
 		},
 		{
 			"type": "keyboard",
-			"base": "0x4000_0000"
+			"base": "0x0004_0000"
 		},
 		{
 			"type": "timer",
-			"base": "0x5000_0000",
+			"base": "0x0005_0000",
 			"master_frequency": 1000
 		}
 	]

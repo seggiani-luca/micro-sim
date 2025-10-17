@@ -2,8 +2,9 @@ package microsim.simulation.component.device.keyboard;
 
 import java.util.LinkedList;
 import java.util.Queue;
-import microsim.simulation.component.bus.Bus;
+import microsim.simulation.component.bus.*;
 import microsim.simulation.component.device.IoDevice;
+import microsim.simulation.info.KeyboardInfo;
 
 /**
  * Implements a keyboard devices that mantains a character queue and returns them via a status and a
@@ -12,9 +13,15 @@ import microsim.simulation.component.device.IoDevice;
 public class KeyboardDevice extends IoDevice {
 
   /**
+   * Keyboard info this device implements.
+   */
+  @SuppressWarnings("unused")
+  KeyboardInfo info; // currently unused
+
+  /**
    * Queue of characters pressed.
    */
-  Queue<Integer> keyQueue = new LinkedList<>();
+  private Queue<Integer> keyQueue = new LinkedList<>();
 
   /**
    * Attaches keyboard device to a
@@ -31,10 +38,11 @@ public class KeyboardDevice extends IoDevice {
    * Instantiates keyboard device, taking a reference to the bus it's mounted on.
    *
    * @param bus bus the component is mounted on
-   * @param base base memory offset
+   * @param info info to build this device from
    */
-  public KeyboardDevice(Bus bus, int base) {
-    super(bus, base, 2);
+  public KeyboardDevice(Bus bus, KeyboardInfo info) {
+    super(bus, info.base, 2);
+    this.info = info;
   }
 
   /**

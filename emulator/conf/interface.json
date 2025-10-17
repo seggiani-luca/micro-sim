@@ -1,5 +1,6 @@
 {
 	"window": {
+		"headless": false, 
 		"scale": 2
 	},
 	"keyboard": {

@@ -6,10 +6,10 @@ import microsim.file.*;
 import org.json.*;
 
 /**
- * Represents info related to the main program flow, including arguments, configuration and EPROM
- * files.
+ * Gets and represents info related to the main program flow, including arguments, configuration and
+ * EPROM files.
  */
-public class MainInfo {
+public class MainEnvironment {
 
   public static final String DEBUG_TAG = "-d";
   public static final String EPROM_TAG = "-e";
@@ -50,6 +50,11 @@ public class MainInfo {
    * The simulation configuration JSON.
    */
   public JSONObject sConfig;
+
+  /**
+   * Should window interface be shown?
+   */
+  public boolean headless = false;
 
   /**
    * Window interface windowScale.
@@ -118,7 +123,7 @@ public class MainInfo {
    * @param args program arguments
    * @throws java.io.IOException if reading or parsing fails
    */
-  public MainInfo(String[] args) throws IOException {
+  public MainEnvironment(String[] args) throws IOException {
     // get arguments
     debugMode = hasArgument(args, DEBUG_TAG);
     epromDataPath = Objects.requireNonNullElse(getArgument(args, EPROM_TAG), epromDataPath);
@@ -134,6 +139,7 @@ public class MainInfo {
 
     // get data of window interface
     JSONObject windowConfig = iConfig.getJSONObject("window");
+    headless = iConfig.optBoolean("headless", headless);
     windowScale = windowConfig.optInt("scale", windowScale);
 
     // get data of keyboard interface

@@ -10,7 +10,7 @@ public abstract class SimulationEvent {
   /**
    * Simulation component that raised this event.
    */
-  SimulationComponent owner;
+  public SimulationComponent owner;
 
   /**
    * Instantiates SimulationEvent getting a reference to the SimulationComponent that raised it.

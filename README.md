@@ -23,6 +23,9 @@ L'utilizzo è il seguente:
 # compila tutto ed esegue (uguale a make run)
 $ make
 
+# compila tutto ed esegue con la shell di debug attiva
+$ make debug
+
 # compila solo l'emulatore
 $ make emulator
 

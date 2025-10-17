@@ -1,9 +1,12 @@
 package microsim;
 
-import microsim.simulation.info.SimulationInfo;
 import java.io.IOException;
+import java.util.List;
 import microsim.simulation.*;
+import microsim.simulation.component.device.*;
 import microsim.simulation.component.device.keyboard.*;
+import microsim.simulation.component.device.video.*;
+import microsim.simulation.info.SimulationInfo;
 import microsim.ui.*;
 
 /**
@@ -25,7 +28,7 @@ public class Main {
   }
 
   /**
-   * Shows version and other basic info.
+   * Shows version and other basic mArgs.
    */
   private static void greet() {
     System.out.println("micro-sim emulator " + VERSION);
@@ -36,28 +39,50 @@ public class Main {
    * Initializes interfaces and attaches them to simulation
    *
    * @param simulation simulation instance to attach to
-   * @param info main info containing info about interfaces
+   * @param mArgs main mArgs containing mArgs about interfaces
    */
-  private static void initInterfaces(Simulation simulation, MainInfo info) {
+  private static void initInterfaces(Simulation simulation, MainEnvironment mArgs) {
     System.out.println("Initializing video window");
 
-    // instantiate video window and attach it
-    VideoWindow window = new VideoWindow(info.windowScale);
-    simulation.addListener(window);
+    // if requested and video device present, instantiate video window and attach it
+    VideoWindow window = null;
+    if (!mArgs.headless) {
+      VideoDevice video = simulation.getDevice(VideoDevice.class);
+      if (video != null) {
+        window = new VideoWindow(video, mArgs.windowScale);
+        simulation.addListener(window);
+      } else {
+        System.out.println("No video device mounted, window not initialized");
+      }
+    }
 
-    // instantiate debug shell and attach it
-    DebugShell debugShell = new DebugShell();
-    debugShell.attachSimulation(simulation);
-
-    if (info.debugMode) {
+    // if requested, instantiate debug shell and attach it
+    if (mArgs.debugMode) {
+      DebugShell debugShell = new DebugShell();
+      debugShell.attachSimulation(simulation);
       System.out.println("Debug mode requested, activating shell");
       debugShell.activate();
     }
 
-    // attach keyboard
-    System.out.println("Attaching keyboard to window panel");
-    JComponentKeyboardSource keyboardSource = new JComponentKeyboardSource(window.getPanel());
-    simulation.keyboard.attachSource(keyboardSource);
+    // if present attach keyboard
+    KeyboardDevice keyboard = simulation.getDevice(KeyboardDevice.class);
+    if (keyboard != null) {
+      System.out.println("Attaching keyboard to source: " + mArgs.keyboardSource.name());
+
+      switch (mArgs.keyboardSource) {
+        case WINDOW -> {
+          if (window == null) {
+            throw new RuntimeException("Can't connect keyboard to nonexistent window");
+          }
+
+          JComponentKeyboardSource keyboardSource = new JComponentKeyboardSource(window.getPanel());
+          keyboard.attachSource(keyboardSource);
+        }
+        default -> {
+          throw new RuntimeException("Unknown keyboard source " + mArgs.keyboardSource.name());
+        }
+      }
+    }
   }
 
   /**
@@ -85,22 +110,32 @@ public class Main {
     greet();
 
     // 1. get data
-    MainInfo info = null;
+    MainEnvironment mArgs = null;
     try {
-      info = new MainInfo(args);
+      mArgs = new MainEnvironment(args);
     } catch (IOException e) {
       System.err.println("Couldn't initialize program. " + e.getMessage());
+      System.exit(1);
     }
 
     // 2. initialize simulation
-    SimulationInfo simulationInfo = new SimulationInfo(
-            info.epromData,
-            info.sConfig
-    );
+    SimulationInfo simulationInfo = null;
+    try {
+      simulationInfo = new SimulationInfo(mArgs.epromData, mArgs.sConfig);
+    } catch (IOException e) {
+      System.err.println("Couldn't initialize simulation. " + e.getMessage());
+      System.exit(1);
+    }
+
     Simulation simulation = new Simulation(simulationInfo);
 
     // 3. initialize interfaces: video window, debug shell
-    initInterfaces(simulation, info);
+    try {
+      initInterfaces(simulation, mArgs);
+    } catch (RuntimeException e) {
+      System.err.println("Couldn't initialize interfaces. " + e.getMessage());
+      System.exit(1);
+    }
 
     // 4. begin simulation
     try {

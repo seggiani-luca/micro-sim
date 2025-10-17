@@ -1,7 +1,7 @@
 package microsim.simulation.component.device;
 
 import java.util.concurrent.locks.LockSupport;
-import microsim.simulation.component.bus.Bus;
+import microsim.simulation.component.bus.*;
 
 /**
  * Implements a device that should be simulated on a thread alongside the main simulation loop. This
