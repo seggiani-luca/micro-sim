@@ -13,7 +13,8 @@ public class TimerDevice extends ThreadedIoDevice {
   /**
    * Timer info this component implements.
    */
-  TimerInfo info;
+  @SuppressWarnings("unused")
+  private TimerInfo info; // currently unused
 
   /**
    * Period of timer clock.
@@ -23,7 +24,7 @@ public class TimerDevice extends ThreadedIoDevice {
   /**
    * Signals if timer has ticked and hasn't been read yet.
    */
-  boolean ticked = false;
+  private boolean ticked = false;
 
   /**
    * Instantiates timer device, taking a reference to the bus it's mounted on.

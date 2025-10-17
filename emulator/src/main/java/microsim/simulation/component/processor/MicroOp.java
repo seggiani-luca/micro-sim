@@ -397,7 +397,7 @@ public class MicroOp {
       case MEM_READ1 -> {
         proc.temp = proc.bus.dataLine.read();
 
-        if (DebugShell.active) {
+        if (DebugShell.isDebuggingEnabled()) {
           proc.raiseEvent(new DebugEvent(proc, "Processor read routine finished and got value "
                   + DebugShell.int32ToString(proc.temp)));
         }
@@ -408,7 +408,7 @@ public class MicroOp {
         proc.bus.writeEnable.drive(proc, 0);
         proc.bus.dataLine.release(proc);
 
-        if (DebugShell.active) {
+        if (DebugShell.isDebuggingEnabled()) {
           proc.raiseEvent(new DebugEvent(proc, "Processor write routine finished"));
         }
       }

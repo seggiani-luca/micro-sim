@@ -16,12 +16,12 @@ public class KeyboardDevice extends IoDevice {
    * Keyboard info this device implements.
    */
   @SuppressWarnings("unused")
-  KeyboardInfo info; // currently unused
+  private final KeyboardInfo info; // currently unused
 
   /**
    * Queue of characters pressed.
    */
-  private Queue<Integer> keyQueue = new LinkedList<>();
+  private final Queue<Integer> keyQueue = new LinkedList<>();
 
   /**
    * Attaches keyboard device to a
@@ -62,6 +62,7 @@ public class KeyboardDevice extends IoDevice {
    * @return value port should return
    */
   @Override
+  @SuppressWarnings("null")
   public int getPort(int index) {
     switch (index) {
       case 0 -> {
@@ -84,6 +85,5 @@ public class KeyboardDevice extends IoDevice {
   @Override
   public void setPort(int index, int data) {
     // nothing to set
-    return;
   }
 }

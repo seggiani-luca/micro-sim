@@ -1,6 +1,5 @@
 package microsim.simulation.info;
 
-import static microsim.simulation.info.SimulationInfo.*;
 import org.json.*;
 
 /**

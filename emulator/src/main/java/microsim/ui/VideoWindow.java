@@ -1,16 +1,10 @@
 package microsim.ui;
 
-import java.awt.Dimension;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.RenderingHints;
-import java.awt.image.BufferedImage;
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import microsim.simulation.component.device.video.VideoDevice;
-import microsim.simulation.event.FrameEvent;
-import microsim.simulation.event.SimulationEvent;
-import microsim.simulation.event.SimulationListener;
+import java.awt.*;
+import java.awt.image.*;
+import javax.swing.*;
+import microsim.simulation.component.device.video.*;
+import microsim.simulation.event.*;
 
 /**
  * Extends JPanel to display frame buffers rendered by
@@ -19,21 +13,22 @@ import microsim.simulation.event.SimulationListener;
 class VideoPanel extends JPanel {
 
   /**
-   * Scale of the panel. 1x matches to display pixels, 2x looks better on most displays.
+   * Scale of the panel. 1x matches to display pixels, 2x looks better on most displays (especially
+   * HiDPI).
    */
-  private int scale;
+  private final int scale;
 
   /**
-   * The frame buffer to display. Gets updated on FrameEvents raised by
-   * {@link simulation.component.device.video.VideoDevice} components.
+   * The frame buffer to display. Gets updated on {@link #updateFrame(java.awt.image.BufferedImage)}
+   * and rendered to the panel on {@link #paint(java.awt.Graphics)} calls.
    */
   private BufferedImage frame;
 
   /**
    * Instantiates panel, setting preferred size to scaled frame buffer size. Frame buffer size is
-   * obtained from {@link simulation.component.device.video.VideoDevice}.
+   * obtained from a {@link simulation.component.device.video.VideoDevice} instance.
    *
-   * @param video video device to render
+   * @param video video device to get frame buffer size from
    * @param scale scale factor of the frame buffer
    */
   public VideoPanel(VideoDevice video, int scale) {
@@ -42,7 +37,7 @@ class VideoPanel extends JPanel {
     int panelWidth = video.getRenderer().getFrameWidth();
     int panelHeight = video.getRenderer().getFrameHeight();
 
-    // init placeholder frame
+    // init placeholder frame, this will be rendered to by video device
     frame = new BufferedImage(
             panelWidth,
             panelHeight,
@@ -63,19 +58,25 @@ class VideoPanel extends JPanel {
   }
 
   /**
-   * Updates the frame buffer.
+   * Updates the frame buffer. Gets called on FrameEvents raised by the
+   * {@link simulation.component.device.video.VideoDevice} component attached to the main video
+   * window (which should be the same that the panel was initialized on).
    *
    * @param frame the new frame buffer
    */
   public void updateFrame(BufferedImage frame) {
-    this.frame = frame;
+    // invoke from swing utilities to make sure updates happen on the EDT thread
+    SwingUtilities.invokeLater(() -> {
+      this.frame = frame;
+      repaint();
+    });
   }
 
   /**
-   * Override of JPanel paintComponent method that scales frame buffer. Uses nearest neighbor
-   * scaling for crisp pixels.
+   * Override of JPanel's paintComponent method that scales frame buffer and paints it to the panel.
+   * Uses nearest neighbor scaling for crisp pixels.
    *
-   * @param g the Graphics object to protect
+   * @param g the Graphics object to protect (see JComponent's documentation)
    */
   @Override
   protected void paintComponent(Graphics g) {
@@ -101,14 +102,17 @@ class VideoPanel extends JPanel {
 }
 
 /**
- * Handles JFrame for windowing and {@link microsim.ui.VideoPanel} for frame buffer display.
+ * Handles JFrame for windowing and {@link microsim.ui.VideoPanel} for frame buffer display. Is
+ * attached to a specific {@link microsim.simulation.component.device.video.VideoDevice} instance
+ * (given to the constructor), which it first uses to initialize panel dimensions. From there
+ * onwards, it only responds to frame events raised by that instance.
  */
 public class VideoWindow implements SimulationListener {
 
   /**
    * Device this video window attaches to.
    */
-  private VideoDevice video;
+  private final VideoDevice video;
 
   /**
    * Main window JFrame.
@@ -121,7 +125,7 @@ public class VideoWindow implements SimulationListener {
   private final VideoPanel panel;
 
   /**
-   * Returns panel, for attaching input.
+   * Returns panel, for attaching input (e.g. keyboard input grabbed from panel).
    *
    * @return JPanel instance
    */
@@ -153,7 +157,8 @@ public class VideoWindow implements SimulationListener {
   }
 
   /**
-   * Receives {@link simulation.event.FrameEvent} events and uses them to repaint {@link #panel}.
+   * Receives {@link simulation.event.FrameEvent} events and uses them to update {@link #panel}'s
+   * frame buffer. Only responds to the video device this window is attached to.
    */
   @Override
   public void onSimulationEvent(SimulationEvent e) {
@@ -164,8 +169,8 @@ public class VideoWindow implements SimulationListener {
         return;
       }
 
+      // actually update frame, repainting is duty of the panel
       panel.updateFrame(f.frame);
-      panel.repaint();
     }
   }
 }

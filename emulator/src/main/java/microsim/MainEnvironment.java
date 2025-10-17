@@ -7,13 +7,30 @@ import org.json.*;
 
 /**
  * Gets and represents info related to the main program flow, including arguments, configuration and
- * EPROM files.
+ * EPROM files. This means handling argument parsing and file reading. Also keeps references to the
+ * configuration JSON files to pass along to other info constructors (mainly for simulation
+ * configuration).
  */
 public class MainEnvironment {
 
+  /**
+   * Argument tag for debug mode.
+   */
   public static final String DEBUG_TAG = "-d";
+
+  /**
+   * Argument tag for EPROM data path.
+   */
   public static final String EPROM_TAG = "-e";
+
+  /**
+   * Argument tag for interface configuration path.
+   */
   public static final String UI_CONFIG_TAG = "-ci";
+
+  /**
+   * Argument tag for simulation configuration path.
+   */
   public static final String SIM_CONFIG_TAG = "-cs";
 
   /**
@@ -42,16 +59,6 @@ public class MainEnvironment {
   public byte[] epromData;
 
   /**
-   * The interface configuration JSON.
-   */
-  public JSONObject iConfig;
-
-  /**
-   * The simulation configuration JSON.
-   */
-  public JSONObject sConfig;
-
-  /**
    * Should window interface be shown?
    */
   public boolean headless = false;
@@ -64,14 +71,25 @@ public class MainEnvironment {
   /**
    * Keyboard input source types.
    */
-  public enum KeyboardSource {
-    WINDOW
+  public enum KeyboardSourceType {
+    window,
+    detached
   }
 
   /**
    * Keyboard input source.
    */
-  public KeyboardSource keyboardSource;
+  public KeyboardSourceType keyboardSourceType;
+
+  /**
+   * The interface configuration JSON.
+   */
+  public JSONObject iConfig;
+
+  /**
+   * The simulation configuration JSON.
+   */
+  public JSONObject sConfig;
 
   /**
    * Gets argument parameter following argument tag. With tag = "-t", from '-t "arg"' returns "arg".
@@ -139,7 +157,7 @@ public class MainEnvironment {
 
     // get data of window interface
     JSONObject windowConfig = iConfig.getJSONObject("window");
-    headless = iConfig.optBoolean("headless", headless);
+    headless = windowConfig.optBoolean("headless", headless);
     windowScale = windowConfig.optInt("scale", windowScale);
 
     // get data of keyboard interface
@@ -147,7 +165,9 @@ public class MainEnvironment {
     String keyboardSourceString = keyboardConfig.getString("source");
     switch (keyboardSourceString) {
       case "window" ->
-        keyboardSource = KeyboardSource.WINDOW;
+        keyboardSourceType = KeyboardSourceType.window;
+      case "detached" ->
+        keyboardSourceType = KeyboardSourceType.detached;
       default ->
         throw new IOException("Unknown keyboard source in keyboard interface configuration");
     }

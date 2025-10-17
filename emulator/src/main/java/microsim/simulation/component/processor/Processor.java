@@ -21,7 +21,7 @@ public class Processor extends SimulationComponent {
    * Processor info this component implements.
    */
   @SuppressWarnings("unused")
-  ProcessorInfo info; // currently unused
+  private final ProcessorInfo info; // currently unused
 
   /**
    * Number of registers. Fixed to 32 according to ABI.
@@ -213,13 +213,13 @@ public class Processor extends SimulationComponent {
     MicroOp nextOp = opQueue.poll();
 
     if (nextOp == null) {
-      if (DebugShell.active) {
+      if (DebugShell.isDebuggingEnabled()) {
         raiseEvent(new DebugEvent(this,
                 "Processor found empty pipeline and started fetch-decode cycle"));
       }
       fetchDecode();
     } else {
-      if (DebugShell.active) {
+      if (DebugShell.isDebuggingEnabled()) {
         raiseEvent(new DebugEvent(this,
                 "Processor found microop " + nextOp.toString()));
       }

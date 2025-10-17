@@ -29,7 +29,7 @@ public class BusInterface {
    * @param byteSelect format to read
    */
   public static void doReadRoutine(Processor proc, int addr, int byteSelect) {
-    if (DebugShell.active) {
+    if (DebugShell.isDebuggingEnabled()) {
       proc.raiseEvent(new DebugEvent(proc, "Processor started read routine at address "
               + DebugShell.int32ToString(addr)));
     }
@@ -65,7 +65,7 @@ public class BusInterface {
    */
   public static void doWriteRoutine(
           Processor proc, int addr, int data, int byteSelect) {
-    if (DebugShell.active) {
+    if (DebugShell.isDebuggingEnabled()) {
       proc.raiseEvent(new DebugEvent(proc, "Processor started write routine at address "
               + DebugShell.int32ToString(addr) + " of data " + DebugShell.int32ToString(data)));
     }

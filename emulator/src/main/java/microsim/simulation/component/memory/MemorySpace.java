@@ -24,7 +24,7 @@ public class MemorySpace extends SimulationComponent {
   /**
    * Memory space info this component implements.
    */
-  MemoryInfo info;
+  private MemoryInfo info;
 
   /**
    * Checks if given address is in memory bounds.
@@ -161,7 +161,7 @@ public class MemorySpace extends SimulationComponent {
       // read operation
       int data = 0x0;
 
-      if (DebugShell.active) {
+      if (DebugShell.isDebuggingEnabled()) {
         raiseEvent(new DebugEvent(this, "Memory saw read operation at addr "
                 + DebugShell.int32ToString(addr)));
       }
@@ -177,7 +177,7 @@ public class MemorySpace extends SimulationComponent {
           data |= (readMemory(addr) & 0xff);
       }
 
-      if (DebugShell.active) {
+      if (DebugShell.isDebuggingEnabled()) {
         raiseEvent(new DebugEvent(this, "Memory read operation gave data "
                 + DebugShell.int32ToString(data)));
       }
@@ -193,7 +193,7 @@ public class MemorySpace extends SimulationComponent {
       // write operation
       int data = bus.dataLine.read();
 
-      if (DebugShell.active) {
+      if (DebugShell.isDebuggingEnabled()) {
         raiseEvent(new DebugEvent(this, "Memory saw write operation at addr "
                 + DebugShell.int32ToString(addr) + " of data "
                 + DebugShell.int32ToString(data)));

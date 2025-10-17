@@ -8,8 +8,8 @@ import microsim.simulation.event.*;
 /**
  * A component simulated within the {@link microsim.simulation.Simulation} class. Implements
  * functionality for stepping on simulation cycles, and for raising
- * {@link microsim.simulation.event.SimulationEvent} events. Components are expected to mount on a
- * bus.
+ * {@link microsim.simulation.event.SimulationEvent} events. Components are expected to be mounted
+ * on a bus and take a reference to it.
  */
 public abstract class SimulationComponent {
 

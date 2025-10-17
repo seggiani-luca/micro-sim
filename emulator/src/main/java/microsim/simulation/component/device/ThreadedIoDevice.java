@@ -2,6 +2,7 @@ package microsim.simulation.component.device;
 
 import java.util.concurrent.locks.LockSupport;
 import microsim.simulation.component.bus.*;
+import microsim.ui.DebugShell;
 
 /**
  * Implements a device that should be simulated on a thread alongside the main simulation loop. This
@@ -46,16 +47,28 @@ public abstract class ThreadedIoDevice extends IoDevice {
   }
 
   /**
-   * Function that implements the actual device thread. To be implemented by subclass.
+   * Method that implements the actual device thread. To be implemented by subclass.
    */
   protected abstract void deviceThread();
 
   /**
    * Spins the thread until the given time, parking it if remaining time is over a millisecond.
+   * Threads that want to obey the debugger's "stop the world" policy should use this method to
+   * sleep.
    *
    * @param time time to wait to
    */
   protected void smartSpin(long time) {
+    // sleep if world is stopped
+    while (DebugShell.isWorldStopped()) {
+      try {
+        Thread.sleep(1);
+      } catch (InterruptedException e) {
+        throw new RuntimeException("Sleeping thread was interrupted while world was stopped.");
+      }
+    }
+
+    // wait for time
     long now = System.nanoTime();
     long remaining = time - now;
 

@@ -66,6 +66,7 @@ public class SimulationInfo {
    *
    * @param eprom EPROM data array
    * @param config JSON configuration file
+   * @throws IOException if JSON parsing fails
    */
   public SimulationInfo(byte[] eprom, JSONObject config) throws IOException {
     processorInfo = new ProcessorInfo(config.getJSONObject("processor"));

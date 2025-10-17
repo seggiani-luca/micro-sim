@@ -40,7 +40,9 @@ public class Simulation extends SimulationComponent implements SimulationListene
   /**
    * Returns first device by type in device list. If not found returns null.
    *
-   * @param type type of device to find
+   * @param <T> type of device instance to return
+   * @param type class of device instance to find (matches above)
+   * @return first found device instance of class type
    */
   public <T extends IoDevice> T getDevice(Class<T> type) {
     for (IoDevice device : devices) {
@@ -54,7 +56,7 @@ public class Simulation extends SimulationComponent implements SimulationListene
 
   /**
    * Instantiates simulation, loading EPROM data in memory and configuring devices and components.
-   * Sets self as listener to the simulation components involved.
+   * Sets self as listener of the simulation components involved.
    *
    * @param info simulation info for configuration
    */
@@ -70,26 +72,31 @@ public class Simulation extends SimulationComponent implements SimulationListene
     proc = new Processor(bus, info.processorInfo);
     memory = new MemorySpace(bus, info.memoryInfo);
 
+    // loop through device infos and init devices
     for (DeviceInfo deviceInfo : info.devicesInfo) {
       switch (deviceInfo) {
         case VideoInfo videoInfo -> {
           VideoDevice videoDevice = new VideoDevice(bus, memory, videoInfo);
           devices.add(videoDevice);
         }
+
         case KeyboardInfo keyboardInfo -> {
           KeyboardDevice keyboardDevice = new KeyboardDevice(bus, keyboardInfo);
           devices.add(keyboardDevice);
         }
+
         case TimerInfo timerInfo -> {
           TimerDevice timerDevice = new TimerDevice(bus, timerInfo);
           devices.add(timerDevice);
         }
+
         case null, default ->
           throw new RuntimeException("Unkown device in device list");
       }
     }
 
-    // set as listener. this is leaky but we don't expect listeners to use it before event is raised
+    // sets self as listener
+    //this leaks this but we don't expect listeners to use it before event is raised
     bus.addListener(this);
     proc.addListener(this);
     memory.addListener(this);
@@ -141,8 +148,8 @@ public class Simulation extends SimulationComponent implements SimulationListene
   }
 
   /**
-   * Executes simulation. All components on local bus update as fast as possible. Video and timer
-   * run on separate threads at fixed frequency.
+   * Executes simulation. All components on local bus update as fast as possible. Threaded devices
+   * (like video and timer) run on separate threads at fixed frequency.
    */
   public void begin() {
     // start other threads
@@ -158,7 +165,7 @@ public class Simulation extends SimulationComponent implements SimulationListene
     // enter simulation loop
     while (true) {
       // if debugging signal cycle to show debug shell
-      if (DebugShell.active) {
+      if (DebugShell.isDebuggingEnabled()) {
         raiseEvent(new CycleEvent(this, cycle));
       }
 

@@ -16,7 +16,8 @@ public class VideoDevice extends ThreadedIoDevice {
   /**
    * Video device info this component implements.
    */
-  VideoInfo info;
+  @SuppressWarnings("unused")
+  private final VideoInfo info; // currently unused
 
   /**
    * Period of video updates (calculated from update frequency).
@@ -30,6 +31,8 @@ public class VideoDevice extends ThreadedIoDevice {
 
   /**
    * Gets this video device's renderer.
+   *
+   * @return this video device's renderer
    */
   public VideoRenderer getRenderer() {
     return renderer;
