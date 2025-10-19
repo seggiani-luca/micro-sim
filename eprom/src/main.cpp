@@ -1,7 +1,10 @@
 #include "lib/lib.h"
 
 void main() {
-	vid::print_strln("Ciao mondo!");
+	while(true) {
+		char c = keyb::get_char();
+		vid::print_char(c);
+	}
 
 	utl::wait();
 	return;
