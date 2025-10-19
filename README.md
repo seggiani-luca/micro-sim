@@ -1,4 +1,7 @@
 # micro-sim
+
+![alt text](https://raw.githubusercontent.com/seggiani-luca/micro-sim/refs/heads/main/docs/screen.png)
+
 micro-sim è un emulatore scritto in Java per un sistema basato su [RISC-V](riscv.org).
 
 Le componenti simulate sono:
