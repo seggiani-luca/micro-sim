@@ -2,6 +2,8 @@ package microsim.simulation;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.function.BiFunction;
 import microsim.simulation.component.*;
 import microsim.simulation.component.bus.*;
 import microsim.simulation.component.device.*;
@@ -55,12 +57,22 @@ public class Simulation extends SimulationComponent implements SimulationListene
   }
 
   /**
+   * Map of device info factories to parse device list.
+   */
+  public static final Map<Class<? extends DeviceInfo>, BiFunction<Bus, DeviceInfo, IoDevice>> DEVICE_FACTORIES = Map.of(
+          VideoInfo.class, (bus, info) -> new VideoDevice(bus, (VideoInfo) info),
+          KeyboardInfo.class, (bus, info) -> new KeyboardDevice(bus, (KeyboardInfo) info),
+          TimerInfo.class, (bus, info) -> new TimerDevice(bus, (TimerInfo) info)
+  );
+
+  /**
    * Instantiates simulation, loading EPROM data in memory and configuring devices and components.
    * Sets self as listener of the simulation components involved.
    *
    * @param info simulation info for configuration
    */
   @SuppressWarnings("LeakingThisInConstructor")
+
   public Simulation(SimulationInfo info) {
     // simulation instances don't attach to buses (they instead own one)
     super(null);
@@ -74,24 +86,19 @@ public class Simulation extends SimulationComponent implements SimulationListene
 
     // loop through device infos and init devices
     for (DeviceInfo deviceInfo : info.devicesInfo) {
-      switch (deviceInfo) {
-        case VideoInfo videoInfo -> {
-          VideoDevice videoDevice = new VideoDevice(bus, memory, videoInfo);
-          devices.add(videoDevice);
-        }
+      // get the correct factory, if it exists
+      BiFunction<Bus, DeviceInfo, IoDevice> factory = DEVICE_FACTORIES.get(deviceInfo.getClass());
+      if (factory == null) {
+        throw new RuntimeException("Unknown device type while populating simulation");
+      }
 
-        case KeyboardInfo keyboardInfo -> {
-          KeyboardDevice keyboardDevice = new KeyboardDevice(bus, keyboardInfo);
-          devices.add(keyboardDevice);
-        }
+      // use it to build device
+      IoDevice device = factory.apply(bus, deviceInfo);
+      devices.add(device);
 
-        case TimerInfo timerInfo -> {
-          TimerDevice timerDevice = new TimerDevice(bus, timerInfo);
-          devices.add(timerDevice);
-        }
-
-        case null, default ->
-          throw new RuntimeException("Unkown device in device list");
+      // if video device, attach it to memory
+      if (device instanceof VideoDevice videoDevice) {
+        videoDevice.attachMemory(memory);
       }
     }
 

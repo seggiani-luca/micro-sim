@@ -3,6 +3,8 @@ package microsim.simulation.info;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 import org.json.*;
 
 /**
@@ -62,6 +64,15 @@ public class SimulationInfo {
   public List<DeviceInfo> devicesInfo = new LinkedList<>();
 
   /**
+   * Map of device info factories to parse device list.
+   */
+  public static final Map<String, Function<JSONObject, DeviceInfo>> DEVICE_INFO_FACTORIES = Map.of(
+          "video", VideoInfo::new,
+          "keyboard", KeyboardInfo::new,
+          "timer", TimerInfo::new
+  );
+
+  /**
    * Builds simulation info from the EPROM data array and a JSON configuration file.
    *
    * @param eprom EPROM data array
@@ -77,23 +88,15 @@ public class SimulationInfo {
       JSONObject device = devices.getJSONObject(i);
       String deviceType = device.getString("type");
 
-      switch (deviceType) {
-        case "video" -> {
-          VideoInfo videoInfo = new VideoInfo(device);
-          devicesInfo.add(videoInfo);
-        }
-        case "keyboard" -> {
-          KeyboardInfo keyboardInfo = new KeyboardInfo(device);
-          devicesInfo.add(keyboardInfo);
-        }
-        case "timer" -> {
-          TimerInfo timerInfo = new TimerInfo(device);
-          devicesInfo.add(timerInfo);
-        }
-        default -> {
-          throw new IOException("Unknown device type " + deviceType);
-        }
+      // get the correct factory, if it exists
+      Function<JSONObject, DeviceInfo> factory = DEVICE_INFO_FACTORIES.get(deviceType);
+      if (factory == null) {
+        throw new IOException("Unknown device type while parsing JSON " + deviceType);
       }
+
+      // use it to build device info
+      DeviceInfo deviceInfo = factory.apply(device);
+      devicesInfo.add(deviceInfo);
     }
   }
 }

@@ -13,7 +13,7 @@ import microsim.simulation.info.VideoInfo;
  * frame buffer and rendering to it. Functions in text mode, with bitmap characters read from a file
  * and loaded into a buffered image cache. Also handles cursor drawing and blinking.
  */
-public class VideoRenderer {
+public final class VideoRenderer {
 
   /**
    * Video device info this renderer implements (renderer is always part of a video device).
@@ -29,7 +29,17 @@ public class VideoRenderer {
    * Reference to memory space. Used to directly access VRAM via the
    * {@link simulation.component.memory.MemorySpace#getVRAM()} method.
    */
-  private final MemorySpace memory;
+  private MemorySpace memory;
+
+  /**
+   * Attaches a memory space to this renderer. Used to defer memory attachment after renderer has
+   * been built.
+   *
+   * @param memory memory to attach
+   */
+  public void attachMemory(MemorySpace memory) {
+    this.memory = memory;
+  }
 
   /**
    * Frame buffer to render on.
@@ -107,10 +117,9 @@ public class VideoRenderer {
   /**
    * Instantiates video renderer, taking a reference to the memory space it should read VRAM from.
    *
-   * @param memory memory space to read from
+   * @param info video info to build renderer from
    */
-  public VideoRenderer(MemorySpace memory, VideoInfo info) {
-    this.memory = memory;
+  public VideoRenderer(VideoInfo info) {
     this.info = info;
 
     // fetch character atlas
@@ -150,6 +159,11 @@ public class VideoRenderer {
    * or not depending on the current blink timer.
    */
   public void render() {
+    // memory must be attached
+    if (memory == null) {
+      throw new RuntimeException("Tried rendering with no memory device attached");
+    }
+
     // update blink
     blinkTimer++;
     if (blinkTimer == BLINK_TIME) {

@@ -30,6 +30,16 @@ public class VideoDevice extends ThreadedIoDevice {
   private final VideoRenderer renderer;
 
   /**
+   * Attaches a memory space to the owned renderer. Used to defer memory attachment after renderer
+   * has been built.
+   *
+   * @param memory memory to attach
+   */
+  public void attachMemory(MemorySpace memory) {
+    renderer.attachMemory(memory);
+  }
+
+  /**
    * Gets this video device's renderer.
    *
    * @return this video device's renderer
@@ -44,16 +54,15 @@ public class VideoDevice extends ThreadedIoDevice {
    *
    * @param bus bus the component is mounted on
    * @param info info to build video device from
-   * @param memory memory space to read from
    */
-  public VideoDevice(Bus bus, MemorySpace memory, VideoInfo info) {
+  public VideoDevice(Bus bus, VideoInfo info) {
     super(bus, info.base, 2);
     this.info = info;
 
     frameTime = 1_000_000_000 / info.frameFreq; // in ns
 
     // init renderer
-    renderer = new VideoRenderer(memory, info);
+    renderer = new VideoRenderer(info);
   }
 
   /**
