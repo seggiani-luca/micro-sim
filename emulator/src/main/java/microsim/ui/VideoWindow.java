@@ -139,15 +139,16 @@ public class VideoWindow implements SimulationListener {
    *
    * @param video video device to render
    * @param scale scale factor of the frame buffer
+   * @param title title of window
    */
-  public VideoWindow(VideoDevice video, int scale) {
+  public VideoWindow(VideoDevice video, int scale, String title) {
     this.video = video;
 
     // setup panel
     panel = new VideoPanel(video, scale);
 
     // setup window
-    frame = new JFrame("micro-sim");
+    frame = new JFrame("micro-sim: " + title);
     frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     frame.setResizable(false);
 

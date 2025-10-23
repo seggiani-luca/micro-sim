@@ -25,6 +25,11 @@ import microsim.ui.DebugShell;
 public class Simulation extends SimulationComponent implements SimulationListener {
 
   /**
+   * Name of machine this simulation implements.
+   */
+  public String machineName;
+
+  /**
    * Simulated processor component. Instantiated after bus, updated first in simulation steps.
    */
   public Processor proc;
@@ -77,6 +82,9 @@ public class Simulation extends SimulationComponent implements SimulationListene
     // simulation instances don't attach to buses (they instead own one)
     super(null);
 
+    // get machine name
+    machineName = info.machineName;
+
     // init bus
     bus = new Bus();
 
@@ -103,7 +111,7 @@ public class Simulation extends SimulationComponent implements SimulationListene
     }
 
     // sets self as listener
-    //this leaks this but we don't expect listeners to use it before event is raised
+    // this leaks a this reference but we don't expect listeners to use it before event is raised
     bus.addListener(this);
     proc.addListener(this);
     memory.addListener(this);
@@ -155,17 +163,9 @@ public class Simulation extends SimulationComponent implements SimulationListene
   }
 
   /**
-   * Executes simulation. All components on local bus update as fast as possible. Threaded devices
-   * (like video and timer) run on separate threads at fixed frequency.
+   * Main simulation thread.
    */
-  public void begin() {
-    // start other threads
-    for (IoDevice device : devices) {
-      if (device instanceof ThreadedIoDevice threadedDevice) {
-        threadedDevice.begin();
-      }
-    }
-
+  private void mainThread() {
     // init cycle counter
     long cycle = 0;
 
@@ -182,5 +182,23 @@ public class Simulation extends SimulationComponent implements SimulationListene
       // increase cycle
       cycle++;
     }
+  }
+
+  /**
+   * Executes simulation. All components on local bus update as fast as possible. Threaded devices
+   * (like video and timer) run on separate threads at fixed frequency.
+   */
+  public void begin() {
+    // start other threads
+    for (IoDevice device : devices) {
+      if (device instanceof ThreadedIoDevice threadedDevice) {
+        threadedDevice.begin(machineName);
+      }
+    }
+
+    // start main simulation thread
+    Thread simulationThread = new Thread(() -> mainThread());
+    simulationThread.setName("Main simulation thread - " + machineName);
+    simulationThread.start();
   }
 }

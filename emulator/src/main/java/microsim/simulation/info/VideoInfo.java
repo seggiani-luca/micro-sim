@@ -56,7 +56,7 @@ public class VideoInfo extends DeviceInfo {
     rows = config.getInt("rows");
     charWidth = config.getInt("character_width");
     charHeight = config.getInt("character_height");
-    charsetPath = config.getString("charset");
+    charsetPath = config.getString("charset_path");
     charsetSize = config.getInt("charset_size");
   }
 }

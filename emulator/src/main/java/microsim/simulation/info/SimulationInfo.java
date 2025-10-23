@@ -5,11 +5,12 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import microsim.file.ELF;
 import org.json.*;
 
 /**
- * Represents info related to a simulation instance, including EPROM data device and component
- * configuration.
+ * Represents info related to a simulation instance, including EPROM data, device and component
+ * configuration, and user interface configuration.
  */
 public class SimulationInfo {
 
@@ -49,6 +50,39 @@ public class SimulationInfo {
   }
 
   /**
+   * Name of simulation instance.
+   */
+  public String machineName;
+
+  /**
+   * Should the debug shell be shown?
+   */
+  public boolean debugMode = false;
+
+  /**
+   * Should window interface be shown?
+   */
+  public boolean headless = false;
+
+  /**
+   * Window interface windowScale.
+   */
+  public int windowScale = 1;
+
+  /**
+   * Keyboard input source types.
+   */
+  public enum KeyboardSourceType {
+    window,
+    detached
+  }
+
+  /**
+   * Keyboard input source.
+   */
+  public KeyboardSourceType keyboardSourceType;
+
+  /**
    * Info about processor of this simulation.
    */
   public ProcessorInfo processorInfo;
@@ -73,16 +107,61 @@ public class SimulationInfo {
   );
 
   /**
-   * Builds simulation info from the EPROM data array and a JSON configuration file.
+   * Builds simulation info from a JSON machine configuration file.
    *
-   * @param eprom EPROM data array
    * @param config JSON configuration file
    * @throws IOException if JSON parsing fails
    */
-  public SimulationInfo(byte[] eprom, JSONObject config) throws IOException {
-    processorInfo = new ProcessorInfo(config.getJSONObject("processor"));
-    memoryInfo = new MemoryInfo(config.getJSONObject("memory"), eprom);
+  public SimulationInfo(JSONObject config) throws IOException {
+    // get machine name
+    machineName = config.getString("machine_name");
 
+    // load eprom data
+    String epromDataPath = config.getString("eprom_path");
+    byte[] epromData = ELF.readEPROM(epromDataPath);
+
+    // configure interfaces
+    JSONObject interfaceConfig = config.getJSONObject("interface");
+    configureInterfaces(interfaceConfig);
+
+    // configure simulation
+    JSONObject simulationConfig = config.getJSONObject("simulation");
+    configureSimulation(simulationConfig, epromData);
+  }
+
+  /**
+   * Configures interfaces based on given JSON configuration object.
+   *
+   * @param config JSON configuration object
+   */
+  private void configureInterfaces(JSONObject config) throws IOException {
+    // get data of window interface
+    JSONObject windowConfig = config.getJSONObject("window");
+
+    // get window mode and scale
+    headless = windowConfig.optBoolean("headless", headless);
+    windowScale = windowConfig.optInt("scale", windowScale);
+
+    // get data of keyboard interface
+    JSONObject keyboardConfig = config.getJSONObject("keyboard");
+
+    // get keyboard source type
+    String keyboardSourceString = keyboardConfig.getString("source");
+    keyboardSourceType = KeyboardSourceType.valueOf(keyboardSourceString.toLowerCase());
+  }
+
+  /**
+   * Configures simulation based on given JSON configuration object and EPROM byte array.
+   *
+   * @param config JSON configuration object
+   * @param epromData EPROM byte array
+   */
+  private void configureSimulation(JSONObject config, byte[] epromData) throws IOException {
+    // get processor and memory information
+    processorInfo = new ProcessorInfo(config.getJSONObject("processor"));
+    memoryInfo = new MemoryInfo(config.getJSONObject("memory"), epromData);
+
+    // get device information
     JSONArray devices = config.getJSONArray("devices");
     for (int i = 0; i < devices.length(); i++) {
       JSONObject device = devices.getJSONObject(i);

@@ -55,19 +55,19 @@ public class Main {
    * @param simulation simulation instance to attach interfaces to
    * @param mArgs main environment containing interface configuration
    */
-  private static void initInterfaces(Simulation simulation, MainEnvironment mArgs) {
+  private static void initInterfaces(Simulation simulation, SimulationInfo info) {
     System.out.println("Initializing video window");
 
     // 1. handle video window
     VideoWindow window = null;
 
     // only if not headless
-    if (!mArgs.headless) {
+    if (!info.headless) {
       // get the first mounted video device
       VideoDevice video = simulation.getDevice(VideoDevice.class);
       if (video != null) {
         // attach the device
-        window = new VideoWindow(video, mArgs.windowScale);
+        window = new VideoWindow(video, info.windowScale, info.machineName);
         simulation.addListener(window);
       } else {
         System.out.println("No video device mounted, window not initialized");
@@ -80,7 +80,7 @@ public class Main {
     debugShell.attachSimulation(simulation);
 
     // activate if requested
-    if (mArgs.debugMode) {
+    if (info.debugMode) {
       System.out.println("Debug mode requested, activating shell");
 
       // activate debug shell
@@ -92,9 +92,9 @@ public class Main {
 
     // only handle if present
     if (keyboard != null) {
-      System.out.println("Attaching keyboard to source: " + mArgs.keyboardSourceType.name());
+      System.out.println("Attaching keyboard to source: " + info.keyboardSourceType.name());
 
-      switch (mArgs.keyboardSourceType) {
+      switch (info.keyboardSourceType) {
         case window -> {
           // attach to window JPanel, if video window was instantiated
           if (window == null) {
@@ -108,24 +108,49 @@ public class Main {
           // don't attach keyboard
         }
         default -> {
-          throw new RuntimeException("Unknown keyboard source " + mArgs.keyboardSourceType.name());
+          throw new RuntimeException("Unknown keyboard source " + info.keyboardSourceType.name());
         }
       }
     }
   }
 
   /**
-   * Program entry point. Main program flow is:
+   * Instantiates a simulation. Initialization flow is:
    * <ol>
    * <li>Get data needed for simulation instantiation. This includes arguments, configuration files,
-   * and the object file containing EPROM data. Most of this is handled by a main environment
-   * object.</li>
+   * and the object file containing EPROM data. Most of this is handled by a main environment object
+   * and done by the caller (main())</li>
    * <li>Instantiate a {@link microsim.simulation.Simulation} object with said configuration and
    * data.</li>
    * <li>Attach interfaces to simulation. These might include {@link ui.VideoWindow},
    * {@link ui.DebugShell}, and some keyboard source for the keyboard device if present.</li>
    * <li>Begin executing simulation.</li>
    * </ol>
+   *
+   * @param info info to instantiate simulation from
+   */
+  public static void initSimulation(SimulationInfo info) {
+    System.out.println("--- Initializing simulation of machine: " + info.machineName + " ---");
+
+    // expect 1. to be done
+    // 2. initialize simulation
+    Simulation simulation = new Simulation(info);
+
+    // 3. initialize interfaces: video window, debug shell and keyboard
+    try {
+      initInterfaces(simulation, info);
+    } catch (RuntimeException e) {
+      System.err.println("Couldn't initialize interfaces. " + e.getMessage());
+      System.exit(1);
+    }
+
+    // 4. begin simulation
+    System.out.println("Simulation of machine " + info.machineName + " powering on\n");
+    simulation.begin();
+  }
+
+  /**
+   * Program entry point. Loads machine configurations and instantiates simulations based on them.
    *
    * Return values for the program are:
    * <ol>
@@ -142,43 +167,20 @@ public class Main {
   public static void main(String[] args) {
     greet();
 
-    // 1. get data
-    MainEnvironment mArgs = null;
+    // get environment. this includes loading machine configurations
+    MainEnvironment env = null;
     try {
-      mArgs = new MainEnvironment(args);
+      env = new MainEnvironment(args);
     } catch (IOException e) {
       System.err.println("Couldn't initialize program. " + e.getMessage());
       System.exit(1);
     }
 
-    // also get simulation data
-    SimulationInfo simulationInfo = null;
-    try {
-      simulationInfo = new SimulationInfo(mArgs.epromData, mArgs.sConfig);
-    } catch (IOException e) {
-      System.err.println("Couldn't initialize simulation. " + e.getMessage());
-      System.exit(1);
-    }
+    System.out.println("Loaded " + env.simulationInfos.size() + " machine configuration(s)\n");
 
-    // 2. initialize simulation
-    Simulation simulation = new Simulation(simulationInfo);
-
-    // 3. initialize interfaces: video window, debug shell and keyboard
-    try {
-      initInterfaces(simulation, mArgs);
-    } catch (RuntimeException e) {
-      System.err.println("Couldn't initialize interfaces. " + e.getMessage());
-      System.exit(1);
-    }
-
-    // 4. begin simulation
-    try {
-      System.out.println("Simulation powering on");
-      simulation.begin();
-    } catch (RuntimeException e) {
-      System.err.println("Simulation error. " + e.getMessage());
-      e.printStackTrace(); // for now print stacktrace
-      System.exit(2);
+    // instantiate simulations from got simulation infos
+    for (SimulationInfo info : env.simulationInfos) {
+      initSimulation(info);
     }
   }
 }

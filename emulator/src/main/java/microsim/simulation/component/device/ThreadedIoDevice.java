@@ -82,9 +82,15 @@ public abstract class ThreadedIoDevice extends IoDevice {
   }
 
   /**
-   * Begins executing device thread.
+   * Begins executing device thread. Takes a reference to the machine name of the simulations it
+   * belongs to for organization.
+   *
+   * @param machineName machine name of simulation
    */
-  public void begin() {
-    new Thread(runnableInstance).start();
+  public void begin(String machineName) {
+    Thread deviceThread = new Thread(runnableInstance);
+    deviceThread.setName("threaded device - " + this.getClass().getSimpleName() + " - "
+            + machineName);
+    deviceThread.start();
   }
 }

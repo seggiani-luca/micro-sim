@@ -1,8 +1,12 @@
 package microsim;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Objects;
 import microsim.file.*;
+import microsim.simulation.info.SimulationInfo;
 import org.json.*;
 
 /**
@@ -19,77 +23,19 @@ public class MainEnvironment {
   public static final String DEBUG_TAG = "-d";
 
   /**
-   * Argument tag for EPROM data path.
+   * Argument tag for configuration directory path.
    */
-  public static final String EPROM_TAG = "-e";
+  public static final String CONFIG_TAG = "-c";
 
   /**
-   * Argument tag for interface configuration path.
+   * Path of the configuration directory path.
    */
-  public static final String UI_CONFIG_TAG = "-ci";
+  public String configPath = "conf/";
 
   /**
-   * Argument tag for simulation configuration path.
+   * List of simulation infos for all found machines.
    */
-  public static final String SIM_CONFIG_TAG = "-cs";
-
-  /**
-   * Signals if the debug shell should be shown.
-   */
-  public boolean debugMode = false;
-
-  /**
-   * Path of the EPROM data file.
-   */
-  public String epromDataPath = "data/eprom.elf";
-
-  /**
-   * Path of the interface configuration file.
-   */
-  public String iConfigPath = "conf/interface.json";
-
-  /**
-   * Path of the simulation configuration file.
-   */
-  public String sConfigPath = "conf/simulation.json";
-
-  /**
-   * Byte array containing EPROM data.
-   */
-  public byte[] epromData;
-
-  /**
-   * Should window interface be shown?
-   */
-  public boolean headless = false;
-
-  /**
-   * Window interface windowScale.
-   */
-  public int windowScale = 1;
-
-  /**
-   * Keyboard input source types.
-   */
-  public enum KeyboardSourceType {
-    window,
-    detached
-  }
-
-  /**
-   * Keyboard input source.
-   */
-  public KeyboardSourceType keyboardSourceType;
-
-  /**
-   * The interface configuration JSON.
-   */
-  public JSONObject iConfig;
-
-  /**
-   * The simulation configuration JSON.
-   */
-  public JSONObject sConfig;
+  public List<SimulationInfo> simulationInfos = new LinkedList<>();
 
   /**
    * Gets argument parameter following argument tag. With tag = "-t", from '-t "arg"' returns "arg".
@@ -143,33 +89,31 @@ public class MainEnvironment {
    */
   public MainEnvironment(String[] args) throws IOException {
     // get arguments
-    debugMode = hasArgument(args, DEBUG_TAG);
-    epromDataPath = Objects.requireNonNullElse(getArgument(args, EPROM_TAG), epromDataPath);
-    iConfigPath = Objects.requireNonNullElse(getArgument(args, UI_CONFIG_TAG), iConfigPath);
-    sConfigPath = Objects.requireNonNullElse(getArgument(args, SIM_CONFIG_TAG), sConfigPath);
+    boolean debugMode = hasArgument(args, DEBUG_TAG);
+    configPath = Objects.requireNonNullElse(getArgument(args, CONFIG_TAG), configPath);
 
-    // load epromData
-    epromData = ELF.readEPROM(epromDataPath);
+    // load machine configs
+    System.out.println("Loading machine configurations from " + configPath);
+    File configDir = new File(configPath);
+    if (!configDir.isDirectory()) {
+      throw new IOException("Given machine configuration path is not a directory");
+    }
 
-    // load configs
-    iConfig = JSON.readJSON(iConfigPath);
-    sConfig = JSON.readJSON(sConfigPath);
+    for (final File entry : configDir.listFiles()) {
+      // ignore directories
+      if (!entry.isDirectory()) {
+        // read the JSON and build a simulation info from it
+        JSONObject config = JSON.readJSON(entry.getPath());
+        SimulationInfo simulationInfo = new SimulationInfo(config);
 
-    // get data of window interface
-    JSONObject windowConfig = iConfig.getJSONObject("window");
-    headless = windowConfig.optBoolean("headless", headless);
-    windowScale = windowConfig.optInt("scale", windowScale);
+        // set debug mode if needed
+        if (debugMode) {
+          simulationInfo.debugMode = true;
+        }
 
-    // get data of keyboard interface
-    JSONObject keyboardConfig = iConfig.getJSONObject("keyboard");
-    String keyboardSourceString = keyboardConfig.getString("source");
-    switch (keyboardSourceString) {
-      case "window" ->
-        keyboardSourceType = KeyboardSourceType.window;
-      case "detached" ->
-        keyboardSourceType = KeyboardSourceType.detached;
-      default ->
-        throw new IOException("Unknown keyboard source in keyboard interface configuration");
+        // append to simulation info list
+        simulationInfos.add(simulationInfo);
+      }
     }
   }
 }

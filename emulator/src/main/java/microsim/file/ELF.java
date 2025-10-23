@@ -80,7 +80,13 @@ public class ELF {
   public static byte[] readEPROM(String path) throws IOException {
     // open ELF
     File file = new File(path);
-    ElfFile elf = ElfFile.from(file);
+
+    ElfFile elf = null;
+    try {
+      elf = ElfFile.from(file);
+    } catch (ElfException e) {
+      throw new IOException("Error loading ELF. " + e.getMessage());
+    }
 
     // check if header is as expected
     checkElf(elf);
