@@ -2,7 +2,7 @@
 
 void main() {
 	while(true) {
-		char c = keyb::get_char();
+		char c = kyb::get_char();
 		vid::print_char(c);
 	}
 

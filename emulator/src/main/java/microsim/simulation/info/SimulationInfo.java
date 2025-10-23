@@ -121,7 +121,7 @@ public class SimulationInfo {
     byte[] epromData = ELF.readEPROM(epromDataPath);
 
     // configure interfaces
-    JSONObject interfaceConfig = config.getJSONObject("interface");
+    JSONObject interfaceConfig = config.getJSONObject("interfaces");
     configureInterfaces(interfaceConfig);
 
     // configure simulation

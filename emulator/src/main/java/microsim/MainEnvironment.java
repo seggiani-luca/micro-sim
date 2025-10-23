@@ -10,10 +10,8 @@ import microsim.simulation.info.SimulationInfo;
 import org.json.*;
 
 /**
- * Gets and represents info related to the main program flow, including arguments, configuration and
- * EPROM files. This means handling argument parsing and file reading. Also keeps references to the
- * configuration JSON files to pass along to other info constructors (mainly for simulation
- * configuration).
+ * Gets and represents info related to the main program flow, including arguments and machine
+ * configuration files. Uses these to build a list of simulation info objects to later instantiate.
  */
 public class MainEnvironment {
 
@@ -33,7 +31,7 @@ public class MainEnvironment {
   public String configPath = "conf/";
 
   /**
-   * List of simulation infos for all found machines.
+   * List of simulation infos for all found machine configurations.
    */
   public List<SimulationInfo> simulationInfos = new LinkedList<>();
 
@@ -92,15 +90,18 @@ public class MainEnvironment {
     boolean debugMode = hasArgument(args, DEBUG_TAG);
     configPath = Objects.requireNonNullElse(getArgument(args, CONFIG_TAG), configPath);
 
-    // load machine configs
+    // load machine configurations
     System.out.println("Loading machine configurations from " + configPath);
+
+    // get machine configuration directory
     File configDir = new File(configPath);
     if (!configDir.isDirectory()) {
       throw new IOException("Given machine configuration path is not a directory");
     }
 
+    // step through machine configurations
     for (final File entry : configDir.listFiles()) {
-      // ignore directories
+      // ignore subdirectories
       if (!entry.isDirectory()) {
         // read the JSON and build a simulation info from it
         JSONObject config = JSON.readJSON(entry.getPath());

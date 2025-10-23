@@ -1,9 +1,9 @@
 {
   "machine_name": "machine0",
   "eprom_path": "data/eprom/eprom0.elf",
-  "interface": {
+  "interfaces": {
     "window": {
-      "headless": false, 
+      "headless": false,
       "scale": 2
     },
     "keyboard": {
@@ -12,22 +12,22 @@
   },
   "simulation": {
     "processor": {
-      "reset_instruction_address": "0x0000_0000"
+      "reset_instruction_address": "0x00000000"
     },
     "memory": {
-      "eprom_start": "0x000_00000",
-      "eprom_end": "0x0000_ffff",
-      "ram_start": "0x0001_0000",
-      "ram_end": "0x0001_ffff",
-      "vram_start": "0x0002_0000",
-      "vram_end": "0x0002_ffff",
+      "eprom_start": "0x000000000",
+      "eprom_end": "0x0000ffff",
+      "ram_start": "0x00010000",
+      "ram_end": "0x0001ffff",
+      "vram_start": "0x00020000",
+      "vram_end": "0x0002ffff",
       "allow_eprom_writes": false,
       "allow_vram_reads": true
     },
     "devices": [
       {
         "type": "video",
-        "base": "0x0003_0000",
+        "base": "0x00030000",
         "frame_frequency": 25,
         "columns": 80,
         "rows": 30,
@@ -38,11 +38,11 @@
       },
       {
         "type": "keyboard",
-        "base": "0x0004_0000"
+        "base": "0x00040000"
       },
       {
         "type": "timer",
-        "base": "0x0005_0000",
+        "base": "0x00050000",
         "master_frequency": 1000
       }
     ]

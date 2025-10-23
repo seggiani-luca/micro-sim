@@ -45,7 +45,7 @@ public abstract class IoDevice extends SimulationComponent {
    * @return signals if address is in bounds
    */
   private boolean inBounds(int addr) {
-    return addr >= base && addr < base + ports;
+    return addr >= base && addr < base + ports * 4;
   }
 
   /**
@@ -77,7 +77,7 @@ public abstract class IoDevice extends SimulationComponent {
     }
 
     // is in bounds, get port index
-    int portIdx = addr - base;
+    int portIdx = (addr - base) / 4;
 
     // read control lines
     boolean readEnable = bus.readEnable.read() == 1;

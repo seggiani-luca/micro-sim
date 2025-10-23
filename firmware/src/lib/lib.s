@@ -1,10 +1,14 @@
 	.section .start
 	.extern main 
 
+	.extern __init_array_start
+	.extern __init_array_end
+
 /* start routine */
 
 	.global _start
 _start:
+
 	/* init stack to top */
 	la sp, __stack_top
 
@@ -24,6 +28,20 @@ _data_cpy_loop:
 	j _data_cpy_loop
 
 _data_cpy_end:
+
+	/* call static constructors */
+	la t0, __init_array_start
+	la t1, __init_array_end
+
+_static_const_loop:
+	beq t0, t1, _static_const_end
+	lw t2, 0(t0)
+	jalr t2
+	addi t0, t0, 4
+	j _static_const_loop
+
+_static_const_end:
+
 	/* jump to entry point */
 	call main 
 

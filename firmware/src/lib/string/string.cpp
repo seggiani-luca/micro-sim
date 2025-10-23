@@ -1,34 +1,19 @@
-#ifndef LIB_STRING_H
-#define LIB_STRING_H
+#include "string.h"
+#include <cstdint>
 
-#include <stdint.h>
-
-/*
- * Namespace for string handling, including cstring functions + memory functions.
- * TODO: include comparison functions
- */
 namespace str {
-	/*
-	 * Returns length of string.
-	 */
 	unsigned int len(const char* s) {
 		unsigned int i = 0;
 		while(*s++) i++;	
 		return i;
 	}
 
-	/*
-	 * Copies string src to string dest.
-	 */
 	char* cpy(char* dest, const char* src) {
 		char* ret = dest;
 		while(*dest++ = *src++);
 		return ret;
 	}
 	
-	/*
-	 * Copies at most n characters from string src to string dest.
-	 */
 	char* ncpy(char* dest, const char* src, unsigned int n) {
 		char* ret = dest;
 		while(n > 0 && (*dest++ = *src++)) {
@@ -44,27 +29,41 @@ namespace str {
 		return ret;
 	}
 	
-	/*
-	 * Concatenates string src to string dest.
-	 */
 	char* cat(char* dest, const char* src) {
 		int i = len(dest);
 		cpy(dest + i, src);
 		return dest;
 	}
 
-	/*
-	 * Concatenates at most n characters from string c to string dest.
-	 */
 	char* ncat(char* dest, const char* src, unsigned int n) {
 		int i = len(dest);
 		ncpy(dest + i, src, n);
 		return dest;
 	}
 
-	/*
-	 * Copies a buffer of n bytes from src to dest.
-	 */
+	int cmp(const char* str1, const char* str2) {
+		while(*str1 && *str2) {
+			if(*str1 != *str2) break;
+			str1++;
+			str2++;
+		}
+
+		return (unsigned char) *str1 - (unsigned char) *str2;
+	}
+	
+	int ncmp(const char* str1, const char* str2, unsigned int n) {
+		while(*str1 && *str2 && n) {
+			if(*str1 != *str2) break;
+			str1++;
+			str2++;
+			n--;
+		}
+		
+		if(n == 0) return 0;
+
+		return (unsigned char) *str1 - (unsigned char) *str2;
+	}
+
 	void* mcpy(void* dest, const void* src, unsigned int n) {
 		// head
 		uint8_t* b_dptr = (uint8_t*) dest;
@@ -94,9 +93,6 @@ namespace str {
 		return dest;
 	}
 	
-	/*
-	 * Copies a buffer of n bytes from src to dest, possibly overlapping.
-	 */
 	void* mmove(void* dest, const void* src, unsigned int n) {
 		if((uint32_t) dest < (uint32_t) src) {
 			return mcpy(dest, src, n); // fotward copy
@@ -130,9 +126,6 @@ namespace str {
 		return dest;
 	}
 
-	/*
-	 * Sets a buffer of n bytes to the given data byte.
-	 */
 	void* mset(void* dest, char data, unsigned int n) {
 		// head
 		uint8_t b_dat = data;
@@ -156,6 +149,19 @@ namespace str {
 	
 		return dest;
 	}
-}
 
-#endif
+	int mcmp(const void* buf1, const void* buf2, unsigned int n) {
+		unsigned char* cbuf1 = (unsigned char*) buf1;		
+		unsigned char* cbuf2 = (unsigned char*) buf2;		
+
+		// byte checks are simpler and fast enough
+		for(unsigned int i = 0; i < n; i++) {
+			if(cbuf1[i] != cbuf2[i]) {
+				return cbuf1[i] - cbuf2[i];
+			}
+		}
+
+		return 0;
+	}
+
+} // str::

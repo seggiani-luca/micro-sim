@@ -1,14 +1,5 @@
-#ifndef LIB_UTILS
-#define LIB_UTILS
-
-namespace vid {
-	void print_str(const char*);
-	void print_strln(const char*);
-	void newline();
-}
-namespace keyb {
-	char get_char();
-}
+#ifndef UTIL_H 
+#define UTIL_H
 
 /*
  * Namespace for general utility functions, including program exiting, waiting on input, debugging
@@ -33,25 +24,12 @@ namespace utl {
 	/*
 	 * Waits for any character.
 	 */
-	void wait() {
-		vid::print_str("Premi un tasto qualsiasi...");
-		keyb::get_char();
-		vid::newline();
-
-		return;
-	}
+	extern void wait();
 
 	/*
 	 * Panics printing a message and quits.
 	 */
-	void panic(const char* msg) {
-		vid::newline();
-		vid::print_strln("Panic!");
-		vid::print_strln(msg);
-		
-		wait();
-		halt();
-	}
-}
+	extern void panic(const char*);
+} // utl::
 
 #endif

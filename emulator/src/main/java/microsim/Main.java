@@ -8,8 +8,8 @@ import microsim.simulation.component.device.video.*;
 import microsim.simulation.info.SimulationInfo;
 
 /**
- * Contains program entry point. Relies on {@link microsim.MainEnvironment} for argument parsing and
- * file loading, instantiates simulation instances and attaches interfaces to them.
+ * Contains program entry point.Loads machine configurations and instantiates simulations based on
+ * them.
  */
 public class Main {
 
@@ -40,7 +40,7 @@ public class Main {
 
   /**
    * Initializes interfaces and attaches them to the given simulation. Interface configuration is
-   * taken from a main environment object.
+   * taken from a simulation info object.
    *
    * Handled interfaces are:
    * <ol>
@@ -49,11 +49,11 @@ public class Main {
    * subsequent ones are simulated but silent.</li>
    * <li>Debug shell, instantiated and attached if debug mode is requested (through argument).</li>
    * <li>Keyboard: attached to a keyboard input source based on what's specified by configuration.
-   * Multiple keyboard policy is same as multiple video devices.</li>
+   * Multiple keyboard policy is same as multiple video device policy.</li>
    * </ol>
    *
    * @param simulation simulation instance to attach interfaces to
-   * @param mArgs main environment containing interface configuration
+   * @param info simulation info that defines interfaces to attach
    */
   private static void initInterfaces(Simulation simulation, SimulationInfo info) {
     System.out.println("Initializing video window");
@@ -74,8 +74,7 @@ public class Main {
       }
     }
 
-    // 2. handle debug shell
-    // should be instantiated anyways as processor might attach it on an EBREAK instruction
+    // 2. handle debug shell. should be instantiated anyways as processor might attach it on EBREAK
     DebugShell debugShell = new DebugShell();
     debugShell.attachSimulation(simulation);
 
@@ -118,21 +117,24 @@ public class Main {
    * Instantiates a simulation. Initialization flow is:
    * <ol>
    * <li>Get data needed for simulation instantiation. This includes arguments, configuration files,
-   * and the object file containing EPROM data. Most of this is handled by a main environment object
-   * and done by the caller (main())</li>
+   * and the object file containing EPROM data. This is wrapped into a simulation info object
+   * provided by the caller.</li>
    * <li>Instantiate a {@link microsim.simulation.Simulation} object with said configuration and
    * data.</li>
    * <li>Attach interfaces to simulation. These might include {@link ui.VideoWindow},
-   * {@link ui.DebugShell}, and some keyboard source for the keyboard device if present.</li>
+   * {@link ui.DebugShell}, and keyboard source for the keyboard device if present. This is done by
+   * the
+   * {@link #initInterfaces(microsim.simulation.Simulation, microsim.simulation.info.SimulationInfo)}
+   * method.</li>
    * <li>Begin executing simulation.</li>
    * </ol>
    *
    * @param info info to instantiate simulation from
    */
   public static void initSimulation(SimulationInfo info) {
-    System.out.println("--- Initializing simulation of machine: " + info.machineName + " ---");
+    System.out.println("--- Initializing simulation of machine \"" + info.machineName + "\" ---");
 
-    // expect 1. to be done
+    // 1. is received through arguments
     // 2. initialize simulation
     Simulation simulation = new Simulation(info);
 
@@ -145,12 +147,19 @@ public class Main {
     }
 
     // 4. begin simulation
-    System.out.println("Simulation of machine " + info.machineName + " powering on\n");
+    System.out.println("Simulation of machine \"" + info.machineName + "\" powering on\n");
     simulation.begin();
   }
 
   /**
-   * Program entry point. Loads machine configurations and instantiates simulations based on them.
+   * Program entry point. Main program flow is:
+   * <ol>
+   * <li>Use {@link microsim.MainEnvironment} to parse arguments and instantiate a list of
+   * simulation info objects.</li>
+   * <li>Instantiate these simulation infos into actual simulations, and attach requested interfaces
+   * to them.</li>
+   * <li>Begin execution of simulations.</li>
+   * </ol>
    *
    * Return values for the program are:
    * <ol>

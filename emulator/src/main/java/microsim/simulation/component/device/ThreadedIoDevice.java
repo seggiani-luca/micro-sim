@@ -89,7 +89,7 @@ public abstract class ThreadedIoDevice extends IoDevice {
    */
   public void begin(String machineName) {
     Thread deviceThread = new Thread(runnableInstance);
-    deviceThread.setName("threaded device - " + this.getClass().getSimpleName() + " - "
+    deviceThread.setName("Threaded device: " + this.getClass().getSimpleName() + " - "
             + machineName);
     deviceThread.start();
   }

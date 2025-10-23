@@ -1,7 +1,7 @@
 MEMORY {
 	EPROM (rx)	: ORIGIN = 0x00000000, LENGTH = 64K
 	RAM (rwx)		: ORIGIN = 0x00010000, LENGTH = 64K
-	VIDEO (rx)	: ORIGIN = 0x00020000, LENGTH = 3K
+	VRAM (rx)		: ORIGIN = 0x00020000, LENGTH = 64K
 }
 
 ENTRY(_start)
@@ -12,11 +12,17 @@ SECTIONS {
 	 * - start routine
 	 * - program code
 	 * - read only data
+	 * - static constructor table
 	 */
 	.text : {
 		KEEP(*(.start))
 		*(.text*)
 		*(.rodata*)
+
+		. = ALIGN(4);
+    __init_array_start = .;
+    KEEP(*(.init_array*))
+    __init_array_end = .;
 	} > EPROM
 
 	/*
@@ -47,7 +53,7 @@ SECTIONS {
 	 */
 	.video (NOLOAD) : {
 		*(.video*)
-	} > VIDEO
+	} > VRAM
 
 	/* sets up stack top */
 	__stack_top = ORIGIN(RAM) + LENGTH(RAM);

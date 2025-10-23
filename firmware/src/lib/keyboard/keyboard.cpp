@@ -1,39 +1,16 @@
-#ifndef LIB_KEYB_H
-#define LIB_KEYB_H
+#include "keyboard.h"
+#include "../conf/hardware.h"
+#include "../video/video.h"
 
-#include <cstdint>
+// reference keyboard device
+hwr::dev::keyboard_device& keyboard = hwr::dev::keyboard;
 
-namespace vid {
-	void print_char(char);
-	void backspace();
-	void newline();
-}
-
-/*
- * Namespace for handling keyboard, including character/string reading/getting.
- */
-namespace keyb {
-	/*
-	 * Keyboard status register.
-	 */
-	inline volatile uint32_t*	keyb_status = (volatile uint32_t*) 0x00040000;
-
-	/*
-	 * Keyboard data register.
-	 */
-	inline volatile uint32_t*	keyb_data = (volatile uint32_t*) 0x00040001;
-
-	/*
-	 * Gets a char without echo.
-	 */
+namespace kyb {
 	char get_char() {
-		while(*keyb_status != 1); // busy wait
-		return *keyb_data;
+		while(*keyboard.sts_reg != 1); // busy wait
+		return *keyboard.buf_reg;
 	}
 
-	/*
-	 * Gets an unsigned integer without echo. Terminates on \n.
-	 */
 	unsigned get_uint(unsigned int base = 0) {
 		unsigned int res = base;
 
@@ -60,9 +37,6 @@ namespace keyb {
 		return res;
 	}
 
-	/*
-	 * Gets an integer without echo. Terminates on \n.
-	 */
 	int get_int() {
 		bool neg = false;
 		char c = get_char();
@@ -82,9 +56,6 @@ namespace keyb {
 		return neg ? - (int) u : (int) u;
 	}
 
-	/*
-	 * Gets a string without echo. Terminates on \n.
-	 */
 	void get_str(char* buf, int n) {
 		int i = 0;
 
@@ -108,15 +79,11 @@ namespace keyb {
 			// step forward
 			i++;
 			if(i >= n - 1) break; 
-
 		}
 
 		buf[i] = '\0';
 	}
 
-	/*
-	 * Reads a char with echo. Doesn't echo control characters (\b and \n)
-	 */
 	char read_char() {
 		char c = get_char();
 
@@ -127,9 +94,6 @@ namespace keyb {
 		return c;
 	}
 	
-	/*
-	 * Reads an unsigned integer without echo. Terminates on \n.
-	 */
 	unsigned read_uint(unsigned int base = 0) {
 		unsigned int res = base;
 
@@ -160,9 +124,6 @@ namespace keyb {
 		return res;
 	}
 
-	/*
-	 * Reads an integer without echo. Terminates on \n.
-	 */
 	int read_int() {
 		bool neg = false;
 		char c = read_char();
@@ -182,9 +143,6 @@ namespace keyb {
 		return neg ? - (int) u : (int) u;
 	}
 
-	/*
-	 * Reads a string with echo. Terminates on \n.
-	 */
 	void read_str(char* buf, int n) {
 		int i = 0;
 
@@ -217,12 +175,8 @@ namespace keyb {
 				vid::newline();
 				break;
 			}
-
 		}
 				
 		buf[i] = '\0';
 	}
-
-}
-
-#endif
+} // kyb::
