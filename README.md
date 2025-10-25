@@ -3,13 +3,10 @@ micro-sim è un emulatore scritto in Java per un sistema basato su [RISC-V](risc
 
 Le componenti simulate sono:
 - Processore che implementa l'ISA RV32I;
-- Spazio di memoria a 32 bit, composto da EPROM in sola lettura, RAM e VRAM:
-    - EPROM: `[0x00000000, 0x0000ffff]`;
-    - RAM: `[0x00010000, 0x0001ffff]`;
-    - VRAM: `[0x00020000, 0x0002ffff]`.
-- Interfaccia video in modalità testo a `0x00030000`;
-- Interfaccia tastiera a `0x00040000`;
-- Interfaccia timer a `0x00050000`.
+- Spazio di memoria a 32 bit, composto da EPROM in sola lettura, RAM e VRAM;
+- Interfaccia video in modalità testo;
+- Interfaccia tastiera;
+- Interfaccia timer.
 
 Il firmware (caricato nelle EPROM simulate) dei sistemi emulati deve essere compilato o assemblato 
 per architettura RISC-V, ISA RV32I. Per compilare il proprio firmware viene resa disponibile una 
