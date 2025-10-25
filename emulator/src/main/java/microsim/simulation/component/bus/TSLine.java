@@ -28,9 +28,10 @@ public class TSLine extends SimulationComponent {
    * Constructs a TSLine taking a reference to the bus it makes up.
    *
    * @param bus bus this line is part of
+   * @param simulationName name of simulation this bus belongs to
    */
-  public TSLine(Bus bus) {
-    super(bus);
+  public TSLine(Bus bus, String simulationName) {
+    super(bus, simulationName);
   }
 
   /**

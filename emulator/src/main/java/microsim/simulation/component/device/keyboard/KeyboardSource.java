@@ -1,18 +1,19 @@
 package microsim.simulation.component.device.keyboard;
 
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
-import java.nio.charset.CharacterCodingException;
-import java.nio.charset.Charset;
-import java.nio.charset.CharsetEncoder;
-import java.nio.charset.CodingErrorAction;
+import java.nio.charset.*;
+import javax.swing.JComponent;
 
 /**
- * Implements an input source that can be attached to a
- * {@link microsim.simulation.component.device.keyboard.KeyboardDevice} to send key events (through
- * the {@link simulation.component.device.keyboard.KeyboardDevice#keyQueue} method.
+ * Implements an input source that attaches to a
+ * {@link microsim.simulation.component.device.keyboard.KeyboardDevice} to send key events.
+ * Characters events are obtained by listening to keyboard events on a
+ * {@link javax.swing.JComponent}.
  */
-public abstract class KeyboardSource {
+public class KeyboardSource {
 
   /**
    * Device instance that listens to this source.
@@ -26,6 +27,28 @@ public abstract class KeyboardSource {
    */
   public void setListener(KeyboardDevice listener) {
     this.listener = listener;
+  }
+
+  /**
+   * Creates a keyboard source and attaches a component to it.
+   *
+   * @param component the JComponent from which we should grab input
+   */
+  public KeyboardSource(JComponent component) {
+    // should have focus to grab input
+    component.setFocusable(true);
+    component.requestFocusInWindow();
+
+    // tab needs to be caputred
+    component.setFocusTraversalKeysEnabled(false);
+
+    // add listener
+    component.addKeyListener(new KeyAdapter() {
+      @Override
+      public void keyPressed(KeyEvent e) {
+        accept(e.getKeyChar());
+      }
+    });
   }
 
   /**

@@ -1,6 +1,6 @@
 package microsim.simulation.event;
 
-import microsim.simulation.component.SimulationComponent;
+import microsim.simulation.Simulation;
 
 /**
  * SimulationEvent that represents a simulation cycle.
@@ -13,18 +13,18 @@ public class CycleEvent extends SimulationEvent {
   public long cycle;
 
   /**
-   * Instantiates CycleEvent getting cycle information.
+   * Instantiates cycle event getting cycle information.
    *
-   * @param owner SimulationComponent that raised CycleEvent
+   * @param owner simulation that raised cycle event
    * @param cycle cycle reached
    */
-  public CycleEvent(SimulationComponent owner, long cycle) {
+  public CycleEvent(Simulation owner, long cycle) {
     super(owner);
     this.cycle = cycle;
   }
 
   /**
-   * Returns information about which cycle was reached. Doesn't print the zero cycle.
+   * Returns information about which cycle was reached.
    *
    * @return cycle debug string
    */

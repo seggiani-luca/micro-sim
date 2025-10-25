@@ -283,7 +283,7 @@ public class DebugShell implements SimulationListener {
   /**
    * Receives a simulation event. {@link microsim.simulation.event.SimulationEvent} events that
    * return a non-null debug string are logged, and {@link microsimsimulation.event.CycleEvent}
-   * events launch the interactive shell. Lastly, {@link microsim.simulation.event.AttachEvent}
+   * events launch the interactive shell. Lastly, {@link microsim.simulation.event.BreakEvent}
    * events activate the debug shell instance.
    *
    * @param e simulation event
@@ -291,7 +291,7 @@ public class DebugShell implements SimulationListener {
   @Override
   public void onSimulationEvent(SimulationEvent e) {
     if (!debuggingEnabled) {
-      if (e instanceof AttachEvent) {
+      if (e instanceof BreakEvent) {
         activate();
       } else {
         return;
@@ -533,7 +533,7 @@ public class DebugShell implements SimulationListener {
 
         case "r":
         case "render": {
-          VideoDevice videoDevice = simulationInstance.getDevice(VideoDevice.class);
+          VideoDevice videoDevice = simulationInstance.video;
           if (videoDevice == null) {
             System.out.println("Simulation doesn't have a video device mounted");
           } else {

@@ -1,135 +1,116 @@
 package microsim.simulation;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.function.BiFunction;
 import microsim.simulation.component.*;
 import microsim.simulation.component.bus.*;
-import microsim.simulation.component.device.*;
+import microsim.simulation.component.processor.*;
+import microsim.simulation.component.memory.*;
+import microsim.simulation.component.device.video.*;
 import microsim.simulation.component.device.keyboard.*;
 import microsim.simulation.component.device.timer.*;
-import microsim.simulation.component.device.video.*;
-import microsim.simulation.component.memory.*;
-import microsim.simulation.component.processor.*;
 import microsim.simulation.event.*;
-import microsim.simulation.info.*;
 import microsim.ui.DebugShell;
 
 /**
- * Represents a simulation instance. Contains references to simulated components and timing
- * constants. Pipes {@link microsim.simulation.event.FrameEvent} events from
+ * Represents a simulation instance by keeping references to simulated components. Pipes
+ * {@link microsim.simulation.event.FrameEvent} events from
  * {@link microsim.simulation.component.SimulationComponent} components to external
  * {@link microsim.simulation.event.SimulationListener} listeners (usually interfaces).
  */
 public class Simulation extends SimulationComponent implements SimulationListener {
 
   /**
-   * Name of machine this simulation implements.
+   * Base address of video device.
    */
-  public String machineName;
+  public static final int VIDEO_BASE = 0x00030000;
 
   /**
-   * Simulated processor component. Instantiated after bus, updated first in simulation steps.
+   * Base address of keyboard device.
    */
-  public Processor proc;
+  public static final int KEYBOARD_BASE = 0x00040000;
 
   /**
-   * Simulated memory component. Instantiated after bus, updated second in simulation steps.
+   * Base address of timer device.
    */
-  public MemorySpace memory;
+  public static final int TIMER_BASE = 0x00050000;
 
   /**
-   * List of simulated devices. Instantiated after bus, updated third in simulation steps.
+   * Simulated processor component.
    */
-  public List<IoDevice> devices = new LinkedList<>();
+  public final Processor proc;
 
   /**
-   * Returns first device by type in device list. If not found returns null.
-   *
-   * @param <T> type of device instance to return
-   * @param type class of device instance to find (matches above)
-   * @return first found device instance of class type
+   * Simulated memory component.
    */
-  public <T extends IoDevice> T getDevice(Class<T> type) {
-    for (IoDevice device : devices) {
-      if (type.isInstance(device)) {
-        return type.cast(device);
-      }
-    }
-
-    return null;
-  }
+  public final MemorySpace memory;
 
   /**
-   * Map of device info factories to parse device list.
+   * Simulated video device component.
    */
-  public static final Map<Class<? extends DeviceInfo>, BiFunction<Bus, DeviceInfo, IoDevice>> DEVICE_FACTORIES = Map.of(
-          VideoInfo.class, (bus, info) -> new VideoDevice(bus, (VideoInfo) info),
-          KeyboardInfo.class, (bus, info) -> new KeyboardDevice(bus, (KeyboardInfo) info),
-          TimerInfo.class, (bus, info) -> new TimerDevice(bus, (TimerInfo) info)
-  );
+  public final VideoDevice video;
+
+  /**
+   * Simulated keyboard device component.
+   */
+  public final KeyboardDevice keyboard;
+
+  /**
+   * Simulated timer device component.
+   */
+  public final TimerDevice timer;
+
+  /**
+   * Is the simulation running?
+   */
+  private volatile boolean running = true;
 
   /**
    * Instantiates simulation, loading EPROM data in memory and configuring devices and components.
    * Sets self as listener of the simulation components involved.
    *
-   * @param info simulation info for configuration
+   * @param simulationName name of this simulation
    */
   @SuppressWarnings("LeakingThisInConstructor")
-
-  public Simulation(SimulationInfo info) {
+  public Simulation(String simulationName) {
     // simulation instances don't attach to buses (they instead own one)
-    super(null);
-
-    // get machine name
-    machineName = info.machineName;
+    super(null, simulationName);
 
     // init bus
-    bus = new Bus();
+    bus = new Bus(simulationName);
 
     // init components on bus
-    proc = new Processor(bus, info.processorInfo);
-    memory = new MemorySpace(bus, info.memoryInfo);
+    proc = new Processor(bus, simulationName);
+    memory = new MemorySpace(bus, simulationName);
+    video = new VideoDevice(bus, VIDEO_BASE, simulationName);
+    keyboard = new KeyboardDevice(bus, KEYBOARD_BASE, simulationName);
+    timer = new TimerDevice(bus, TIMER_BASE, simulationName);
 
-    // loop through device infos and init devices
-    for (DeviceInfo deviceInfo : info.devicesInfo) {
-      // get the correct factory, if it exists
-      BiFunction<Bus, DeviceInfo, IoDevice> factory = DEVICE_FACTORIES.get(deviceInfo.getClass());
-      if (factory == null) {
-        throw new RuntimeException("Unknown device type while populating simulation");
-      }
+    // attach memory to video
+    video.attachMemory(memory);
 
-      // use it to build device
-      IoDevice device = factory.apply(bus, deviceInfo);
-      devices.add(device);
-
-      // if video device, attach it to memory
-      if (device instanceof VideoDevice videoDevice) {
-        videoDevice.attachMemory(memory);
-      }
-    }
-
-    // sets self as listener
+    // set self as listener
     // this leaks a this reference but we don't expect listeners to use it before event is raised
     bus.addListener(this);
     proc.addListener(this);
     memory.addListener(this);
-
-    for (IoDevice device : devices) {
-      device.addListener(this);
-    }
+    video.addListener(this);
+    keyboard.addListener(this);
+    timer.addListener(this);
   }
 
   /**
    * Pipes {@link microsim.simulation.event.FrameEvent} events from
    * {@link microsim.simulation.component.SimulationComponent} components to external
-   * {@link microsim.simulation.event.SimulationListener} listeners.
+   * {@link microsim.simulation.event.SimulationListener} listeners. Checks for
+   * {@link microsim.simulation.event.HaltEvent} events to power off.
    *
    * @param e event to pipe
    */
   @Override
   public void onSimulationEvent(SimulationEvent e) {
+    if (e instanceof HaltEvent) {
+      poweroff();
+    }
+
     raiseEvent(e);
   }
 
@@ -152,14 +133,11 @@ public class Simulation extends SimulationComponent implements SimulationListene
     bus.step();
 
     // components read and step
-    // local bus
     proc.step();
     memory.step();
-
-    // devices
-    for (IoDevice device : devices) {
-      device.step();
-    }
+    video.step();
+    keyboard.step();
+    timer.step();
   }
 
   /**
@@ -170,7 +148,7 @@ public class Simulation extends SimulationComponent implements SimulationListene
     long cycle = 0;
 
     // enter simulation loop
-    while (true) {
+    while (running) {
       // if debugging signal cycle to show debug shell
       if (DebugShell.isDebuggingEnabled()) {
         raiseEvent(new CycleEvent(this, cycle));
@@ -182,6 +160,8 @@ public class Simulation extends SimulationComponent implements SimulationListene
       // increase cycle
       cycle++;
     }
+
+    System.out.println("Simulation: \"" + simulationName + "\" powering off\n");
   }
 
   /**
@@ -190,15 +170,24 @@ public class Simulation extends SimulationComponent implements SimulationListene
    */
   public void begin() {
     // start other threads
-    for (IoDevice device : devices) {
-      if (device instanceof ThreadedIoDevice threadedDevice) {
-        threadedDevice.begin(machineName);
-      }
-    }
+    video.begin();
+    timer.begin();
 
     // start main simulation thread
     Thread simulationThread = new Thread(() -> mainThread());
-    simulationThread.setName("Main simulation thread - " + machineName);
+    simulationThread.setName(simulationName + ": Main");
     simulationThread.start();
+  }
+
+  /**
+   * Stops execution of simulation. Threaded devices are stopped before the simulation.
+   */
+  public void poweroff() {
+    // stop other threads
+    video.stop();
+    timer.stop();
+
+    // stop this thread
+    running = false;
   }
 }

@@ -15,10 +15,12 @@ public class BusInterface {
    */
   class BusMicroOps {
 
+    // read routine
     static final MicroOp MEM_READ0 = new MicroOp(OpType.MEM_READ0);
+
+    // write routine
     static final MicroOp MEM_READ1 = new MicroOp(OpType.MEM_READ1);
     static final MicroOp MEM_WRITE0 = new MicroOp(OpType.MEM_WRITE0);
-
   }
 
   /**
@@ -50,7 +52,6 @@ public class BusInterface {
    * @param proc processor instance that reads
    */
   private static void readRoutine(Processor proc) {
-//    proc.opQueue.addFirst(BusMicroOps.MEM_READ2);
     proc.opQueue.addFirst(BusMicroOps.MEM_READ1);
     proc.opQueue.addFirst(BusMicroOps.MEM_READ0);
   }
@@ -88,6 +89,5 @@ public class BusInterface {
    */
   private static void writeRoutine(Processor proc) {
     proc.opQueue.addFirst(BusMicroOps.MEM_WRITE0);
-
   }
 }

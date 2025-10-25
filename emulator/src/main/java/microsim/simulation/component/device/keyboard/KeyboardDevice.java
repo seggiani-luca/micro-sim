@@ -4,19 +4,12 @@ import java.util.LinkedList;
 import java.util.Queue;
 import microsim.simulation.component.bus.*;
 import microsim.simulation.component.device.IoDevice;
-import microsim.simulation.info.KeyboardInfo;
 
 /**
- * Implements a keyboard devices that mantains a character queue and returns them via a status and a
- * data port.
+ * Implements a keyboard device that keeps a character queue and returns characters via a status and
+ * a data port.
  */
 public class KeyboardDevice extends IoDevice {
-
-  /**
-   * Keyboard info this device implements.
-   */
-  @SuppressWarnings("unused")
-  private final KeyboardInfo info; // currently unused
 
   /**
    * Queue of characters pressed.
@@ -37,12 +30,12 @@ public class KeyboardDevice extends IoDevice {
   /**
    * Instantiates keyboard device, taking a reference to the bus it's mounted on.
    *
-   * @param bus bus the component is mounted on
-   * @param info info to build this device from
+   * @param bus bus the keyboard device is mounted on
+   * @param base base address of keyboard device
+   * @param simulationName name of the simulation this keyboard device belongs to
    */
-  public KeyboardDevice(Bus bus, KeyboardInfo info) {
-    super(bus, info.base, 2);
-    this.info = info;
+  public KeyboardDevice(Bus bus, int base, String simulationName) {
+    super(bus, simulationName, base, 2);
   }
 
   /**
@@ -56,7 +49,7 @@ public class KeyboardDevice extends IoDevice {
   }
 
   /**
-   * Returns keyboard ports. Port 0 is status and port 1 is data.
+   * Gets keyboard ports. Port 0 is status and port 1 is data.
    *
    * @param index index of port
    * @return value port should return
@@ -77,7 +70,7 @@ public class KeyboardDevice extends IoDevice {
   }
 
   /**
-   * Sets port at index (doesn't do anything for keyboard device).
+   * Sets ports (doesn't do anything for keyboard device).
    *
    * @param index not significant
    * @param data not significant

@@ -16,10 +16,10 @@ public class FrameEvent extends SimulationEvent {
   public BufferedImage frame;
 
   /**
-   * Instantiates FrameEvent getting a reference to the VideoDevice that raised it. Also gets a
+   * Instantiates frame event getting a reference to the video device that raised it. Also gets a
    * reference to the frame buffer.
    *
-   * @param owner VideoDevice that raised FrameEvent
+   * @param owner video device that raised frame event
    * @param frame rendered frame
    */
   public FrameEvent(VideoDevice owner, BufferedImage frame) {

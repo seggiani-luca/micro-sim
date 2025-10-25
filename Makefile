@@ -3,7 +3,7 @@ MAKEFLAGS += --no-print-directory
 
 EMULATOR := emulator
 EXECUTABLE := target/micro-sim-app.jar
-EPROM := firmware 
+EPROM := eprom
 
 all: emulator eprom 
 
@@ -23,4 +23,9 @@ emulator:
 eprom:
 	@echo ">> Building EPROMs..."
 	@cd $(EPROM) && $(MAKE)
+	@echo
+
+clean:
+	@echo ">> Cleaning EPROMs..."
+	@cd $(EPROM) && $(MAKE) clean
 	@echo

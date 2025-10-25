@@ -64,16 +64,40 @@ public class Bus extends SimulationComponent {
 
   /**
    * Instantiates a bus by initializing address, data and control lines.
+   *
+   * @param simulationName name of simulation this bus belongs to
    */
-  public Bus() {
+  public Bus(String simulationName) {
     // buses aren't mounted to buses
-    super(null);
+    super(null, simulationName);
 
-    addressLine = new TSLine(this);
-    dataLine = new TSLine(this);
-    readEnable = new TSLine(this);
-    writeEnable = new TSLine(this);
-    byteSelect = new TSLine(this);
+    addressLine = new TSLine(this, simulationName);
+    dataLine = new TSLine(this, simulationName);
+    readEnable = new TSLine(this, simulationName);
+    writeEnable = new TSLine(this, simulationName);
+    byteSelect = new TSLine(this, simulationName);
+  }
+
+  /**
+   * Checks if an address is aligned to the word size specified by byteSelect.
+   *
+   * @param addr address to check
+   * @param byteSelect word size
+   * @return signals whether alignment is respected
+   */
+  private boolean checkAlignment(int addr, int byteSelect) {
+    switch (byteSelect) {
+      case ByteSelect.WORD -> {
+        return (addr & 0x3) == 0;
+      }
+      case ByteSelect.HALF -> {
+        return (addr & 0x1) == 0;
+      }
+      case ByteSelect.BYTE -> {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**
@@ -86,5 +110,20 @@ public class Bus extends SimulationComponent {
     readEnable.step();
     writeEnable.step();
     byteSelect.step();
+
+    // perform checks
+    int addr = addressLine.read();
+    int byteSel = byteSelect.read();
+
+    if (!checkAlignment(addr, byteSel)) {
+      throw new RuntimeException("Unaligned memory access");
+    }
+
+    boolean readEnb = readEnable.read() == 1;
+    boolean writeEnb = writeEnable.read() == 1;
+
+    if (readEnb && writeEnb) {
+      throw new RuntimeException("Read Enable and Write Enable simultaneously high");
+    }
   }
 }

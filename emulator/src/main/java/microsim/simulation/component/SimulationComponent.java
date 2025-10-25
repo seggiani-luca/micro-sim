@@ -9,9 +9,23 @@ import microsim.simulation.event.*;
  * A component simulated within the {@link microsim.simulation.Simulation} class. Implements
  * functionality for stepping on simulation cycles, and for raising
  * {@link microsim.simulation.event.SimulationEvent} events. Components are expected to be mounted
- * on a bus and take a reference to it.
+ * on a bus and take a reference to it. They also keep the name of the simulation they belong to.
  */
 public abstract class SimulationComponent {
+
+  /**
+   * Name of simulation this component belongs to.
+   */
+  protected final String simulationName;
+
+  /**
+   * Gets name of simulation this component belongs to
+   *
+   * @return simulation name
+   */
+  public String getSimulationName() {
+    return simulationName;
+  }
 
   /**
    * Array of event listeners.
@@ -27,9 +41,11 @@ public abstract class SimulationComponent {
    * Instantiates component, taking a reference to the bus it's mounted to.
    *
    * @param bus bus the component is mounted on
+   * @param simulationName name of simulation this component belongs to
    */
-  public SimulationComponent(Bus bus) {
+  public SimulationComponent(Bus bus, String simulationName) {
     this.bus = bus;
+    this.simulationName = simulationName;
   }
 
   /**

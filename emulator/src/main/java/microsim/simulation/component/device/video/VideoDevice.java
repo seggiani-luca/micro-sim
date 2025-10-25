@@ -3,7 +3,6 @@ package microsim.simulation.component.device.video;
 import microsim.simulation.component.bus.*;
 import microsim.simulation.component.memory.*;
 import microsim.simulation.event.*;
-import microsim.simulation.info.VideoInfo;
 import microsim.simulation.component.device.ThreadedIoDevice;
 
 /**
@@ -14,15 +13,14 @@ import microsim.simulation.component.device.ThreadedIoDevice;
 public class VideoDevice extends ThreadedIoDevice {
 
   /**
-   * Video device info this component implements.
+   * Frequency of video updates.
    */
-  @SuppressWarnings("unused")
-  private final VideoInfo info; // currently unused
+  public static final long FRAME_FREQ = 25; // in hz
 
   /**
-   * Period of video updates (calculated from update frequency).
+   * Period of video updates.
    */
-  public final long frameTime;
+  public static final long FRAME_TIME = 1_000_000_000 / FRAME_FREQ; // in ns
 
   /**
    * The component in charge of actually holding and rendering a framebuffer.
@@ -49,24 +47,22 @@ public class VideoDevice extends ThreadedIoDevice {
   }
 
   /**
-   * Instantiates video device, taking a reference to the bus it's mounted on and the memory space
-   * it should read VRAM from.
+   * Instantiates video device, taking a reference to the bus it's mounted on and the base address
+   * it should respond from.
    *
-   * @param bus bus the component is mounted on
-   * @param info info to build video device from
+   * @param bus bus the video device is mounted on
+   * @param base base address of video device
+   * @param simulationName name of the simulation this video device belongs to
    */
-  public VideoDevice(Bus bus, VideoInfo info) {
-    super(bus, info.base, 2);
-    this.info = info;
-
-    frameTime = 1_000_000_000 / info.frameFreq; // in ns
+  public VideoDevice(Bus bus, int base, String simulationName) {
+    super(bus, simulationName, base, 2);
 
     // init renderer
-    renderer = new VideoRenderer(info);
+    renderer = new VideoRenderer();
   }
 
   /**
-   * Gets port (doesn't do anything for video device).
+   * Gets ports (doesn't do anything for video device).
    *
    * @param index not significant
    * @return always 0
@@ -99,12 +95,12 @@ public class VideoDevice extends ThreadedIoDevice {
   @Override
   protected void deviceThread() {
     long updateTime = System.nanoTime();
-    while (true) {
+    while (running) {
       // render to buffer
       render();
 
       // wait for frame time
-      updateTime += frameTime;
+      updateTime += FRAME_TIME;
       smartSpin(updateTime);
     }
   }

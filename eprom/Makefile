@@ -18,6 +18,9 @@ EPROM_OUT := ../emulator/data/eprom
 EPROM_NAME := $(notdir $(EPROM_SRC:.cpp=.elf))
 EPROM_ELF := $(addprefix $(EPROM_OUT)/, $(EPROM_NAME))
 
+EX_EPROM_ELF := $(wildcard $(EPROM_OUT)/*.elf)
+EX_EPROM_NUM := $(words $(EX_EPROM_ELF))
+
 # -- tools --
 RISCV_C := riscv32-unknown-elf-gcc
 RISCV_S := riscv32-unknown-elf-as
@@ -49,3 +52,5 @@ $(LIB_OUT):
 clean:
 	@echo "Cleaning EPROM build files..."
 	@rm -rf $(LIB_OUT)
+	@echo "Cleaning $(EX_EPROM_NUM) EPROM(s) from data dir..."
+	@rm -rf $(EX_EPROM_ELF)

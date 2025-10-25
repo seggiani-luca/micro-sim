@@ -44,7 +44,7 @@ class VideoPanel extends JPanel {
             BufferedImage.TYPE_INT_RGB
     );
 
-    var g = frame.getGraphics();
+    Graphics g = frame.getGraphics();
     g.setColor(java.awt.Color.BLACK);
     g.fillRect(0, 0, frame.getWidth(), frame.getHeight());
 
@@ -110,11 +110,6 @@ class VideoPanel extends JPanel {
 public class VideoWindow implements SimulationListener {
 
   /**
-   * Device this video window attaches to.
-   */
-  private final VideoDevice video;
-
-  /**
    * Main window JFrame.
    */
   private final JFrame frame;
@@ -142,8 +137,6 @@ public class VideoWindow implements SimulationListener {
    * @param title title of window
    */
   public VideoWindow(VideoDevice video, int scale, String title) {
-    this.video = video;
-
     // setup panel
     panel = new VideoPanel(video, scale);
 
@@ -158,20 +151,21 @@ public class VideoWindow implements SimulationListener {
   }
 
   /**
-   * Receives {@link simulation.event.FrameEvent} events and uses them to update {@link #panel}'s
-   * frame buffer. Only responds to the video device this window is attached to.
+   * Receives {@link microsim.simulation.event.FrameEvent} events and uses them to update
+   * {@link #panel}'s frame buffer. Also checks for {@link microsim.simulation.event.HaltEvent} to
+   * close window.
    */
   @Override
   public void onSimulationEvent(SimulationEvent e) {
-    // check for FrameEvent
+    // check for frame event
     if (e instanceof FrameEvent f) {
-      // ignore video devices this window wasn't built on
-      if (f.owner != video) {
-        return;
-      }
-
-      // actually update frame, repainting is duty of the panel
+      // have panel update frame
       panel.updateFrame(f.frame);
+    }
+
+    // check for halt event
+    if (e instanceof HaltEvent) {
+      frame.dispose();
     }
   }
 }

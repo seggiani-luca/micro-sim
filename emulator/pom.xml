@@ -9,27 +9,17 @@
   <version>0.0</version>
 
 	<dependencies>
-
     <dependency>
       <!-- for elf parsing -->
       <groupId>net.fornwall</groupId>
       <artifactId>jelf</artifactId>
       <version>0.10.0</version>
 		</dependency>
-
-		<dependency>
-      <!-- for json parsing -->
-			<groupId>org.json</groupId>
-			<artifactId>json</artifactId>
-			<version>20250517</version>
-		</dependency>
-
   </dependencies>
 
 	<build>
     <finalName>micro-sim</finalName>
-		<plugins>
-      
+		<plugins> 
       <plugin>
         <!-- builds jar archive -->
         <artifactId>maven-assembly-plugin</artifactId>
@@ -55,7 +45,6 @@
 					<finalName>micro-sim-app</finalName>
         </configuration>
       </plugin>
-      
 		</plugins>
 	</build>
 

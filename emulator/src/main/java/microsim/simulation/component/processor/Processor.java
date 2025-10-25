@@ -5,23 +5,21 @@ import java.util.LinkedList;
 import microsim.simulation.component.*;
 import microsim.simulation.component.bus.*;
 import microsim.simulation.event.*;
-import microsim.simulation.info.ProcessorInfo;
 import microsim.ui.DebugShell;
 
 /**
  * A processor implementing the RISC-V rv32i ISA. This comprises basic memory movement, arithmetic
  * and logic operations (except MULs and DIvs), and basic branching and stack management. For more
- * info, see the @link
+ * info, see the {@link
  * <a href="www.cs.sfu.ca/~ashriram/Courses/CS295/assets/notebooks/RISCV/RISCV_CARD.pdf">green
- * card</a>.
+ * card</a>}.
  */
 public class Processor extends SimulationComponent {
 
   /**
-   * Processor info this component implements.
+   * Reset value of program counter {@link #pc}.
    */
-  @SuppressWarnings("unused")
-  private final ProcessorInfo info; // currently unused
+  public static final int RESET_INSTRUCTION_ADDRESS = 0;
 
   /**
    * Number of registers. Fixed to 32 according to ABI.
@@ -148,16 +146,15 @@ public class Processor extends SimulationComponent {
   }
 
   /**
-   * Instantiates processor, taking a reference to the bus it's mounted on and configuration info.
-   * Resets instruction pointer to {@link #RESET_INSTRUCTION_ADDRESS}.
+   * Instantiates processor, taking a reference to the bus it's mounted on. Resets instruction
+   * pointer to {@link #RESET_INSTRUCTION_ADDRESS}.
    *
-   * @param bus bus the component is mounted on
-   * @param info info to build processor from
+   * @param bus bus the processor is mounted on
+   * @param simulationName name of simulation this processor belongs to
    */
   @SuppressWarnings("LeakingThisInConstructor")
-  public Processor(Bus bus, ProcessorInfo info) {
-    super(bus);
-    this.info = info;
+  public Processor(Bus bus, String simulationName) {
+    super(bus, simulationName);
 
     // processor  takes control of all lines but data and byteSelect
     // leaks this in constructor but we don't expect TSLine objects to do anything with it
@@ -166,7 +163,7 @@ public class Processor extends SimulationComponent {
     bus.writeEnable.drive(this, 0);
 
     // reset instruction pointer
-    pc = info.resetInstructionAddress;
+    pc = RESET_INSTRUCTION_ADDRESS;
   }
 
   /**
@@ -220,8 +217,7 @@ public class Processor extends SimulationComponent {
       fetchDecode();
     } else {
       if (DebugShell.isDebuggingEnabled()) {
-        raiseEvent(new DebugEvent(this,
-                "Processor found microop " + nextOp.toString()));
+        raiseEvent(new DebugEvent(this, "Processor found microop " + nextOp.toString()));
       }
       nextOp.execute(this);
     }

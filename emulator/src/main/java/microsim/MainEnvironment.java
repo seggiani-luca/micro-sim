@@ -2,18 +2,43 @@ package microsim;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import microsim.file.*;
-import microsim.simulation.info.SimulationInfo;
-import org.json.*;
+import microsim.file.ELF;
 
 /**
- * Gets and represents info related to the main program flow, including arguments and machine
+ * Gets and represents info related to the main program flow, including arguments and simulation
  * configuration files. Uses these to build a list of simulation info objects to later instantiate.
  */
 public class MainEnvironment {
+
+  /**
+   * Represents information about a simulation instance.
+   */
+  public static class SimulationInfo {
+
+    /**
+     * EPROM the instance should load.
+     */
+    public byte[] epromData;
+
+    /**
+     * Name of simulation.
+     */
+    public String simulationName;
+
+    /**
+     * Constructs simulation info from EPROM data and name.
+     *
+     * @param epromData
+     * @param simulationName
+     */
+    public SimulationInfo(byte[] epromData, String simulationName) {
+      this.epromData = epromData;
+      this.simulationName = simulationName;
+    }
+  }
 
   /**
    * Argument tag for debug mode.
@@ -21,19 +46,34 @@ public class MainEnvironment {
   public static final String DEBUG_TAG = "-d";
 
   /**
-   * Argument tag for configuration directory path.
+   * Argument tag for window scale.
    */
-  public static final String CONFIG_TAG = "-c";
+  public static final String SCALE_TAG = "-s";
 
   /**
-   * Path of the configuration directory path.
+   * Argument tag for EPROM data path.
    */
-  public String configPath = "conf/";
+  public static final String EPROM_TAG = "-e";
 
   /**
-   * List of simulation infos for all found machine configurations.
+   * Should debug mode be enabled?
    */
-  public List<SimulationInfo> simulationInfos = new LinkedList<>();
+  public boolean debugMode;
+
+  /**
+   * Scale of video window.
+   */
+  public int windowScale = 2;
+
+  /**
+   * EPROM data path.
+   */
+  public String epromPath = "data/eprom";
+
+  /**
+   * List of simulation info objectss for all found simulation configurations.
+   */
+  public List<SimulationInfo> simulationInfos = new ArrayList<>();
 
   /**
    * Gets argument parameter following argument tag. With tag = "-t", from '-t "arg"' returns "arg".
@@ -80,40 +120,49 @@ public class MainEnvironment {
   }
 
   /**
-   * Builds a MainInfo object from program arguments.
+   * Builds environment from program arguments.
    *
    * @param args program arguments
    * @throws java.io.IOException if reading or parsing fails
    */
   public MainEnvironment(String[] args) throws IOException {
     // get arguments
-    boolean debugMode = hasArgument(args, DEBUG_TAG);
-    configPath = Objects.requireNonNullElse(getArgument(args, CONFIG_TAG), configPath);
+    debugMode = hasArgument(args, DEBUG_TAG);
 
-    // load machine configurations
-    System.out.println("Loading machine configurations from " + configPath);
-
-    // get machine configuration directory
-    File configDir = new File(configPath);
-    if (!configDir.isDirectory()) {
-      throw new IOException("Given machine configuration path is not a directory");
+    String windowScaleArg = getArgument(args, SCALE_TAG);
+    if (windowScaleArg != null) {
+      try {
+        windowScale = Integer.parseInt(windowScaleArg);
+      } catch (NumberFormatException e) {
+        System.err.println("Error parsing scale argument. Using default of " + windowScale);
+      }
     }
 
-    // step through machine configurations
-    for (final File entry : configDir.listFiles()) {
+    epromPath = Objects.requireNonNullElse(getArgument(args, EPROM_TAG), epromPath);
+
+    // load simulation EPROMs
+    System.out.println(">> Loading simulation EPROM(s) from " + epromPath);
+
+    // get simulation configuration directory
+    File epromDir = new File(epromPath);
+    if (!epromDir.isDirectory()) {
+      throw new IOException("Given simulation EPROM path is not a directory");
+    }
+
+    // step through simulation configurations
+    for (final File entry : epromDir.listFiles()) {
       // ignore subdirectories
       if (!entry.isDirectory()) {
-        // read the JSON and build a simulation info from it
-        JSONObject config = JSON.readJSON(entry.getPath());
-        SimulationInfo simulationInfo = new SimulationInfo(config);
+        try {
+          // read the EPROM and build a simulation info from it
+          byte[] epromData = ELF.readEPROM(entry.getAbsolutePath());
+          SimulationInfo simulationInfo = new SimulationInfo(epromData, entry.getName());
 
-        // set debug mode if needed
-        if (debugMode) {
-          simulationInfo.debugMode = true;
+          // append to simulation info list
+          simulationInfos.add(simulationInfo);
+        } catch (IOException e) {
+          throw new IOException("Error loading EPROM data. " + e.getMessage(), e);
         }
-
-        // append to simulation info list
-        simulationInfos.add(simulationInfo);
       }
     }
   }

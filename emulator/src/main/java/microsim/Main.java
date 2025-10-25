@@ -4,12 +4,10 @@ import java.io.IOException;
 import microsim.ui.*;
 import microsim.simulation.*;
 import microsim.simulation.component.device.keyboard.*;
-import microsim.simulation.component.device.video.*;
-import microsim.simulation.info.SimulationInfo;
+import microsim.MainEnvironment.SimulationInfo;
 
 /**
- * Contains program entry point.Loads machine configurations and instantiates simulations based on
- * them.
+ * Contains program entry point. Loads EPROM data and instantiates simulations based on them.
  */
 public class Main {
 
@@ -19,19 +17,25 @@ public class Main {
   public static final String VERSION;
 
   /**
-   * Year of build. <!-- TODO --> For now manually set, might eventually want to read it from
-   * MANIFEST.
+   * Year. <!-- TODO --> For now manually set, might eventually want to read it from MANIFEST.
    */
   public static final String YEAR = "2025";
 
-  // get version from MANIFEST
+  // get version from MANIFEST, if present
   static {
     Package pkg = Main.class.getPackage();
-    VERSION = pkg.getImplementationVersion();
+    VERSION = (pkg != null && pkg.getImplementationVersion() != null)
+            ? pkg.getImplementationVersion()
+            : "DEV_BUILD";
   }
 
   /**
-   * Shows project name, version, year of build and authorship.
+   * Main environment, to be instantiated on startup.
+   */
+  private static MainEnvironment env;
+
+  /**
+   * Shows project name, version, year and authorship.
    */
   private static void greet() {
     System.out.println("micro-sim emulator " + VERSION);
@@ -39,115 +43,77 @@ public class Main {
   }
 
   /**
-   * Initializes interfaces and attaches them to the given simulation. Interface configuration is
-   * taken from a simulation info object.
+   * Initializes interfaces and attaches them to the given simulation.
    *
    * Handled interfaces are:
    * <ol>
-   * <li>Video window, instantiated if a valid video device is found and configuration is not
-   * headless. Note that only the first mounted video device is attached to the video window,
-   * subsequent ones are simulated but silent.</li>
-   * <li>Debug shell, instantiated and attached if debug mode is requested (through argument).</li>
-   * <li>Keyboard: attached to a keyboard input source based on what's specified by configuration.
-   * Multiple keyboard policy is same as multiple video device policy.</li>
+   * <li>Video window.</li>
+   * <li>Debug shell, always attached, activated if debug mode is requested (through argument).</li>
+   * <li>Keyboard: attached and listening from video window.</li>
    * </ol>
    *
    * @param simulation simulation instance to attach interfaces to
-   * @param info simulation info that defines interfaces to attach
    */
-  private static void initInterfaces(Simulation simulation, SimulationInfo info) {
-    System.out.println("Initializing video window");
-
+  private static void initInterfaces(Simulation simulation) {
     // 1. handle video window
-    VideoWindow window = null;
+    System.out.println("Initializing video window");
+    VideoWindow window = new VideoWindow(simulation.video, env.windowScale,
+            simulation.getSimulationName());
+    simulation.addListener(window);
 
-    // only if not headless
-    if (!info.headless) {
-      // get the first mounted video device
-      VideoDevice video = simulation.getDevice(VideoDevice.class);
-      if (video != null) {
-        // attach the device
-        window = new VideoWindow(video, info.windowScale, info.machineName);
-        simulation.addListener(window);
-      } else {
-        System.out.println("No video device mounted, window not initialized");
-      }
-    }
-
-    // 2. handle debug shell. should be instantiated anyways as processor might attach it on EBREAK
+    // 2. handle debug shell. should be always attached as processor might activate it on EBREAK
+    System.out.println("Attaching debug shell");
     DebugShell debugShell = new DebugShell();
     debugShell.attachSimulation(simulation);
 
     // activate if requested
-    if (info.debugMode) {
-      System.out.println("Debug mode requested, activating shell");
+    if (env.debugMode) {
+      System.out.println("Debug mode requested, activating debug shell");
 
       // activate debug shell
       debugShell.activate();
     }
 
     // 3. handle keyboard
-    KeyboardDevice keyboard = simulation.getDevice(KeyboardDevice.class);
-
-    // only handle if present
-    if (keyboard != null) {
-      System.out.println("Attaching keyboard to source: " + info.keyboardSourceType.name());
-
-      switch (info.keyboardSourceType) {
-        case window -> {
-          // attach to window JPanel, if video window was instantiated
-          if (window == null) {
-            throw new RuntimeException("Can't connect keyboard to nonexistent window");
-          }
-
-          JComponentKeyboardSource keyboardSource = new JComponentKeyboardSource(window.getPanel());
-          keyboard.attachSource(keyboardSource);
-        }
-        case detached -> {
-          // don't attach keyboard
-        }
-        default -> {
-          throw new RuntimeException("Unknown keyboard source " + info.keyboardSourceType.name());
-        }
-      }
-    }
+    System.out.println("Attaching keyboard source");
+    KeyboardSource keyboardSource = new KeyboardSource(window.getPanel());
+    simulation.keyboard.attachSource(keyboardSource);
   }
 
   /**
    * Instantiates a simulation. Initialization flow is:
    * <ol>
-   * <li>Get data needed for simulation instantiation. This includes arguments, configuration files,
-   * and the object file containing EPROM data. This is wrapped into a simulation info object
-   * provided by the caller.</li>
    * <li>Instantiate a {@link microsim.simulation.Simulation} object with said configuration and
    * data.</li>
-   * <li>Attach interfaces to simulation. These might include {@link ui.VideoWindow},
-   * {@link ui.DebugShell}, and keyboard source for the keyboard device if present. This is done by
-   * the
-   * {@link #initInterfaces(microsim.simulation.Simulation, microsim.simulation.info.SimulationInfo)}
-   * method.</li>
+   * <li>Load EPROM data into simulation memory.</li>
+   * <li>Attach interfaces to simulation. These include {@link ui.VideoWindow},
+   * {@link ui.DebugShell}, and keyboard source for the keyboard device. Attachment is handled by
+   * the {@link #initInterfaces(microsim.simulation.Simulation)} method.</li>
    * <li>Begin executing simulation.</li>
    * </ol>
    *
-   * @param info info to instantiate simulation from
+   * @param epromData EPROM data to load into memory
+   * @param simulationName name of simulated simulation
    */
-  public static void initSimulation(SimulationInfo info) {
-    System.out.println("--- Initializing simulation of machine \"" + info.machineName + "\" ---");
+  public static void initSimulation(String simulationName, byte[] epromData) {
+    System.out.println(">> Initializing simulation: \"" + simulationName + "\"");
 
-    // 1. is received through arguments
-    // 2. initialize simulation
-    Simulation simulation = new Simulation(info);
+    // 1. initialize simulation
+    Simulation simulation = new Simulation(simulationName);
+
+    // 2. load EPROM
+    simulation.memory.loadEPROM(epromData);
 
     // 3. initialize interfaces: video window, debug shell and keyboard
     try {
-      initInterfaces(simulation, info);
+      initInterfaces(simulation);
     } catch (RuntimeException e) {
       System.err.println("Couldn't initialize interfaces. " + e.getMessage());
       System.exit(1);
     }
 
     // 4. begin simulation
-    System.out.println("Simulation of machine \"" + info.machineName + "\" powering on\n");
+    System.out.println("Simulation: \"" + simulationName + "\" powering on\n");
     simulation.begin();
   }
 
@@ -156,10 +122,11 @@ public class Main {
    * <ol>
    * <li>Use {@link microsim.MainEnvironment} to parse arguments and instantiate a list of
    * simulation info objects.</li>
-   * <li>Instantiate these simulation infos into actual simulations, and attach requested interfaces
-   * to them.</li>
-   * <li>Begin execution of simulations.</li>
+   * <li>Instantiate these simulation info objects into actual simulations, attach interfaces to
+   * them, and execute them. Instantiation is handled by
+   * {@link #initSimulation(java.lang.String, byte[])}.</li>
    * </ol>
+   * Any simulation instantiation failure aborts the entire program.
    *
    * Return values for the program are:
    * <ol>
@@ -176,8 +143,7 @@ public class Main {
   public static void main(String[] args) {
     greet();
 
-    // get environment. this includes loading machine configurations
-    MainEnvironment env = null;
+    // 1. get environment. this includes loading simulation EPROMs and other arguments
     try {
       env = new MainEnvironment(args);
     } catch (IOException e) {
@@ -185,11 +151,11 @@ public class Main {
       System.exit(1);
     }
 
-    System.out.println("Loaded " + env.simulationInfos.size() + " machine configuration(s)\n");
+    System.out.println("Loaded " + env.simulationInfos.size() + " simulation EPROM(s)\n");
 
-    // instantiate simulations from got simulation infos
+    // 2. instantiate simulations from simulation infos in main environment
     for (SimulationInfo info : env.simulationInfos) {
-      initSimulation(info);
+      initSimulation(info.simulationName, info.epromData);
     }
   }
 }

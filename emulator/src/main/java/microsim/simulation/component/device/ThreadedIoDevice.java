@@ -32,22 +32,31 @@ public abstract class ThreadedIoDevice extends IoDevice {
   private final Runnable runnableInstance;
 
   /**
+   * Is the device thread running? Note that this should be used by threads if they want to be
+   * terminated correctly.
+   */
+  protected volatile boolean running = true;
+
+  /**
    * Instantiates device, taking a reference to the bus it's mounted on, the base address it should
    * respond from and the number of ports it offers..
    *
-   * @param bus bus the component is mounted on
+   * @param bus bus the device is mounted on
+   * @param simulationName name of the simulation this device belongs to
    * @param base base address
    * @param ports number of ports
    */
-  public ThreadedIoDevice(Bus bus, int base, int ports) {
-    super(bus, base, ports);
+  public ThreadedIoDevice(Bus bus, String simulationName, int base, int ports) {
+    super(bus, simulationName, base, ports);
 
     // set up runnable instance
     runnableInstance = new DeviceThread();
   }
 
   /**
-   * Method that implements the actual device thread. To be implemented by subclass.
+   * Method that implements the actual device thread. To be implemented by subclass. The
+   * implementation should loop on {@link #running} if it wants to be terminated correctly, and use
+   * {@link #smartSpin(long)} to sleep, if it wants to obey debugger policy.
    */
   protected abstract void deviceThread();
 
@@ -82,15 +91,18 @@ public abstract class ThreadedIoDevice extends IoDevice {
   }
 
   /**
-   * Begins executing device thread. Takes a reference to the machine name of the simulations it
-   * belongs to for organization.
-   *
-   * @param machineName machine name of simulation
+   * Begins executing device thread.
    */
-  public void begin(String machineName) {
+  public void begin() {
     Thread deviceThread = new Thread(runnableInstance);
-    deviceThread.setName("Threaded device: " + this.getClass().getSimpleName() + " - "
-            + machineName);
+    deviceThread.setName(simulationName + ": " + getDeviceName());
     deviceThread.start();
+  }
+
+  /**
+   * Stops executing device thread.
+   */
+  public void stop() {
+    running = false;
   }
 }

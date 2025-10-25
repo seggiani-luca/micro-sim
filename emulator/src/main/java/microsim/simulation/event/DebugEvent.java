@@ -11,7 +11,7 @@ public class DebugEvent extends SimulationEvent {
   private final String message;
 
   /**
-   * Instantiates DebugEvent getting debug information
+   * Instantiates debug event getting debug information
    *
    * @param owner component that raised event
    * @param message debug message

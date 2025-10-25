@@ -4,7 +4,6 @@ import microsim.simulation.component.*;
 import microsim.simulation.component.bus.*;
 import microsim.simulation.component.bus.Bus.ByteSelect;
 import microsim.simulation.event.*;
-import microsim.simulation.info.MemoryInfo;
 import microsim.ui.DebugShell;
 
 /**
@@ -22,27 +21,43 @@ import microsim.ui.DebugShell;
 public class MemorySpace extends SimulationComponent {
 
   /**
-   * Memory space info this component implements.
+   * Beginning of EPROM region.
    */
-  private MemoryInfo info;
+  public static final int EPROM_START = 0x00000000;
 
   /**
-   * Checks if given address is in memory bounds.
-   *
-   * @param addr address to check
-   * @return signals if address is in bounds
+   * End of EPROM region.
    */
-  public boolean inBounds(int addr) {
-    if (addr >= info.epromStart && addr <= info.epromEnd) {
-      return true;
-    } else if (addr >= info.ramStart && addr <= info.ramEnd) {
-      return true;
-    } else if (addr >= info.vramStart && addr <= info.vramEnd) {
-      return true;
-    }
+  public static final int EPROM_END = 0x0000ffff;
+  /**
+   * Beginning of RAM region.
+   */
+  public static final int RAM_START = 0x00010000;
 
-    return false;
-  }
+  /**
+   * End of RAM region.
+   */
+  public static final int RAM_END = 0x0001ffff;
+
+  /**
+   * Beginning of VRAM region.
+   */
+  public static final int VRAM_START = 0x00020000;
+
+  /**
+   * End of VRAM region.
+   */
+  public static final int VRAM_END = 0x0002ffff;
+
+  /**
+   * Should EPROM writes be allowed?
+   */
+  public static final boolean ALLOW_EPROM_WRITES = false;
+
+  /**
+   * Should EPROM reads be allowed?
+   */
+  public static final boolean ALLOW_VRAM_READS = true;
 
   /**
    * Holds EPROM data.
@@ -66,50 +81,51 @@ public class MemorySpace extends SimulationComponent {
   private boolean driving;
 
   /**
-   * Instantiates memory space, taking a reference to the bus it's mounted on and configuration info
-   * (including the EPROM data it should load in the EPROM region).
+   * Instantiates memory space, taking a reference to the bus it's mounted on.
    *
-   * @param bus bus the component is mounted on
-   * @param info info to build memory space from
+   * @param bus bus the memory space is mounted on
+   * @param simulationName name of simulation this memory space belongs to
    */
-  public MemorySpace(Bus bus, MemoryInfo info) {
-    super(bus);
-    this.info = info;
+  public MemorySpace(Bus bus, String simulationName) {
+    super(bus, simulationName);
 
     // setup memory arrays
-    eprom = new byte[info.epromEnd - info.epromStart + 1];
-    ram = new byte[info.ramEnd - info.ramStart + 1];
-    vram = new byte[info.vramEnd - info.vramStart + 1];
+    eprom = new byte[EPROM_END - EPROM_START + 1];
+    ram = new byte[RAM_END - RAM_START + 1];
+    vram = new byte[VRAM_END - VRAM_START + 1];
+  }
 
+  /**
+   * Checks if given address is in memory space bounds.
+   *
+   * @param addr address to check
+   * @return signals if address is in bounds
+   */
+  public boolean inBounds(int addr) {
+    if (addr >= EPROM_START && addr <= EPROM_END) {
+      return true;
+    } else if (addr >= RAM_START && addr <= RAM_END) {
+      return true;
+    } else if (addr >= VRAM_START && addr <= VRAM_END) {
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * Loads EPROM data into memory.
+   *
+   * @param epromData data to load
+   */
+  public void loadEPROM(byte[] epromData) {
     // check if EPROM data fits
-    if (info.epromData.length > eprom.length) {
+    if (epromData.length > eprom.length) {
       throw new RuntimeException("Given EPROM data doesn't fit in EPROM");
     }
 
     // load EPROM data
-    System.arraycopy(info.epromData, 0, eprom, 0, info.epromData.length);
-  }
-
-  /**
-   * Checks if an address is aligned to the word size specified by byteSelect.
-   *
-   * @param addr address to check
-   * @param byteSelect word size
-   * @return boolean that signals whether alignment is respected
-   */
-  private boolean checkAlignment(int addr, int byteSelect) {
-    switch (byteSelect) {
-      case ByteSelect.WORD -> {
-        return (addr & 0x3) == 0;
-      }
-      case ByteSelect.HALF -> {
-        return (addr & 0x1) == 0;
-      }
-      case ByteSelect.BYTE -> {
-        return true;
-      }
-    }
-    return false;
+    System.arraycopy(epromData, 0, eprom, 0, epromData.length);
   }
 
   /**
@@ -132,9 +148,7 @@ public class MemorySpace extends SimulationComponent {
    * </ol>
    * </li>
    * </ul>
-   * If both {@link simulation.component.bus.Bus#readEnable} and
-   * {@link simulation.component.bus.Bus#writeEnable} are high, raises an exception. If requested
-   * address is out of bounds, expect it to be a I/O operation and ignore.
+   * If requested address is out of bounds, expect it to be a I/O operation and ignore.
    */
   @Override
   public final void step() {
@@ -148,14 +162,6 @@ public class MemorySpace extends SimulationComponent {
     boolean readEnable = bus.readEnable.read() == 1;
     boolean writeEnable = bus.writeEnable.read() == 1;
     int byteSelect = bus.byteSelect.read();
-
-    if (!checkAlignment(addr, byteSelect)) {
-      throw new RuntimeException("Unaligned memory access");
-    }
-
-    if (readEnable && writeEnable) {
-      throw new RuntimeException("Read Enable and Write Enable simultaneously high");
-    }
 
     if (readEnable) {
       // read operation
@@ -195,8 +201,7 @@ public class MemorySpace extends SimulationComponent {
 
       if (DebugShell.isDebuggingEnabled()) {
         raiseEvent(new DebugEvent(this, "Memory saw write operation at addr "
-                + DebugShell.int32ToString(addr) + " of data "
-                + DebugShell.int32ToString(data)));
+                + DebugShell.int32ToString(addr) + " of data " + DebugShell.int32ToString(data)));
       }
 
       // set word in (max) four byte writes
@@ -208,6 +213,10 @@ public class MemorySpace extends SimulationComponent {
           writeMemory(addr + 1, (byte) (data >>> 8));
         case ByteSelect.BYTE:
           writeMemory(addr, (byte) data);
+      }
+
+      if (DebugShell.isDebuggingEnabled()) {
+        raiseEvent(new DebugEvent(this, "Memory write operation finished"));
       }
 
       return;
@@ -241,15 +250,15 @@ public class MemorySpace extends SimulationComponent {
    * @return data read
    */
   public byte readMemory(int addr, boolean debugMode) {
-    if (addr >= info.epromStart && addr <= info.epromEnd) {
-      return eprom[addr - info.epromStart];
-    } else if (addr >= info.ramStart && addr <= info.ramEnd) {
-      return ram[addr - info.ramStart];
-    } else if (addr >= info.vramStart && addr <= info.vramEnd) {
-      if (!info.allowVramReads && !debugMode) {
+    if (addr >= EPROM_START && addr <= EPROM_END) {
+      return eprom[addr - EPROM_START];
+    } else if (addr >= RAM_START && addr <= RAM_END) {
+      return ram[addr - RAM_START];
+    } else if (addr >= VRAM_START && addr <= VRAM_END) {
+      if (!ALLOW_VRAM_READS && !debugMode) {
         throw new RuntimeException("VRAM reads are forbidden.");
       }
-      return vram[addr - info.vramStart];
+      return vram[addr - VRAM_START];
     }
 
     return 0; // never reached
@@ -276,15 +285,15 @@ public class MemorySpace extends SimulationComponent {
    * @param debugMode enforce simulation correctness
    */
   public void writeMemory(int addr, byte data, boolean debugMode) {
-    if (addr >= info.epromStart && addr <= info.epromEnd) {
-      if (!info.allowEpromWrites && !debugMode) {
+    if (addr >= EPROM_START && addr <= EPROM_END) {
+      if (!ALLOW_EPROM_WRITES && !debugMode) {
         throw new RuntimeException("EPROM writes are forbidden.");
       }
-      eprom[addr - info.epromStart] = data;
-    } else if (addr >= info.ramStart && addr <= info.ramEnd) {
-      ram[addr - info.ramStart] = data;
-    } else if (addr >= info.vramStart && addr <= info.vramEnd) {
-      vram[addr - info.vramStart] = data;
+      eprom[addr - EPROM_START] = data;
+    } else if (addr >= RAM_START && addr <= RAM_END) {
+      ram[addr - RAM_START] = data;
+    } else if (addr >= VRAM_START && addr <= VRAM_END) {
+      vram[addr - VRAM_START] = data;
     }
   }
 
