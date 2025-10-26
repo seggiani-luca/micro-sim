@@ -371,12 +371,10 @@ public class MicroOp {
       case ENV -> {
         switch (immI(inst)) {
           case 0x00 -> { // ecall
-            System.out.println("Environment call, halting...");
             proc.raiseEvent(new HaltEvent(proc));
           }
 
           case 0x01 -> { // ebreak
-            System.out.println("Environment break, launching debugger...");
             proc.raiseEvent(new BreakEvent(proc));
           }
 

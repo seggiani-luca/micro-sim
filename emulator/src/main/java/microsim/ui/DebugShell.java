@@ -17,7 +17,6 @@ import microsim.simulation.event.*;
 
 /**
  * Handles the shell shown in debug mode.
- * </ol>
  */
 public class DebugShell implements SimulationListener {
 
@@ -49,6 +48,11 @@ public class DebugShell implements SimulationListener {
    */
   public synchronized void deactivate() {
     debuggingEnabled = false;
+
+    // clear event queues
+    for (Queue<SimulationEvent> eventQueue : eventQueues) {
+      eventQueue.clear();
+    }
   }
 
   /**
@@ -85,28 +89,27 @@ public class DebugShell implements SimulationListener {
   }
 
   /**
+   * Cycle counter for multi-cycle stepping.
+   */
+  private long remainingCycles = -1;
+
+  /**
+   * Keeps track of which instance we are multi-cycle stepping on.
+   */
+  private long cycleInstance;
+
+  /**
    * Flag that signals whether the shell should greet the user. Set to false at first greet to have
    * it greet on startup.
    */
   private static volatile boolean shouldGreet = true;
 
   /**
-   * Next cycle to show shell at. Used with {@link #shouldShowShell} to jump to specific cycle.
-   */
-  private int nextShellCycle = 0;
-
-  /**
-   * Signals whether shell should be shown or not. Used with {@link #nextShellCycle} to jump to
-   * specific cycle.
-   */
-  private boolean shouldShowShell = true;
-
-  /**
    * Simulation instances to debug. Used to access processor and memory information from shell.
    */
-  private List<Simulation> simulationInstances = new ArrayList<>();
+  private final List<Simulation> simulationInstances = new ArrayList<>();
 
-  private List<Queue<SimulationEvent>> eventQueues = new ArrayList<>();
+  private final List<Queue<SimulationEvent>> eventQueues = new ArrayList<>();
 
   /**
    * Attaches a new simulation instance to the debug shell (basically makes self a listener and
@@ -211,6 +214,21 @@ public class DebugShell implements SimulationListener {
   }
 
   /**
+   * Prints all active instances, including index mappings and power state.
+   */
+  private void printInstances() {
+    for (int i = 0; i < simulationInstances.size(); i++) {
+      Simulation instance = simulationInstances.get(i);
+      System.out.print("\t" + i + ":\t\"" + instance.name + "\"\t");
+      if (instance.isRunning()) {
+        System.out.println("(powered on)");
+      } else {
+        System.out.println("(powered off)");
+      }
+    }
+  }
+
+  /**
    * Reads and prints data from memory at given address from simulation at index. Checks valid
    * addresses and out of bound reads.
    *
@@ -289,7 +307,12 @@ public class DebugShell implements SimulationListener {
    * @param e simulation event
    */
   @Override
-  public void onSimulationEvent(SimulationEvent e) {
+  public synchronized void onSimulationEvent(SimulationEvent e) {
+    // only respond if debugging
+    if (!debuggingEnabled && !(e instanceof BreakEvent)) {
+      return;
+    }
+
     // ignore video frames
     if (e instanceof FrameEvent) {
       return;
@@ -300,12 +323,34 @@ public class DebugShell implements SimulationListener {
       activate();
     }
 
+    // handle multi-cycling
+    if (remainingCycles != -1 && (e instanceof CycleEvent)) {
+      if (simulationInstances.indexOf(e.owner.simulation) == cycleInstance) {
+        remainingCycles--;
+        if (remainingCycles == 0) {
+          remainingCycles = -1;
+        }
+      }
+    }
+
+    // check for waits on powered off instances
+    if (remainingCycles != -1 && (e instanceof HaltEvent)) {
+      if (simulationInstances.indexOf(e.owner.simulation) == cycleInstance) {
+        remainingCycles = -1;
+      }
+    }
+
     // normal event, queue it or enter shell
     int idx = simulationInstances.indexOf(e.owner.simulation);
     Queue<SimulationEvent> eventQueue = eventQueues.get(idx);
 
-    if (e instanceof CycleEvent ce) {
-      System.out.println();
+    if (remainingCycles == -1 && e instanceof CycleEvent ce) {
+      // greet if needed
+      if (shouldGreet) {
+        greet();
+      }
+
+      // print buffered events
       while (!eventQueue.isEmpty()) {
         log(eventQueue.remove());
       }
@@ -367,13 +412,14 @@ public class DebugShell implements SimulationListener {
     switch (page) {
       case GENERAL -> {
         System.out.println("Available commands:");
-        System.out.println("\tstep: steps execution by 1 cycle or to specific cycle");
-        System.out.println("\tcontinue: resume normal execution");
+        System.out.println("\tstep: steps past 1 or more cycles");
+        System.out.println("\tcontinue: resumes normal execution");
         System.out.println("\tquit: halts executions and quits");
         System.out.println("\tproc: offers processor information");
         System.out.println("\tmem: offers memory information");
         System.out.println("\trender: forces screen rendering");
         System.out.println("\tthread: controls device threads");
+        System.out.println("\tinstance: shows current instances");
       }
       case PROC -> {
         System.out.println("Available proc options:");
@@ -417,19 +463,20 @@ public class DebugShell implements SimulationListener {
       return -1;
     }
 
+    if (!simulationInstances.get(idx).isRunning()) {
+      System.out.println("Rquested instance is powered off");
+      return -1;
+    }
+
     return idx;
   }
 
   /**
    * Displays a debug shell for the current simulation instance.
    */
-  private synchronized void shell() {
+  private void shell() {
     // enter debug shell loop
     while (true) {
-      if (shouldGreet) {
-        greet();
-      }
-
       System.out.print("debug> ");
       String cmd = new Scanner(System.in).nextLine().strip();
 
@@ -445,12 +492,17 @@ public class DebugShell implements SimulationListener {
       switch (tokens[0]) {
         case "s":
         case "step":
-          if (tokens.length == 2) {
+          if (tokens.length == 3) {
+            int gotCycleInstance = getSimulationIndex(tokens[1]);
+            if (gotCycleInstance == -1) {
+              continue;
+            }
+            cycleInstance = gotCycleInstance;
+
             try {
-              nextShellCycle = Integer.parseInt(tokens[1]);
-              shouldShowShell = false;
+              remainingCycles = Integer.parseInt(tokens[2]);
             } catch (NumberFormatException e) {
-              System.out.println("Invalid cycle index");
+              System.out.println("Invalid cycle amount");
               continue;
             }
           }
@@ -582,6 +634,12 @@ public class DebugShell implements SimulationListener {
               continue;
             }
           }
+        }
+
+        case "i":
+        case "instance": {
+          printInstances();
+          continue;
         }
 
         default:

@@ -69,6 +69,15 @@ public class Simulation extends SimulationComponent implements SimulationListene
   private volatile boolean running = true;
 
   /**
+   * Returns if the simulation is running.
+   *
+   * @return state of simulation
+   */
+  public boolean isRunning() {
+    return running;
+  }
+
+  /**
    * Instantiates simulation, loading EPROM data in memory and configuring devices and components.
    * Sets self as listener of the simulation components involved.
    *
@@ -170,7 +179,7 @@ public class Simulation extends SimulationComponent implements SimulationListene
       cycle++;
     }
 
-    System.out.println(">> Simulation: \"" + name + "\" powering off\n");
+    System.out.println("\n>> Simulation: \"" + name + "\" powering off\n");
   }
 
   /**
