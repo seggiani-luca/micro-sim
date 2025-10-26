@@ -2,6 +2,7 @@ package microsim.simulation.component.device.keyboard;
 
 import java.util.LinkedList;
 import java.util.Queue;
+import microsim.simulation.Simulation;
 import microsim.simulation.component.bus.*;
 import microsim.simulation.component.device.IoDevice;
 
@@ -32,10 +33,10 @@ public class KeyboardDevice extends IoDevice {
    *
    * @param bus bus the keyboard device is mounted on
    * @param base base address of keyboard device
-   * @param simulationName name of the simulation this keyboard device belongs to
+   * @param simulation simulation this keyboard device belongs to
    */
-  public KeyboardDevice(Bus bus, int base, String simulationName) {
-    super(bus, simulationName, base, 2);
+  public KeyboardDevice(Bus bus, int base, Simulation simulation) {
+    super(bus, simulation, base, 2);
   }
 
   /**

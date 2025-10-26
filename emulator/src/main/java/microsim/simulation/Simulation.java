@@ -19,6 +19,11 @@ import microsim.ui.DebugShell;
 public class Simulation extends SimulationComponent implements SimulationListener {
 
   /**
+   * Name of this simulation
+   */
+  public final String name;
+
+  /**
    * Base address of video device.
    */
   public static final int VIDEO_BASE = 0x00030000;
@@ -67,22 +72,26 @@ public class Simulation extends SimulationComponent implements SimulationListene
    * Instantiates simulation, loading EPROM data in memory and configuring devices and components.
    * Sets self as listener of the simulation components involved.
    *
-   * @param simulationName name of this simulation
+   * @param name name of this simulation
    */
   @SuppressWarnings("LeakingThisInConstructor")
-  public Simulation(String simulationName) {
+  public Simulation(String name) {
     // simulation instances don't attach to buses (they instead own one)
-    super(null, simulationName);
+    // they also don't have a reference to a simulation they belong to (they are one)
+    super(null, null);
+    simulation = this;
+
+    this.name = name;
 
     // init bus
-    bus = new Bus(simulationName);
+    bus = new Bus(this);
 
     // init components on bus
-    proc = new Processor(bus, simulationName);
-    memory = new MemorySpace(bus, simulationName);
-    video = new VideoDevice(bus, VIDEO_BASE, simulationName);
-    keyboard = new KeyboardDevice(bus, KEYBOARD_BASE, simulationName);
-    timer = new TimerDevice(bus, TIMER_BASE, simulationName);
+    proc = new Processor(bus, this);
+    memory = new MemorySpace(bus, this);
+    video = new VideoDevice(bus, VIDEO_BASE, this);
+    keyboard = new KeyboardDevice(bus, KEYBOARD_BASE, this);
+    timer = new TimerDevice(bus, TIMER_BASE, this);
 
     // attach memory to video
     video.attachMemory(memory);
@@ -161,7 +170,7 @@ public class Simulation extends SimulationComponent implements SimulationListene
       cycle++;
     }
 
-    System.out.println("Simulation: \"" + simulationName + "\" powering off\n");
+    System.out.println(">> Simulation: \"" + name + "\" powering off\n");
   }
 
   /**
@@ -175,7 +184,7 @@ public class Simulation extends SimulationComponent implements SimulationListene
 
     // start main simulation thread
     Thread simulationThread = new Thread(() -> mainThread());
-    simulationThread.setName(simulationName + ": Main");
+    simulationThread.setName(name + ": Main");
     simulationThread.start();
   }
 

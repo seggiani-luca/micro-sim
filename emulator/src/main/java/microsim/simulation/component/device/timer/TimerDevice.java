@@ -1,5 +1,6 @@
 package microsim.simulation.component.device.timer;
 
+import microsim.simulation.Simulation;
 import microsim.simulation.component.bus.*;
 import microsim.simulation.component.device.ThreadedIoDevice;
 
@@ -29,10 +30,10 @@ public class TimerDevice extends ThreadedIoDevice {
    *
    * @param bus bus the timer device is mounted on
    * @param base base address of timer device
-   * @param simulationName name of the simulation this timer device belongs to
+   * @param simulation simulation this timer device belongs to
    */
-  public TimerDevice(Bus bus, int base, String simulationName) {
-    super(bus, simulationName, base, 1);
+  public TimerDevice(Bus bus, int base, Simulation simulation) {
+    super(bus, simulation, base, 1);
   }
 
   /**

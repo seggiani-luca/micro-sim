@@ -1,5 +1,6 @@
 package microsim.simulation.component.device.video;
 
+import microsim.simulation.Simulation;
 import microsim.simulation.component.bus.*;
 import microsim.simulation.component.memory.*;
 import microsim.simulation.event.*;
@@ -52,10 +53,10 @@ public class VideoDevice extends ThreadedIoDevice {
    *
    * @param bus bus the video device is mounted on
    * @param base base address of video device
-   * @param simulationName name of the simulation this video device belongs to
+   * @param simulation simulation this video device belongs to
    */
-  public VideoDevice(Bus bus, int base, String simulationName) {
-    super(bus, simulationName, base, 2);
+  public VideoDevice(Bus bus, int base, Simulation simulation) {
+    super(bus, simulation, base, 2);
 
     // init renderer
     renderer = new VideoRenderer();

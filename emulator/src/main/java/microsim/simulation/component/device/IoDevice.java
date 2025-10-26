@@ -1,5 +1,6 @@
 package microsim.simulation.component.device;
 
+import microsim.simulation.Simulation;
 import microsim.simulation.component.SimulationComponent;
 import microsim.simulation.component.bus.*;
 import microsim.simulation.event.DebugEvent;
@@ -31,12 +32,12 @@ public abstract class IoDevice extends SimulationComponent {
    * respond from and the number of ports it offers.
    *
    * @param bus bus the device is mounted on
-   * @param simulationName name of the simulation this device belongs to
+   * @param simulation simulation this device belongs to
    * @param base base address
    * @param ports number of ports
    */
-  public IoDevice(Bus bus, String simulationName, int base, int ports) {
-    super(bus, simulationName);
+  public IoDevice(Bus bus, Simulation simulation, int base, int ports) {
+    super(bus, simulation);
     this.base = base;
     this.ports = ports;
   }

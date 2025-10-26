@@ -1,5 +1,6 @@
 package microsim.simulation.component.bus;
 
+import microsim.simulation.Simulation;
 import microsim.simulation.component.SimulationComponent;
 
 /**
@@ -65,17 +66,17 @@ public class Bus extends SimulationComponent {
   /**
    * Instantiates a bus by initializing address, data and control lines.
    *
-   * @param simulationName name of simulation this bus belongs to
+   * @param simulation simulation this bus belongs to
    */
-  public Bus(String simulationName) {
+  public Bus(Simulation simulation) {
     // buses aren't mounted to buses
-    super(null, simulationName);
+    super(null, simulation);
 
-    addressLine = new TSLine(this, simulationName);
-    dataLine = new TSLine(this, simulationName);
-    readEnable = new TSLine(this, simulationName);
-    writeEnable = new TSLine(this, simulationName);
-    byteSelect = new TSLine(this, simulationName);
+    addressLine = new TSLine(this, simulation);
+    dataLine = new TSLine(this, simulation);
+    readEnable = new TSLine(this, simulation);
+    writeEnable = new TSLine(this, simulation);
+    byteSelect = new TSLine(this, simulation);
   }
 
   /**

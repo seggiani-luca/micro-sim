@@ -62,5 +62,5 @@ halt:
 
 	.global debugger
 debugger:
-	ebreak:
+	ebreak
 	ret

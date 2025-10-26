@@ -2,6 +2,7 @@ package microsim.simulation.component.processor;
 
 import java.util.Deque;
 import java.util.LinkedList;
+import microsim.simulation.Simulation;
 import microsim.simulation.component.*;
 import microsim.simulation.component.bus.*;
 import microsim.simulation.event.*;
@@ -150,11 +151,11 @@ public class Processor extends SimulationComponent {
    * pointer to {@link #RESET_INSTRUCTION_ADDRESS}.
    *
    * @param bus bus the processor is mounted on
-   * @param simulationName name of simulation this processor belongs to
+   * @param simulation simulation this processor belongs to
    */
   @SuppressWarnings("LeakingThisInConstructor")
-  public Processor(Bus bus, String simulationName) {
-    super(bus, simulationName);
+  public Processor(Bus bus, Simulation simulation) {
+    super(bus, simulation);
 
     // processor  takes control of all lines but data and byteSelect
     // leaks this in constructor but we don't expect TSLine objects to do anything with it

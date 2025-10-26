@@ -30,6 +30,6 @@ public class CycleEvent extends SimulationEvent {
    */
   @Override
   public String getDebugMessage() {
-    return "\nCycle " + cycle;
+    return "Cycle " + cycle;
   }
 }

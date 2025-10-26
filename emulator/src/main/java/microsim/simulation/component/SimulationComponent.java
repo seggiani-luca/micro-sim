@@ -2,6 +2,7 @@ package microsim.simulation.component;
 
 import java.util.ArrayList;
 import java.util.List;
+import microsim.simulation.Simulation;
 import microsim.simulation.component.bus.*;
 import microsim.simulation.event.*;
 
@@ -14,18 +15,9 @@ import microsim.simulation.event.*;
 public abstract class SimulationComponent {
 
   /**
-   * Name of simulation this component belongs to.
+   * Simulation this component belongs to.
    */
-  protected final String simulationName;
-
-  /**
-   * Gets name of simulation this component belongs to
-   *
-   * @return simulation name
-   */
-  public String getSimulationName() {
-    return simulationName;
-  }
+  public Simulation simulation;
 
   /**
    * Array of event listeners.
@@ -41,11 +33,11 @@ public abstract class SimulationComponent {
    * Instantiates component, taking a reference to the bus it's mounted to.
    *
    * @param bus bus the component is mounted on
-   * @param simulationName name of simulation this component belongs to
+   * @param simulation simulation this component belongs to
    */
-  public SimulationComponent(Bus bus, String simulationName) {
+  public SimulationComponent(Bus bus, Simulation simulation) {
     this.bus = bus;
-    this.simulationName = simulationName;
+    this.simulation = simulation;
   }
 
   /**

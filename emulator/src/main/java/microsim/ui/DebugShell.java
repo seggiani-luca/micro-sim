@@ -2,7 +2,12 @@ package microsim.ui;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.ArrayList;
 import java.util.Deque;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
+import java.util.Scanner;
 import microsim.Main;
 import microsim.simulation.*;
 import microsim.simulation.component.device.video.*;
@@ -11,12 +16,7 @@ import microsim.simulation.component.processor.*;
 import microsim.simulation.event.*;
 
 /**
- * Handles the shell shown in debug mode. Debug information is shown in 2 ways:
- * <ol>
- * <li>Via the {@link #log(java.lang.String)} method, which prints event information mid-cycle.</li>
- * <li>Via the {@link #shell()} method, which offers interactive debugging at the beginning of
- * simulation cycles. This is automatically called on {@link simulation.event.CycleEvent}
- * events.</li>
+ * Handles the shell shown in debug mode.
  * </ol>
  */
 public class DebugShell implements SimulationListener {
@@ -26,7 +26,7 @@ public class DebugShell implements SimulationListener {
    * components to decide whether to raise debug events or not (raising them anyways is
    * inefficient).
    */
-  private static boolean debuggingEnabled = false;
+  private static volatile boolean debuggingEnabled = false;
 
   /**
    * Returns whether debugging is enabled.
@@ -38,35 +38,39 @@ public class DebugShell implements SimulationListener {
   }
 
   /**
-   * Counter of active instances. Used to know when to set {@link #debuggingEnabled} to false.
-   */
-  private static int instances = 0;
-
-  /**
    * Activates debug shell.
    */
-  public void activate() {
+  public synchronized void activate() {
     debuggingEnabled = true;
-    instances++;
   }
 
   /**
    * Deactivates debug shell.
    */
-  public void deactivate() {
-    if (instances > 0) {
-      instances--;
-    }
-    if (instances == 0) {
-      debuggingEnabled = false;
-    }
+  public synchronized void deactivate() {
+    debuggingEnabled = false;
   }
 
   /**
    * Static flag that signals whether the world is stopped. This is static as the first debug shell
    * instance that stops the world stops it for all simulation instances.
    */
-  private static volatile boolean stopTheWorld = false;
+  private static volatile boolean isWorldStopped = false;
+
+  private static void stopTheWorld() {
+    isWorldStopped = true;
+
+    // sleep to sync
+    try {
+      Thread.sleep(100);
+    } catch (InterruptedException e) {
+      throw new RuntimeException("Debug shell was interrupted while waiting for threads");
+    }
+  }
+
+  private static void startTheWorld() {
+    isWorldStopped = false;
+  }
 
   /**
    * Returns whether world is stopped. {@link microsim.simulation.component.device.ThreadedIoDevice}
@@ -77,14 +81,14 @@ public class DebugShell implements SimulationListener {
    * @return is world stopped?
    */
   public static boolean isWorldStopped() {
-    return stopTheWorld;
+    return isWorldStopped;
   }
 
   /**
    * Flag that signals whether the shell should greet the user. Set to false at first greet to have
    * it greet on startup.
    */
-  private boolean shouldGreet = true;
+  private static volatile boolean shouldGreet = true;
 
   /**
    * Next cycle to show shell at. Used with {@link #shouldShowShell} to jump to specific cycle.
@@ -98,9 +102,11 @@ public class DebugShell implements SimulationListener {
   private boolean shouldShowShell = true;
 
   /**
-   * Simulation instance to debug. Used to access processor and memory information from shell.
+   * Simulation instances to debug. Used to access processor and memory information from shell.
    */
-  private Simulation simulationInstance = null;
+  private List<Simulation> simulationInstances = new ArrayList<>();
+
+  private List<Queue<SimulationEvent>> eventQueues = new ArrayList<>();
 
   /**
    * Attaches a new simulation instance to the debug shell (basically makes self a listener and
@@ -109,20 +115,11 @@ public class DebugShell implements SimulationListener {
    * @param simulationInstance simulation instance to attach
    */
   public void attachSimulation(Simulation simulationInstance) {
-    this.simulationInstance = simulationInstance;
+    simulationInstances.add(simulationInstance);
     simulationInstance.addListener(this);
-  }
 
-  /**
-   * Detaches attached simulation instance. If no simulation instance is attached, nothing changes.
-   */
-  public void detachSimulation() {
-    if (simulationInstance == null) {
-      return;
-    }
-
-    simulationInstance.removeListener(this);
-    this.simulationInstance = null;
+    Queue<SimulationEvent> eventQueue = new LinkedList<>();
+    eventQueues.add(eventQueue);
   }
 
   /**
@@ -139,7 +136,7 @@ public class DebugShell implements SimulationListener {
 
   /**
    * Prints EPROM data array word by word. Used as an utility by whoever gets data from
-   * {@link elf.Elf}.
+   * {@link file.ELF}.
    *
    * @param eprom EPROM data array
    */
@@ -169,10 +166,12 @@ public class DebugShell implements SimulationListener {
   }
 
   /**
-   * Fetches processor registers from processor in current simulation and prints them.
+   * Fetches processor registers from processor in simulation at index and prints them.
+   *
+   * @param idx index of simulation
    */
-  private void printProcessorRegisters() {
-    Processor proc = simulationInstance.proc;
+  private void printProcessorRegisters(int idx) {
+    Processor proc = simulationInstances.get(idx).proc;
 
     int[] registers = proc.getRegisters();
     int pc = proc.getPc();
@@ -193,10 +192,12 @@ public class DebugShell implements SimulationListener {
   }
 
   /**
-   * Fetches MicroOp queue from processor in current simulation and prints it.
+   * Fetches MicroOp queue from processor in simulation at index and prints it.
+   *
+   * @param idx index of simulation
    */
-  private void printProcessorMicroOps() {
-    Processor proc = simulationInstance.proc;
+  private void printProcessorMicroOps(int idx) {
+    Processor proc = simulationInstances.get(idx).proc;
     Deque<MicroOp> ops = proc.getMicroOps();
 
     if (ops.isEmpty()) {
@@ -210,13 +211,14 @@ public class DebugShell implements SimulationListener {
   }
 
   /**
-   * Reads and prints data from memory at given address. Checks valid addresses and out of bound
-   * reads.
+   * Reads and prints data from memory at given address from simulation at index. Checks valid
+   * addresses and out of bound reads.
    *
+   * @param idx index of simulation
    * @param addr the address to read from
    */
-  private void readMemoryAtAddress(String addr) {
-    MemorySpace memory = simulationInstance.memory;
+  private void readMemoryAtAddress(int idx, String addr) {
+    MemorySpace memory = simulationInstances.get(idx).memory;
     int numAddr;
 
     // is address valid?
@@ -241,13 +243,14 @@ public class DebugShell implements SimulationListener {
   }
 
   /**
-   * Writes data to memory at given address. Checks valid addresses, valid data and out of bound
-   * writes.
+   * Writes data to memory at given address from simulation at index. Checks valid addresses, valid
+   * data and out of bound writes.
    *
+   * @param idx index of simulation
    * @param addr the address to read from
    */
-  private void writeMemoryAtAddress(String addr, String data) {
-    MemorySpace memory = simulationInstance.memory;
+  private void writeMemoryAtAddress(int idx, String addr, String data) {
+    MemorySpace memory = simulationInstances.get(idx).memory;
     int numAddr;
 
     // is address valid?
@@ -281,55 +284,53 @@ public class DebugShell implements SimulationListener {
   }
 
   /**
-   * Receives a simulation event. {@link microsim.simulation.event.SimulationEvent} events that
-   * return a non-null debug string are logged, and {@link microsimsimulation.event.CycleEvent}
-   * events launch the interactive shell. Lastly, {@link microsim.simulation.event.BreakEvent}
-   * events activate the debug shell instance.
+   * Receives a simulation event.
    *
    * @param e simulation event
    */
   @Override
   public void onSimulationEvent(SimulationEvent e) {
-    if (!debuggingEnabled) {
-      if (e instanceof BreakEvent) {
-        activate();
-      } else {
-        return;
-      }
+    // ignore video frames
+    if (e instanceof FrameEvent) {
+      return;
     }
 
-    // if we get here we are debuggingEnabled, print message
-    String message = e.getDebugMessage();
-
-    // is there a debug message event?
-    if (message != null) {
-      // dont log frame messages if world isn't stopped (they flood the console)
-      if (!(e instanceof FrameEvent) || stopTheWorld) {
-        log(message);
-      }
+    // activate shell if requested
+    if (e instanceof BreakEvent) {
+      activate();
     }
 
-    // if it's a cycle, launch shell
-    if (e instanceof CycleEvent cycleEvent) {
-      if (shouldShowShell) {
-        shell();
-      } else {
-        if (cycleEvent.cycle >= nextShellCycle) {
-          shouldShowShell = true;
-          shell();
-        }
+    // normal event, queue it or enter shell
+    int idx = simulationInstances.indexOf(e.owner.simulation);
+    Queue<SimulationEvent> eventQueue = eventQueues.get(idx);
+
+    if (e instanceof CycleEvent ce) {
+      System.out.println();
+      while (!eventQueue.isEmpty()) {
+        log(eventQueue.remove());
       }
+      log(ce);
+
+      // enter shell
+      stopTheWorld();
+      shell();
+      startTheWorld();
+    } else {
+      eventQueue.add(e);
     }
   }
 
   /**
-   * Logs a debug message.
+   * Logs a debug event.
    *
-   * @param message message to display
+   * @param event event to log
    */
-  private void log(String message) {
+  private void log(SimulationEvent event) {
+    String message = event.getDebugMessage();
+    String simulation = event.owner.simulation.name;
+
     message = message.replace("\n", "\n\t");
-    System.out.println("\t" + message);
+    System.out.println("\t" + "\"" + simulation + "\" -> " + message);
   }
 
   /**
@@ -390,45 +391,39 @@ public class DebugShell implements SimulationListener {
         System.out.println("\tresume: resumes all device threads");
       }
       default ->
-        throw new RuntimeException("Unkown help page");
+        throw new RuntimeException("Unknown help page");
     }
   }
 
   /**
-   * Displays a debug shell for the current simulation instance. The shell offers the following
-   * commands:
-   * <ul>
-   * <li>step: steps execution by 1 cycle. Operand can be specified to specify at which step to
-   * stop.</li>
-   * <li>continue: resume normal execution</li>
-   * <li>quit: halts execution and quits.</li>
-   * <li>
-   * proc: offers processor information with following options:
-   * <ul>
-   * <li>registers: prints all registers:</li>
-   * <li>pipeline: prints pipeline information:</li>
-   * </ul>
-   * </li>
-   * <li>
-   * mem: offers memory information with following options:
-   * <ul>
-   * <li>read: reads memory at address.</li>
-   * <li>write: writes memory at address.</li>
-   * </ul>
-   * </li>
-   * <li>
-   * render: forces screen rendering
-   * </li>
-   * <li>
-   * thread: controls device threads with following options:
-   * <ul>
-   * <li>stop: stops all device threads.</li>
-   * <li>resume: resumes all device threads.</li>
-   * </ul>
-   * </li>
-   * </ul>
+   * Helpers that gets the numerical index of a simulation from a string. Does valid format and
+   * bound checking.
+   *
+   * @param idxString string representing simulation index
+   * @return actual simulation index
    */
-  private void shell() {
+  private int getSimulationIndex(String idxString) {
+    int idx;
+    try {
+      idx = Integer.parseInt(idxString);
+
+    } catch (NumberFormatException e) {
+      System.out.println("Invalid simulation index. " + e.getMessage());
+      return -1;
+    }
+
+    if (idx < 0 || idx >= simulationInstances.size()) {
+      System.out.println("Simulation index out of bounds.");
+      return -1;
+    }
+
+    return idx;
+  }
+
+  /**
+   * Displays a debug shell for the current simulation instance.
+   */
+  private synchronized void shell() {
     // enter debug shell loop
     while (true) {
       if (shouldGreet) {
@@ -436,7 +431,7 @@ public class DebugShell implements SimulationListener {
       }
 
       System.out.print("debug> ");
-      String cmd = new java.util.Scanner(System.in).nextLine().strip();
+      String cmd = new Scanner(System.in).nextLine().strip();
 
       // print help on empty commands
       if (cmd.isEmpty()) {
@@ -446,6 +441,7 @@ public class DebugShell implements SimulationListener {
 
       String[] tokens = cmd.split("\\s+");
 
+      // parse
       switch (tokens[0]) {
         case "s":
         case "step":
@@ -472,18 +468,23 @@ public class DebugShell implements SimulationListener {
         case "p":
         case "proc": {
           // print help on empty options
-          if (tokens.length < 2) {
+          if (tokens.length < 3) {
             help(HelpPage.PROC);
+            continue;
+          }
+
+          int idx = getSimulationIndex(tokens[2]);
+          if (idx == -1) {
             continue;
           }
 
           switch (tokens[1]) {
             case "r", "registers" -> {
-              printProcessorRegisters();
+              printProcessorRegisters(idx);
               continue;
             }
             case "p", "pipeline" -> {
-              printProcessorMicroOps();
+              printProcessorMicroOps(idx);
               continue;
             }
 
@@ -496,31 +497,38 @@ public class DebugShell implements SimulationListener {
         case "m":
         case "mem": {
           // print help on empty options
-          if (tokens.length < 2) {
+          if (tokens.length < 3) {
             help(HelpPage.MEM);
+            continue;
+          }
+
+          int idx = getSimulationIndex(tokens[2]);
+          if (idx == -1) {
             continue;
           }
 
           switch (tokens[1]) {
             case "r", "read" -> {
-              if (tokens.length < 3) {
+              if (tokens.length < 4) {
                 System.out.println("Please specify memory address");
+                continue;
               }
 
-              String addr = tokens[2];
+              String addr = tokens[3];
 
-              readMemoryAtAddress(addr);
+              readMemoryAtAddress(idx, addr);
               continue;
             }
             case "w", "write" -> {
-              if (tokens.length < 4) {
+              if (tokens.length < 5) {
                 System.out.println("Please specify memory address and data to be written");
+                continue;
               }
 
-              String addr = tokens[2];
-              String data = tokens[3];
+              String addr = tokens[3];
+              String data = tokens[4];
 
-              writeMemoryAtAddress(addr, data);
+              writeMemoryAtAddress(idx, addr, data);
               continue;
             }
 
@@ -533,12 +541,18 @@ public class DebugShell implements SimulationListener {
 
         case "r":
         case "render": {
-          VideoDevice videoDevice = simulationInstance.video;
-          if (videoDevice == null) {
-            System.out.println("Simulation doesn't have a video device mounted");
-          } else {
-            videoDevice.render();
+          if (tokens.length < 2) {
+            System.out.println("Please specify simulation index");
+            continue;
           }
+
+          int idx = getSimulationIndex(tokens[1]);
+          if (idx == -1) {
+            continue;
+          }
+
+          VideoDevice videoDevice = simulationInstances.get(idx).video;
+          videoDevice.render();
           continue;
         }
 
@@ -552,21 +566,14 @@ public class DebugShell implements SimulationListener {
 
           switch (tokens[1]) {
             case "s", "stop" -> {
-              System.out.println("Stopping all threads...");
-              stopTheWorld = true;
-
-              // sleep to sync
-              try {
-                Thread.sleep(100);
-              } catch (InterruptedException e) {
-                throw new RuntimeException("Debug shell was interrupted while waiting for threads");
-              }
+              System.out.println("Stopping all device threads...");
+              stopTheWorld();
 
               continue;
             }
             case "r", "resume" -> {
-              System.out.println("Resuming all threads...");
-              stopTheWorld = false;
+              System.out.println("Resuming all device threads...");
+              startTheWorld();
               continue;
             }
 

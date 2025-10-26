@@ -1,5 +1,6 @@
 package microsim.simulation.component.memory;
 
+import microsim.simulation.Simulation;
 import microsim.simulation.component.*;
 import microsim.simulation.component.bus.*;
 import microsim.simulation.component.bus.Bus.ByteSelect;
@@ -84,10 +85,10 @@ public class MemorySpace extends SimulationComponent {
    * Instantiates memory space, taking a reference to the bus it's mounted on.
    *
    * @param bus bus the memory space is mounted on
-   * @param simulationName name of simulation this memory space belongs to
+   * @param simulation simulation this memory space belongs to
    */
-  public MemorySpace(Bus bus, String simulationName) {
-    super(bus, simulationName);
+  public MemorySpace(Bus bus, Simulation simulation) {
+    super(bus, simulation);
 
     // setup memory arrays
     eprom = new byte[EPROM_END - EPROM_START + 1];

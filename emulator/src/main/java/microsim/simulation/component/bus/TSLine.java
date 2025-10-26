@@ -1,5 +1,6 @@
 package microsim.simulation.component.bus;
 
+import microsim.simulation.Simulation;
 import microsim.simulation.component.SimulationComponent;
 
 /**
@@ -28,10 +29,10 @@ public class TSLine extends SimulationComponent {
    * Constructs a TSLine taking a reference to the bus it makes up.
    *
    * @param bus bus this line is part of
-   * @param simulationName name of simulation this bus belongs to
+   * @param simulation name of simulation this bus belongs to
    */
-  public TSLine(Bus bus, String simulationName) {
-    super(bus, simulationName);
+  public TSLine(Bus bus, Simulation simulation) {
+    super(bus, simulation);
   }
 
   /**

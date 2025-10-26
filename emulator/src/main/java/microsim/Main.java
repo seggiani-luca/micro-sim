@@ -1,6 +1,8 @@
 package microsim;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import microsim.ui.*;
 import microsim.simulation.*;
 import microsim.simulation.component.device.keyboard.*;
@@ -35,6 +37,16 @@ public class Main {
   private static MainEnvironment env;
 
   /**
+   * Debug shell used to debug all simulation instances.
+   */
+  private static DebugShell debugShell;
+
+  /**
+   * Simulation instances.
+   */
+  private static List<Simulation> simulationInstances = new ArrayList<>();
+
+  /**
    * Shows project name, version, year and authorship.
    */
   private static void greet() {
@@ -57,13 +69,11 @@ public class Main {
   private static void initInterfaces(Simulation simulation) {
     // 1. handle video window
     System.out.println("Initializing video window");
-    VideoWindow window = new VideoWindow(simulation.video, env.windowScale,
-            simulation.getSimulationName());
+    VideoWindow window = new VideoWindow(simulation.video, env.windowScale, simulation.name);
     simulation.addListener(window);
 
     // 2. handle debug shell. should be always attached as processor might activate it on EBREAK
     System.out.println("Attaching debug shell");
-    DebugShell debugShell = new DebugShell();
     debugShell.attachSimulation(simulation);
 
     // activate if requested
@@ -78,6 +88,8 @@ public class Main {
     System.out.println("Attaching keyboard source");
     KeyboardSource keyboardSource = new KeyboardSource(window.getPanel());
     simulation.keyboard.attachSource(keyboardSource);
+
+    System.out.println();
   }
 
   /**
@@ -89,13 +101,13 @@ public class Main {
    * <li>Attach interfaces to simulation. These include {@link ui.VideoWindow},
    * {@link ui.DebugShell}, and keyboard source for the keyboard device. Attachment is handled by
    * the {@link #initInterfaces(microsim.simulation.Simulation)} method.</li>
-   * <li>Begin executing simulation.</li>
    * </ol>
    *
    * @param epromData EPROM data to load into memory
    * @param simulationName name of simulated simulation
+   * @return simulation that was instantiated
    */
-  public static void initSimulation(String simulationName, byte[] epromData) {
+  public static Simulation initSimulation(String simulationName, byte[] epromData) {
     System.out.println(">> Initializing simulation: \"" + simulationName + "\"");
 
     // 1. initialize simulation
@@ -112,9 +124,7 @@ public class Main {
       System.exit(1);
     }
 
-    // 4. begin simulation
-    System.out.println("Simulation: \"" + simulationName + "\" powering on\n");
-    simulation.begin();
+    return simulation;
   }
 
   /**
@@ -125,6 +135,7 @@ public class Main {
    * <li>Instantiate these simulation info objects into actual simulations, attach interfaces to
    * them, and execute them. Instantiation is handled by
    * {@link #initSimulation(java.lang.String, byte[])}.</li>
+   * <li>Begin simulations.</li>
    * </ol>
    * Any simulation instantiation failure aborts the entire program.
    *
@@ -153,9 +164,17 @@ public class Main {
 
     System.out.println("Loaded " + env.simulationInfos.size() + " simulation EPROM(s)\n");
 
-    // 2. instantiate simulations from simulation infos in main environment
+    // 2. instantiate simulations from simulation infos in main environment, and attach interfaces
+    debugShell = new DebugShell(); // has to be unique
     for (SimulationInfo info : env.simulationInfos) {
-      initSimulation(info.simulationName, info.epromData);
+      Simulation simulation = initSimulation(info.simulationName, info.epromData);
+      simulationInstances.add(simulation);
+    }
+
+    // 3. begin simulations
+    for (Simulation simulation : simulationInstances) {
+      System.out.println(">> Simulation \"" + simulation.name + "\" powering on\n");
+      simulation.begin();
     }
   }
 }

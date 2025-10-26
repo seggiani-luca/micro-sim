@@ -1,6 +1,7 @@
 package microsim.simulation.component.device;
 
 import java.util.concurrent.locks.LockSupport;
+import microsim.simulation.Simulation;
 import microsim.simulation.component.bus.*;
 import microsim.ui.DebugShell;
 
@@ -42,12 +43,12 @@ public abstract class ThreadedIoDevice extends IoDevice {
    * respond from and the number of ports it offers..
    *
    * @param bus bus the device is mounted on
-   * @param simulationName name of the simulation this device belongs to
+   * @param simulation simulation this device belongs to
    * @param base base address
    * @param ports number of ports
    */
-  public ThreadedIoDevice(Bus bus, String simulationName, int base, int ports) {
-    super(bus, simulationName, base, ports);
+  public ThreadedIoDevice(Bus bus, Simulation simulation, int base, int ports) {
+    super(bus, simulation, base, ports);
 
     // set up runnable instance
     runnableInstance = new DeviceThread();
@@ -95,7 +96,7 @@ public abstract class ThreadedIoDevice extends IoDevice {
    */
   public void begin() {
     Thread deviceThread = new Thread(runnableInstance);
-    deviceThread.setName(simulationName + ": " + getDeviceName());
+    deviceThread.setName(simulation.name + ": " + getDeviceName());
     deviceThread.start();
   }
 
