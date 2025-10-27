@@ -1,11 +1,12 @@
 #include "keyboard.h"
-#include "../conf/hardware.h"
 #include "../video/video.h"
 
-// reference keyboard device
-hwr::dev::keyboard_device& keyboard = hwr::dev::keyboard;
-
 namespace kyb {
+	char poll_char() {
+		if(*keyboard.sts_reg == 1) return *keyboard.buf_reg;
+		return '\0';
+	}
+	
 	char get_char() {
 		while(*keyboard.sts_reg != 1); // busy wait
 		return *keyboard.buf_reg;

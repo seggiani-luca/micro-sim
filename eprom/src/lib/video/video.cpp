@@ -1,13 +1,6 @@
 #include "video.h"
-#include "../conf/hardware.h"
 #include "../util/util.h"
 #include "../string/string.h"
-
-// reference video device
-hwr::dev::video_device& video = hwr::dev::video;
-
-// reference video memory
-volatile uint8_t (&vram)[] = hwr::mem::vram;
 
 namespace vid {
 	coords::coords(int col, int row) {
@@ -16,16 +9,24 @@ namespace vid {
 	}
 
 	coords::coords(int idx) {
-		this->col = idx % video.rows;
+		this->col = idx % video.cols;
 		this->row = idx / video.cols;
 	}
 
-	inline int coords::get_idx() {
+	int coords::get_idx() {
 		return col + row * video.cols;
 	}
 
 	bool coords::validate() {
 		return !(col < 0 || col >= video.cols || row < 0 || row >= video.rows);
+	}
+
+	coords coords::operator+(const coords& other) {
+		return coords(this->col + other.col, this->row + other.row);
+	}
+	
+	bool coords::operator==(const coords& other) {
+		return this->col == other.col && this->row == other.row;
 	}
 
 	coords cur = coords(0, 0); 

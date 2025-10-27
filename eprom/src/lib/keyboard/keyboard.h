@@ -1,10 +1,22 @@
 #ifndef KEYBOARD_H
 #define KEYBOARD_H
 
+#include "../conf/hardware.h"
+
 /*
  * Namespace for handling keyboard, including character/string reading/getting.
  */
 namespace kyb {
+	/*
+	 * Reference to keyboard device.
+	 */
+	inline hwr::dev::keyboard_device& keyboard = hwr::dev::keyboard;
+	
+	/*
+	 * Polls a char without echo.
+	 */
+	char poll_char();
+	
 	/*
 	 * Gets a char without echo.
 	 */

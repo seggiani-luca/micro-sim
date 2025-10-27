@@ -31,10 +31,10 @@ _data_cpy_end:
 
 	/* call static constructors */
 	la t0, __init_array_start
-	la t1, __init_array_end
+	la s0, __init_array_end
 
 _static_const_loop:
-	beq t0, t1, _static_const_end
+	beq t0, s0, _static_const_end
 	lw t2, 0(t0)
 	jalr t2
 	addi t0, t0, 4

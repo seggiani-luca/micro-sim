@@ -1,11 +1,33 @@
 #ifndef LIB_VIDEO_H
 #define LIB_VIDEO_H
 
+#include "../conf/hardware.h"
+
 /*
  * Namespace for handling console graphics, including simple character/string/int printing/putting, 
  * display cursor handling, simple geometric graphics and table drawing.
  */
 namespace vid {
+	/*
+	 * Reference to video device.
+	 */
+	inline hwr::dev::video_device& video = hwr::dev::video;
+
+	/*
+	 * Reference to video memory.
+	 */
+	inline volatile uint8_t (&vram)[] = hwr::mem::vram;
+
+	/*
+	 * Reference to screen width.
+	 */
+	inline const int COLS = hwr::dev::video.cols;
+	
+	/*
+	 * Reference to screen height.
+	 */
+	inline const int ROWS = hwr::dev::video.rows;
+	
 	/*
 	 * Size of tabulation.
 	 */
@@ -17,6 +39,11 @@ namespace vid {
 	struct coords {
 		int col;
 		int row;
+
+		/*
+		 * Default constructor.
+		 */
+		coords() {};
 
 		/*
 		 * Constructs a coordinate pair from column and row indices.
@@ -37,6 +64,16 @@ namespace vid {
 		 * Check if coordinate pair is on screen.
 		 */
 		bool validate();
+
+		/*
+		 * Sums coordinates.
+		 */
+		coords operator+(const coords&);
+
+		/*
+		 * Compares coordinates
+		 */
+		bool operator==(const coords&);
 	};
 
 	/*
