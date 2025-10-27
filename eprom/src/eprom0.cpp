@@ -22,8 +22,8 @@ const char TOP_LEFT_D 		= 0xc9;
 const char TOP_RIGHT_D		= 0xbb;
 const char BOTTOM_LEFT_D	= 0xc8;
 const char BOTTOM_RIGHT_D	= 0xbc;
-const char T_LEFT_D   		= 0xc9;
-const char T_RIGHT_D  		= 0xbc;
+const char T_LEFT_D   		= 0xb9;
+const char T_RIGHT_D  		= 0xcc;
 const char T_TOP_D    		= 0xca;
 const char T_BOTTOM_D 		= 0xcb;
 const char CROSS_D    		= 0xce;
@@ -75,22 +75,12 @@ const vid::coords START_POS = {1, 1};
 unsigned int num_pellets;
 bool pellets[MAP_SIZE * MAP_SIZE];
 
-int get_vram_idx(int r, int c) {
-	return (c + MAP_OFFSET) + r * vid::COLS;
-}
-int get_vram_idx(vid::coords coords) {
-	return get_vram_idx(coords.row, coords.col);
-}
-
-int get_map_idx(int r, int c) {
-	return c + r * MAP_SIZE;
-}
 int get_map_idx(vid::coords coords) {
-	return get_map_idx(coords.row, coords.col);
+	return coords.col + coords.row * MAP_SIZE;
 }
 
 vid::coords map_to_vram(vid::coords in) {
-	return vid::coords(in.col + MAP_OFFSET, in.row);
+	return {in.row, in.col + MAP_OFFSET};
 }
 
 char get_table_char(bool a, bool b, bool l, bool r) {
@@ -124,7 +114,7 @@ char get_table_char(bool a, bool b, bool l, bool r) {
 void draw_map() {
 	for(int r = 0; r < MAP_SIZE; r++) {
 		for(int c = 0; c < MAP_SIZE; c++) {
-			bool present = MAP[get_map_idx(r, c)] == '#';
+			bool present = MAP[get_map_idx({r, c})] == '#';
 			if(!present) continue;
 
 			char t = '\0';
@@ -139,15 +129,15 @@ void draw_map() {
 				if(r == MAP_SIZE - 1 && c == MAP_SIZE - 1) t = BOTTOM_RIGHT_D;
 			} else {
 				// inside
-				bool above = MAP[get_map_idx(r - 1, c)] == '#';
-				bool below = MAP[get_map_idx(r + 1, c)] == '#';
-				bool left = MAP[get_map_idx(r, c - 1)] == '#';
-				bool right = MAP[get_map_idx(r, c + 1)] == '#';
+				bool above = MAP[get_map_idx({r - 1, c})] == '#';
+				bool below = MAP[get_map_idx({r + 1, c})] == '#';
+				bool left = MAP[get_map_idx({r, c - 1})] == '#';
+				bool right = MAP[get_map_idx({r, c + 1})] == '#';
 			
 				t = get_table_char(above, below, left, right);
 			}
 
-			vid::vram[get_vram_idx(r, c)] = t;
+			vid::put_char(map_to_vram({r, c}), t);
 		}
 	}
 }
@@ -158,14 +148,14 @@ void fill_pellets() {
 
 	for(int r = 1; r < MAP_SIZE - 1; r++) {
 		for(int c = 1 ; c < MAP_SIZE - 1; c++) {
-			char map_tile = MAP[get_map_idx(r, c)];
+			char map_tile = MAP[get_map_idx({r, c})];
 			bool present = map_tile == '#' || map_tile == '@';
 			if(present) continue;
 				
 			// is pellet
-			pellets[get_map_idx(r, c)] = true;
+			pellets[get_map_idx({r, c})] = true;
 			num_pellets++;
-			vid::vram[get_vram_idx(r, c)] = PELLET;
+			vid::put_char(map_to_vram({r, c}), PELLET);
 		}
 	}
 	
@@ -180,10 +170,10 @@ void fill_pellets() {
 /*
  * Player.
  */
-const vid::coords NORTH	= {0, -1};
-const vid::coords SOUTH	= {0,  1};
-const vid::coords WEST 	= {-1, 0};
-const vid::coords EAST 	= {1,  0};
+const vid::coords NORTH	= {-1, 0};
+const vid::coords SOUTH	= {1,  0};
+const vid::coords WEST 	= {0, -1};
+const vid::coords EAST 	= {0,  1};
 
 struct {
 	vid::coords pos = START_POS;
@@ -206,6 +196,7 @@ vid::coords wrap(vid::coords coords) {
 }
 
 void update_player() {	
+	// get input
 	char k = kyb::poll_char();
 	switch(k) {
 		case 'W': case 'w': wanted_dir = NORTH; break;
@@ -215,26 +206,30 @@ void update_player() {
 	}
 
 	vid::coords wanted_pos = wrap(player.pos + wanted_dir);
+	
+	// try moving
 	vid::coords new_pos = wanted_pos;
 
 	if(MAP[get_map_idx(wanted_pos)] != '#') { 
-		// can go in wanted direction
+		// can move in wanted direction
 		player.dir = wanted_dir;
 	} else {
-		// can't go in wanted direction, hold previous and go on
+		// can't move in wanted direction, hold previous and go on
 		new_pos = wrap(player.pos + player.dir);
 	}
 
 	if(MAP[get_map_idx(new_pos)] != '#') { 
+		// actually move
 		vid::put_char(map_to_vram(player.pos), '\0');
 		player.pos = new_pos;
 		vid::put_char(map_to_vram(player.pos), SMILEY);
-	}
 
-	bool& cur_pellet = pellets[get_map_idx(player.pos)];
-	if(cur_pellet) {
-		cur_pellet = false;
-		num_pellets--;
+		// eat pellet
+		bool& cur_pellet = pellets[get_map_idx(player.pos)];
+		if(cur_pellet) {
+			cur_pellet = false;
+			num_pellets--;
+		}
 	}
 }
 
@@ -249,9 +244,9 @@ unsigned int rand() {
 
 const vid::coords GHOST0_POS = {28, 28};
 const vid::coords GHOST0_DIR = WEST;
-const vid::coords GHOST1_POS = {1, 28};
+const vid::coords GHOST1_POS = {28, 1};
 const vid::coords GHOST1_DIR = NORTH;
-const vid::coords GHOST2_POS = {19, 20};
+const vid::coords GHOST2_POS = {20, 19};
 const vid::coords GHOST2_DIR = NORTH;
 
 struct ghost {
@@ -296,12 +291,46 @@ bool update_ghost(ghost& gh) {
 /*
  * Ui.
  */
-void draw_ui() {
-	vid::put_str({1, 1}, "Pellets: ");
-	vid::put_char({10, 1}, '\0');
-	vid::put_char({11, 1}, '\0');
-	vid::put_char({12, 1}, '\0');
-	vid::put_uint({10, 1}, num_pellets);
+void print_heading(vid::coords pos, vid::coords dir) {
+	if(dir == NORTH) vid::put_str(pos, "NORTH");
+	if(dir == SOUTH) vid::put_str(pos, "SOUTH");
+	if(dir == WEST) vid::put_str(pos, "WEST ");
+	if(dir == EAST) vid::put_str(pos, "EAST ");
+}
+
+void draw_ui(ghost* ghosts) {
+	vid::put_str({1, 1}, "Risc-man v0.0");
+	
+	vid::put_str({1, 56}, "Pellets: ");
+	vid::put_uint({1, 66}, num_pellets);
+	
+	vid::put_str({2, 1}, "Player X: ");
+	vid::put_int({2, 11}, player.pos.row);
+	vid::put_str({3, 1}, "Player Y: ");
+	vid::put_int({3, 11}, player.pos.col);
+	vid::put_str({4, 1}, "Player heading: ");
+	print_heading({4, 17}, player.dir);
+	
+	vid::put_str({2, 56}, "Ghost 0 X: ");
+	vid::put_int({2, 67}, ghosts[0].pos.row);
+	vid::put_str({3, 56}, "Ghost 0 Y: ");
+	vid::put_int({3, 67}, ghosts[0].pos.col);
+	vid::put_str({4, 56}, "Ghost 0 heading: ");
+	print_heading({4, 73}, ghosts[0].dir);
+	
+	vid::put_str({26, 1}, "Ghost 1 X: ");
+	vid::put_int({26, 12}, ghosts[1].pos.row);
+	vid::put_str({27, 1}, "Ghost 1 Y: ");
+	vid::put_int({27, 12}, ghosts[1].pos.col);
+	vid::put_str({28, 1}, "Ghost 1 heading: ");
+	print_heading({28, 18}, ghosts[1].dir);
+	
+	vid::put_str({26, 56}, "Ghost 2 X: ");
+	vid::put_int({26, 67}, ghosts[2].pos.row);
+	vid::put_str({27, 56}, "Ghost 2 Y: ");
+	vid::put_int({27, 67}, ghosts[2].pos.col);
+	vid::put_str({28, 56}, "Ghost 2 heading: ");
+	print_heading({28, 73}, ghosts[2].dir);
 }
 
 void main() {
@@ -335,19 +364,19 @@ void main() {
 		}
 
 		if(gameover) {
-			vid::put_str({1, 2}, "Game over!");
+			vid::put_str({15, 35}, "Game over!");
 			utl::wait();
 			goto start;
 		}
 
 		if(num_pellets == 0) {
-			vid::put_str({1, 2}, "Hai vinto!");
+			vid::put_str({15, 35}, "Hai vinto!");
 			utl::wait();
 			goto start;
 		}	
 		
-		draw_ui();
+		draw_ui(ghosts);
 
-		tim::wait_ticks(250);
+		tim::wait_ticks(200);
 	}
 }

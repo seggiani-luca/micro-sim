@@ -3,9 +3,9 @@
 #include "../string/string.h"
 
 namespace vid {
-	coords::coords(int col, int row) {
-		this->col = col;
+	coords::coords(int row, int col) {
 		this->row = row;
+		this->col = col;
 	}
 
 	coords::coords(int idx) {
@@ -22,27 +22,27 @@ namespace vid {
 	}
 
 	coords coords::operator+(const coords& other) {
-		return coords(this->col + other.col, this->row + other.row);
+		return {this->row + other.row, this->col + other.col};
 	}
 	
 	bool coords::operator==(const coords& other) {
-		return this->col == other.col && this->row == other.row;
+		return this->row == other.row && this->col == other.col;
 	}
 
-	coords cur = coords(0, 0); 
+	coords cur = {0, 0}; 
 
-	void set_cursor(coords new_Coords) {
-		cur.col = new_Coords.col;
-		cur.row = new_Coords.row;
+	void set_cursor(coords new_coords) {
+		cur.row = new_coords.row;
+		cur.col = new_coords.col;
 
-		*video.cur_col_reg = cur.col;
 		*video.cur_row_reg = cur.row;
+		*video.cur_col_reg = cur.col;
 	}
 
 
 	void clear() {
 		str::mset((void*) vram, '\0', video.rows * video.cols);
-		set_cursor(coords(0, 0));
+		set_cursor({0, 0});
 	}
 
 	void scroll() {
@@ -52,11 +52,11 @@ namespace vid {
 		// clean last line
 		str::mset((void*) (vram + (video.rows - 1) * video.cols), ' ', video.cols);
 				
-		if(cur.row > 0) set_cursor(coords(cur.col, cur.row - 1));
+		if(cur.row > 0) set_cursor({cur.row - 1, cur.col});
 	}
 
 	void newline() {
-		set_cursor(coords(0, cur.row + 1));
+		set_cursor({cur.row + 1, 0});
 
 		if(cur.row == video.rows) {
 			scroll();
@@ -64,7 +64,7 @@ namespace vid {
 	}
 
 	void inc_cur() {
-		set_cursor(coords(cur.col + 1, cur.row));
+		set_cursor({cur.row, cur.col + 1});
 
 		if(cur.col == video.cols) {
 			newline();
@@ -85,7 +85,7 @@ namespace vid {
 			}
 		}
 
-		set_cursor(coords(new_col, new_row));
+		set_cursor({new_row, new_col});
 	}
 
 	void backspace() {
@@ -174,6 +174,7 @@ namespace vid {
 		if(!pos.validate() || !last_pos.validate()) {
 			utl::panic("Coordinate non valide per put_uint() (il numero puo' occupare 10 caratteri)");
 		}
+		str::mset((void*) (vram + pos_idx), '\0', last_pos.get_idx() - pos_idx);
 
 		char temp[10];
 		int i = 0;
@@ -196,12 +197,14 @@ namespace vid {
 
 		int pos_idx = pos.get_idx();
 
+		int off = 0;
 		if(n < 0) {
 			n = -n;
 			vram[pos_idx] = '-';
+			off = 1;
 		}
 
-		put_uint(coords(pos_idx + 1), (unsigned int) n);
+		put_uint(coords(pos_idx + off), (unsigned int) n);
 	}
 
 	void put_str(coords pos, const char* s) {

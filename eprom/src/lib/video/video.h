@@ -37,8 +37,8 @@ namespace vid {
 	 * Defines coordinates on screen and allows conversion to video array index and validation. 
 	 */
 	struct coords {
-		int col;
 		int row;
+		int col;
 
 		/*
 		 * Default constructor.
@@ -46,7 +46,7 @@ namespace vid {
 		coords() {};
 
 		/*
-		 * Constructs a coordinate pair from column and row indices.
+		 * Constructs a coordinate pair from row and column indices.
 		 */
 		coords(int, int);
 

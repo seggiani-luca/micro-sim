@@ -1,9 +1,6 @@
 	.section .start
 	.extern main 
 
-	.extern __init_array_start
-	.extern __init_array_end
-
 /* start routine */
 
 	.global _start
@@ -30,14 +27,14 @@ _data_cpy_loop:
 _data_cpy_end:
 
 	/* call static constructors */
-	la t0, __init_array_start
-	la s0, __init_array_end
+	la s0, __init_array_start
+	la s1, __init_array_end
 
 _static_const_loop:
-	beq t0, s0, _static_const_end
-	lw t2, 0(t0)
+	beq s0, s1, _static_const_end
+	lw t2, 0(s0)
 	jalr t2
-	addi t0, t0, 4
+	addi s0, s0, 4
 	j _static_const_loop
 
 _static_const_end:
