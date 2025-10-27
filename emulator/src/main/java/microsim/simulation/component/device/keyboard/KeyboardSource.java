@@ -70,7 +70,7 @@ public class KeyboardSource {
       ByteBuffer bb = encoder.encode(cb);
 
       // insert key in listener queue
-      listener.queueKey(bb.get());
+      listener.key = bb.get();
     } catch (CharacterCodingException e) {
       // can't convert, ignore
     }

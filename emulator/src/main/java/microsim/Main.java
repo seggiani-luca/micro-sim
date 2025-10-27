@@ -165,7 +165,7 @@ public class Main {
     System.out.println("Loaded " + env.simulationInfos.size() + " simulation EPROM(s)\n");
 
     // 2. instantiate simulations from simulation infos in main environment, and attach interfaces
-    debugShell = new DebugShell(); // has to be unique
+    debugShell = DebugShell.getInstance(); // has to be unique
     for (SimulationInfo info : env.simulationInfos) {
       Simulation simulation = initSimulation(info.simulationName, info.epromData);
       simulationInstances.add(simulation);

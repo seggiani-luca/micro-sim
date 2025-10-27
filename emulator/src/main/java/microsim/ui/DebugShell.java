@@ -16,9 +16,63 @@ import microsim.simulation.component.processor.*;
 import microsim.simulation.event.*;
 
 /**
- * Handles the shell shown in debug mode.
+ * Handles the shell shown in debug mode. Is a singleton.
  */
 public class DebugShell implements SimulationListener {
+
+  /**
+   * Declares a custom exception handler for uncaught exceptions.
+   */
+  public static class DebugExceptionHandler implements Thread.UncaughtExceptionHandler {
+
+    /**
+     * Gives thread information and dumps event info.
+     *
+     * @param t thread that crashed
+     * @param e exception that made it crash
+     */
+    @Override
+    public void uncaughtException(Thread t, Throwable e) {
+      System.err.println("Thread " + t.getName() + " threw an exception: " + e.getMessage());
+
+      DebugShell main = DebugShell.getInstance();
+
+      for (int i = 0; i < main.simulationInstances.size(); i++) {
+        Simulation instance = main.simulationInstances.get(i);
+        Queue<SimulationEvent> eventQueue = main.eventQueues.get(i);
+
+        System.err.println("Event dump " + i + ", \"" + instance.name + "\":");
+        while (!eventQueue.isEmpty()) {
+          main.log(eventQueue.remove());
+        }
+        System.err.println();
+      }
+
+      System.exit(2);
+    }
+  }
+
+  /**
+   * The only allowed instance of this class.
+   */
+  private static DebugShell singleton;
+
+  /**
+   * Returns the singleton debug shell.
+   *
+   * @return singleton shell
+   */
+  public static DebugShell getInstance() {
+    if (singleton == null) {
+      singleton = new DebugShell();
+    }
+
+    return singleton;
+  }
+
+  private DebugShell() {
+
+  }
 
   /**
    * Static flag that signals whether debugging is enabled. This is static as it's used by
@@ -180,7 +234,7 @@ public class DebugShell implements SimulationListener {
     int pc = proc.getPc();
 
     System.out.println("\tpc:\t" + int32ToString(pc));
-    System.out.println("\tzero:\t0"); // defaults to zero register
+    System.out.println("\tzero:\t0x00000000"); // defaults to zero register
 
     final String[] mnemonics = {
       "ra", "sp", "gp", "tp", "t0", "t1", "t2", "s0/fp", "s1", "a0", "a1", "a2", "a3", "a4", "a5",
@@ -189,8 +243,8 @@ public class DebugShell implements SimulationListener {
     };
 
     // loop through registers and print
-    for (int i = 0; i < Processor.REGISTERS - 1; i++) {
-      System.out.println("\t" + mnemonics[i] + ":\t" + int32ToString(registers[i]));
+    for (int i = 1; i < Processor.REGISTERS; i++) {
+      System.out.println("\t" + mnemonics[i - 1] + ":\t" + int32ToString(registers[i]));
     }
   }
 

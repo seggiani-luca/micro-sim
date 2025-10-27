@@ -194,6 +194,7 @@ public class Simulation extends SimulationComponent implements SimulationListene
     // start main simulation thread
     Thread simulationThread = new Thread(() -> mainThread());
     simulationThread.setName(name + ": Main");
+    simulationThread.setUncaughtExceptionHandler(new DebugShell.DebugExceptionHandler());
     simulationThread.start();
   }
 

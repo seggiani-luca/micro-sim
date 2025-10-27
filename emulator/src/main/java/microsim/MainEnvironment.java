@@ -149,20 +149,27 @@ public class MainEnvironment {
       throw new IOException("Given simulation EPROM path is not a directory");
     }
 
-    // step through simulation configurations
+    // step through ELF files
     for (final File entry : epromDir.listFiles()) {
       // ignore subdirectories
-      if (!entry.isDirectory()) {
-        try {
-          // read the EPROM and build a simulation info from it
-          byte[] epromData = ELF.readEPROM(entry.getAbsolutePath());
-          SimulationInfo simulationInfo = new SimulationInfo(epromData, entry.getName());
+      if (entry.isDirectory()) {
+        continue;
+      }
 
-          // append to simulation info list
-          simulationInfos.add(simulationInfo);
-        } catch (IOException e) {
-          throw new IOException("Error loading EPROM data. " + e.getMessage(), e);
-        }
+      // ignore non-ELF files
+      if (!entry.getName().endsWith(".elf")) {
+        continue;
+      }
+
+      try {
+        // read the EPROM and build a simulation info from it
+        byte[] epromData = ELF.readEPROM(entry.getAbsolutePath());
+        SimulationInfo simulationInfo = new SimulationInfo(epromData, entry.getName());
+
+        // append to simulation info list
+        simulationInfos.add(simulationInfo);
+      } catch (IOException e) {
+        throw new IOException("Error loading EPROM data. " + e.getMessage(), e);
       }
     }
   }

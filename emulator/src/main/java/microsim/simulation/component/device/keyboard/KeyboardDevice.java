@@ -7,15 +7,14 @@ import microsim.simulation.component.bus.*;
 import microsim.simulation.component.device.IoDevice;
 
 /**
- * Implements a keyboard device that keeps a character queue and returns characters via a status and
- * a data port.
+ * Implements a keyboard device that returns characters via a status and a data port.
  */
 public class KeyboardDevice extends IoDevice {
 
   /**
-   * Queue of characters pressed.
+   * Last key pressed.
    */
-  private final Queue<Integer> keyQueue = new LinkedList<>();
+  byte key = '\0';
 
   /**
    * Attaches keyboard device to a
@@ -40,16 +39,6 @@ public class KeyboardDevice extends IoDevice {
   }
 
   /**
-   * Queues a character codepoint on the key queue. This is meant to be called by a
-   * {@link microsim.simulation.component.device.keyboard.KeyboardSource} implementation.
-   *
-   * @param k ASCII codepoint of key pressed
-   */
-  public void queueKey(byte k) {
-    keyQueue.add(Integer.valueOf(k));
-  }
-
-  /**
    * Gets keyboard ports. Port 0 is status and port 1 is data.
    *
    * @param index index of port
@@ -60,10 +49,12 @@ public class KeyboardDevice extends IoDevice {
   public int getPort(int index) {
     switch (index) {
       case 0 -> {
-        return keyQueue.isEmpty() ? 0 : 1;
+        return (key == '\0') ? 0 : 1;
       }
       case 1 -> {
-        return keyQueue.isEmpty() ? 0 : keyQueue.poll();
+        byte prevKey = key;
+        key = '\0';
+        return prevKey;
       }
     }
 
