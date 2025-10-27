@@ -70,6 +70,8 @@ const char MAP[] =
 "#                            #"
 "##############################";
 
+const vid::coords START_POS = {1, 1};
+
 unsigned int num_pellets;
 bool pellets[MAP_SIZE * MAP_SIZE];
 
@@ -166,13 +168,18 @@ void fill_pellets() {
 			vid::vram[get_vram_idx(r, c)] = PELLET;
 		}
 	}
+	
+	// clear pellet player starts on 
+	bool& cur_pellet = pellets[get_map_idx(START_POS)];
+	if(cur_pellet) {
+		cur_pellet = false;
+		num_pellets--;
+	}
 }
 
 /*
  * Player.
  */
-const vid::coords START_POS = {1, 1};
-
 const vid::coords NORTH	= {0, -1};
 const vid::coords SOUTH	= {0,  1};
 const vid::coords WEST 	= {-1, 0};
@@ -198,13 +205,7 @@ vid::coords wrap(vid::coords coords) {
 	return coords;
 }
 
-void update_player() {
-	bool& cur_pellet = pellets[get_map_idx(player.pos)];
-	if(cur_pellet) {
-		cur_pellet = false;
-		num_pellets--;
-	}
-	
+void update_player() {	
 	char k = kyb::poll_char();
 	switch(k) {
 		case 'W': case 'w': wanted_dir = NORTH; break;
@@ -228,6 +229,12 @@ void update_player() {
 		vid::put_char(map_to_vram(player.pos), '\0');
 		player.pos = new_pos;
 		vid::put_char(map_to_vram(player.pos), SMILEY);
+	}
+
+	bool& cur_pellet = pellets[get_map_idx(player.pos)];
+	if(cur_pellet) {
+		cur_pellet = false;
+		num_pellets--;
 	}
 }
 
@@ -298,30 +305,35 @@ void draw_ui() {
 }
 
 void main() {
-
 	start:
 	vid::clear();
 	vid::set_cursor({-1, -1}); // hide cursor
 	
+	// init map
 	draw_map();
 	fill_pellets();
 
+	// init ghosts
+	ghost ghosts[] = {
+		{ GHOST0_POS, GHOST0_DIR },
+		{ GHOST1_POS, GHOST1_DIR },
+		{ GHOST2_POS, GHOST2_DIR }
+	};
+	int num_ghosts = 3;
+
+	// init player
 	player.pos = START_POS;
 	player.dir = EAST;
 
-	ghost ghost0 = { GHOST0_POS, GHOST0_DIR };
-	ghost ghost1 = { GHOST1_POS, GHOST1_DIR };
-	ghost ghost2 = { GHOST2_POS, GHOST2_DIR };
-
+	// game loop
 	while(true) {
-		draw_ui();
 		update_player();
 
 		bool gameover = false;
-		gameover |= update_ghost(ghost0);
-		gameover |= update_ghost(ghost1);
-		gameover |= update_ghost(ghost2);
-		
+		for(int i = 0; i < num_ghosts; i++) {
+			gameover |= update_ghost(ghosts[i]);
+		}
+
 		if(gameover) {
 			vid::put_str({1, 2}, "Game over!");
 			utl::wait();
@@ -333,6 +345,8 @@ void main() {
 			utl::wait();
 			goto start;
 		}	
+		
+		draw_ui();
 
 		tim::wait_ticks(250);
 	}
