@@ -9,12 +9,12 @@ namespace utl {
 	/*
 	 * Spins indefinitely.
 	 */
-	extern "C" void spin();
+	extern "C" [[noreturn]] void spin();
 
 	/*
 	 * Halts processor.
 	 */
-	extern "C" void halt();
+	extern "C" [[noreturn]] void halt();
 
 	/*
 	 * Signals to launch debug shell. 
@@ -29,7 +29,7 @@ namespace utl {
 	/*
 	 * Panics printing a message and quits.
 	 */
-	extern void panic(const char*);
+	[[noreturn]] extern void panic(const char*);
 } // utl::
 
 #endif

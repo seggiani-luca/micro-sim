@@ -1,5 +1,4 @@
 #include "lib/lib.h"
-#include "lib/video/video.h"
 
 /*
  * Characters.

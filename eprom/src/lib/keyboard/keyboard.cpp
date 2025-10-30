@@ -28,7 +28,7 @@ namespace kyb {
 			// if newline return
 			if(c == '\n') break;
 
-			// if not allowed continnue
+			// if not allowed continue
 			if(c < '0' || c > '9') continue;
 
 			// write decimal and step
