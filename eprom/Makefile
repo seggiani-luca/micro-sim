@@ -32,17 +32,17 @@ RISCV_RELF := readelf
 all: $(LIB_OUT_C) $(LIB_OUT_S) $(EPROM_ELF)
 
 $(EPROM_OUT)/%.elf: $(EPROM_SRC) $(LIB_OUT_C) $(LIB_OUT_S) | $(EPROM_OUT)
-	@echo "Compiling and linking EPROM source $@..."
+	@echo "Compiling and linking EPROM source $@"
 	@$(RISCV_C) -march=rv32i -mabi=ilp32 -O2 -ffreestanding -nostdlib -fno-exceptions -fno-rtti -c $< -o $(OUT)/$*.o
 	@$(RISCV_L) -T $(MEM_MAP) $(OUT)/$*.o $(LIB_OUT_C) $(LIB_OUT_S) -o $@
 
 $(LIB_OUT)/%.o: $(LIB_SRC)/%.cpp | $(LIB_OUT)
-	@echo "Compiling lib source $<..."
+	@echo "Compiling lib source $<"
 	@mkdir -p $(dir $@)
 	@$(RISCV_C) -march=rv32i -mabi=ilp32 -O2 -ffreestanding -nostdlib -fno-exceptions -fno-rtti -mno-small-data-limit=0 -c $< -o $@
 
 $(LIB_OUT)/%.o: $(LIB_SRC)/%.s | $(LIB_OUT)
-	@echo "Assembling lib source $<..."
+	@echo "Assembling lib source $<"
 	@mkdir -p $(dir $@)
 	@$(RISCV_S) -march=rv32i -mabi=ilp32 $< -o $@
 
@@ -50,7 +50,7 @@ $(LIB_OUT):
 	@mkdir -p $(LIB_OUT)
 
 clean:
-	@echo "Cleaning EPROM build files..."
-	@rm -rf $(LIB_OUT)
-	@echo "Cleaning $(EX_EPROM_NUM) EPROM(s) from data dir..."
+	@echo "Cleaning EPROM build files"
+	@rm -rf $(OUT)/* 
+	@echo "Cleaning $(EX_EPROM_NUM) EPROM(s) from data dir"
 	@rm -rf $(EX_EPROM_ELF)
