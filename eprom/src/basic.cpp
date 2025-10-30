@@ -1,5 +1,7 @@
 #include "lib/lib.h"
 
+#define VER "0.0"
+
 /*
  * Tokens.
  */
@@ -509,6 +511,11 @@ bool exec_print(token* toks) {
 	}
 
 	if(toks->type == T_STR) {
+		if(toks[1].type != T_MARK) {
+			vid::print_strln("Spazzatura dopo PRINT");
+			return false;
+		}
+
 		vid::print_strln(toks->payload.str);
 		return true;
 	}
@@ -575,8 +582,24 @@ bool exec_goto(token* toks, int* line) {
 	return true;
 }
 
-bool exec_input(token* toks) {
+bool exec_input(token* toks) {	
+	if(toks->type != T_VAR) {
+		vid::print_strln("Nessuna variabile dopo INPUT");
+		return false;
+	}
 	
+	if(toks[1].type != T_MARK) {
+		vid::print_strln("Spazzatura dopo INPUT");
+		return false;
+	}
+
+	char name = toks->payload.var;
+	
+	int val = kyb::read_int();
+
+	define_var(name);
+	var(name) = val;
+
 	return true;	
 }
 
@@ -681,7 +704,15 @@ bool exec_statement(token* toks, int* line) {
 	}
 }
 
+void greet() {
+	vid::print_str("micro-sim BASIC ");
+	vid::print_strln(VER);
+	vid::put_str({0, 60}, "2025 - Luca Seggiani");
+}
+
 void main() {
+	greet();
+
 	// init lines
 	for(int i = 0; i < max_lines; i++) {
 		lines[i][0].type = T_MARK;
