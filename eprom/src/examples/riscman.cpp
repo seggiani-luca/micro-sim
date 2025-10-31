@@ -291,44 +291,44 @@ bool update_ghost(ghost& gh) {
  * Ui.
  */
 void print_heading(vid::coords pos, vid::coords dir) {
-	if(dir == NORTH) vid::put_str(pos, "NORTH");
-	if(dir == SOUTH) vid::put_str(pos, "SOUTH");
-	if(dir == WEST) vid::put_str(pos, "WEST ");
-	if(dir == EAST) vid::put_str(pos, "EAST ");
+	if(dir == NORTH) vid::put_str(pos, "nord ");
+	if(dir == SOUTH) vid::put_str(pos, "sud  ");
+	if(dir == WEST) vid::put_str(pos, "ovest");
+	if(dir == EAST) vid::put_str(pos, "est  ");
 }
 
 void draw_ui(ghost* ghosts) {
 	vid::put_str({1, 1}, "Risc-man v0.0");
 	
-	vid::put_str({1, 56}, "Pellets: ");
+	vid::put_str({1, 56}, "Pellet: ");
 	vid::put_uint({1, 66}, num_pellets);
 	
-	vid::put_str({2, 1}, "Player X: ");
+	vid::put_str({2, 1}, "Giocatore X: ");
 	vid::put_int({2, 11}, player.pos.row);
-	vid::put_str({3, 1}, "Player Y: ");
+	vid::put_str({3, 1}, "Giocatore Y: ");
 	vid::put_int({3, 11}, player.pos.col);
-	vid::put_str({4, 1}, "Player heading: ");
+	vid::put_str({4, 1}, "Giocatore diretto: ");
 	print_heading({4, 17}, player.dir);
 	
-	vid::put_str({2, 56}, "Ghost 0 X: ");
+	vid::put_str({2, 56}, "Fantasma 0 X: ");
 	vid::put_int({2, 67}, ghosts[0].pos.row);
-	vid::put_str({3, 56}, "Ghost 0 Y: ");
+	vid::put_str({3, 56}, "Fantasma 0 Y: ");
 	vid::put_int({3, 67}, ghosts[0].pos.col);
-	vid::put_str({4, 56}, "Ghost 0 heading: ");
+	vid::put_str({4, 56}, "Fantasma 0 diretto: ");
 	print_heading({4, 73}, ghosts[0].dir);
 	
-	vid::put_str({26, 1}, "Ghost 1 X: ");
+	vid::put_str({26, 1}, "Fantasma 1 X: ");
 	vid::put_int({26, 12}, ghosts[1].pos.row);
-	vid::put_str({27, 1}, "Ghost 1 Y: ");
+	vid::put_str({27, 1}, "Fantasma 1 Y: ");
 	vid::put_int({27, 12}, ghosts[1].pos.col);
-	vid::put_str({28, 1}, "Ghost 1 heading: ");
+	vid::put_str({28, 1}, "Fantasma 1 diretto: ");
 	print_heading({28, 18}, ghosts[1].dir);
 	
-	vid::put_str({26, 56}, "Ghost 2 X: ");
+	vid::put_str({26, 56}, "Fantasma 2 X: ");
 	vid::put_int({26, 67}, ghosts[2].pos.row);
-	vid::put_str({27, 56}, "Ghost 2 Y: ");
+	vid::put_str({27, 56}, "Fantasma 2 Y: ");
 	vid::put_int({27, 67}, ghosts[2].pos.col);
-	vid::put_str({28, 56}, "Ghost 2 heading: ");
+	vid::put_str({28, 56}, "Fantasma 2 diretto: ");
 	print_heading({28, 73}, ghosts[2].dir);
 }
 
