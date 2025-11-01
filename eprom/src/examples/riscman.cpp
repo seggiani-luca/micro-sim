@@ -303,33 +303,33 @@ void draw_ui(ghost* ghosts) {
 	vid::put_str({1, 56}, "Pellet: ");
 	vid::put_uint({1, 66}, num_pellets);
 	
-	vid::put_str({2, 1}, "Giocatore X: ");
-	vid::put_int({2, 11}, player.pos.row);
-	vid::put_str({3, 1}, "Giocatore Y: ");
-	vid::put_int({3, 11}, player.pos.col);
-	vid::put_str({4, 1}, "Giocatore diretto: ");
-	print_heading({4, 17}, player.dir);
+	vid::put_str({2, 1}, "X giocatore: ");
+	vid::put_int({2, 14}, player.pos.row);
+	vid::put_str({3, 1}, "Y Giocatore: ");
+	vid::put_int({3, 14}, player.pos.col);
+	vid::put_str({4, 1}, "Riscman diretto a ");
+	print_heading({4, 19}, player.dir);
 	
-	vid::put_str({2, 56}, "Fantasma 0 X: ");
-	vid::put_int({2, 67}, ghosts[0].pos.row);
-	vid::put_str({3, 56}, "Fantasma 0 Y: ");
-	vid::put_int({3, 67}, ghosts[0].pos.col);
-	vid::put_str({4, 56}, "Fantasma 0 diretto: ");
-	print_heading({4, 73}, ghosts[0].dir);
+	vid::put_str({2, 56}, "X Fantasma 0: ");
+	vid::put_int({2, 70}, ghosts[0].pos.row);
+	vid::put_str({3, 56}, "Y Fantasma 0: ");
+	vid::put_int({3, 70}, ghosts[0].pos.col);
+	vid::put_str({4, 56}, "Fant. 0 diretto a ");
+	print_heading({4, 75}, ghosts[0].dir);
 	
-	vid::put_str({26, 1}, "Fantasma 1 X: ");
-	vid::put_int({26, 12}, ghosts[1].pos.row);
-	vid::put_str({27, 1}, "Fantasma 1 Y: ");
-	vid::put_int({27, 12}, ghosts[1].pos.col);
-	vid::put_str({28, 1}, "Fantasma 1 diretto: ");
-	print_heading({28, 18}, ghosts[1].dir);
+	vid::put_str({26, 1}, "X Fantasma 1: ");
+	vid::put_int({26, 14}, ghosts[1].pos.row);
+	vid::put_str({27, 1}, "Y Fantasma 1: ");
+	vid::put_int({27, 14}, ghosts[1].pos.col);
+	vid::put_str({28, 1}, "Fant. 1 diretto a ");
+	print_heading({28, 19}, ghosts[1].dir);
 	
-	vid::put_str({26, 56}, "Fantasma 2 X: ");
-	vid::put_int({26, 67}, ghosts[2].pos.row);
-	vid::put_str({27, 56}, "Fantasma 2 Y: ");
-	vid::put_int({27, 67}, ghosts[2].pos.col);
-	vid::put_str({28, 56}, "Fantasma 2 diretto: ");
-	print_heading({28, 73}, ghosts[2].dir);
+	vid::put_str({26, 56}, "X Fantasma 2: ");
+	vid::put_int({26, 70}, ghosts[2].pos.row);
+	vid::put_str({27, 56}, "Y Fantasma 2: ");
+	vid::put_int({27, 70}, ghosts[2].pos.col);
+	vid::put_str({28, 56}, "Fant. 2 diretto a ");
+	print_heading({28, 75}, ghosts[2].dir);
 }
 
 void main() {

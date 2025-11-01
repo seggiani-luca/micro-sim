@@ -531,6 +531,11 @@ bool apply_relop(int arg1, int arg2, op_type type) {
 }
 
 bool eval_expr(token*& toks, int& res, bool continues = true) {
+	if(!continues && toks->type == T_MARK) {
+		vid::print_strln("Espressione vuota");
+		return false;
+	}
+
 	// get first expression token
 	if(!get_tok_val(*toks, res)) return false;
 
@@ -574,11 +579,6 @@ bool eval_expr(token*& toks, int& res, bool continues = true) {
 }
 
 bool exec_print(token* toks) {
-	if(toks->type == T_MARK) {
-		vid::print_strln("Nulla da stampare");
-		return false;
-	}
-
 	// if string print it
 	if(toks->type == T_STR) {
 		if(toks[1].type != T_MARK) {
@@ -647,7 +647,7 @@ bool exec_if(token* toks, int* line) {
 bool exec_goto(token* toks, int* line) {
 	// expect expression and get line number
 	int res;
-	if(!get_tok_val(*toks, res)) {
+	if(!eval_expr(toks, res, false)) {
 		return false;
 	}
 
