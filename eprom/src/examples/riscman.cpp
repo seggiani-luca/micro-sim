@@ -315,7 +315,7 @@ void draw_ui(ghost* ghosts) {
 	vid::put_str({3, 56}, "Y Fantasma 0: ");
 	vid::put_int({3, 70}, ghosts[0].pos.col);
 	vid::put_str({4, 56}, "Fant. 0 diretto a ");
-	print_heading({4, 75}, ghosts[0].dir);
+	print_heading({4, 74}, ghosts[0].dir);
 	
 	vid::put_str({26, 1}, "X Fantasma 1: ");
 	vid::put_int({26, 14}, ghosts[1].pos.row);
@@ -329,7 +329,7 @@ void draw_ui(ghost* ghosts) {
 	vid::put_str({27, 56}, "Y Fantasma 2: ");
 	vid::put_int({27, 70}, ghosts[2].pos.col);
 	vid::put_str({28, 56}, "Fant. 2 diretto a ");
-	print_heading({28, 75}, ghosts[2].dir);
+	print_heading({28, 74}, ghosts[2].dir);
 }
 
 void main() {

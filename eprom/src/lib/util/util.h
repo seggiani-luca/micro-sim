@@ -29,7 +29,7 @@ namespace utl {
 	/*
 	 * Panics printing a message and quits.
 	 */
-	[[noreturn]] extern void panic(const char*);
+	[[noreturn]] extern void panic(const char* msg);
 } // utl::
 
 #endif

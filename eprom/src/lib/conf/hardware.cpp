@@ -26,5 +26,13 @@ namespace hwr {
 		timer_device timer = {
 			.sts_reg = (volatile uint32_t*) 0x00050000
 		};
+
+		network_device network = {
+			.tx_reg 		= (volatile uint32_t*) 0x00060000,
+			.tx_rdy_reg	= (volatile uint32_t*) 0x00060004,
+			.rx_reg 		= (volatile uint32_t*) 0x00060008,
+			.rx_rdy_reg	= (volatile uint32_t*) 0x0006000c,
+			.addr = *((volatile uint32_t*) 0x00060010)
+		};
 	} // dev::
 } // hwr::

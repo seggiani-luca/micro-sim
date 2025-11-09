@@ -44,7 +44,7 @@ public class Main {
   /**
    * Simulation instances.
    */
-  private static List<Simulation> simulationInstances = new ArrayList<>();
+  private static final List<Simulation> simulationInstances = new ArrayList<>();
 
   /**
    * Shows project name, version, year and authorship.

@@ -20,14 +20,14 @@ public abstract class SimulationComponent {
   public Simulation simulation;
 
   /**
-   * Array of event listeners.
-   */
-  private final List<SimulationListener> listeners = new ArrayList<>();
-
-  /**
    * Reference to the communication bus the component is mounted on.
    */
   public Bus bus;
+
+  /**
+   * Array of event listeners.
+   */
+  private final List<SimulationListener> listeners = new ArrayList<>();
 
   /**
    * Instantiates component, taking a reference to the bus it's mounted to.

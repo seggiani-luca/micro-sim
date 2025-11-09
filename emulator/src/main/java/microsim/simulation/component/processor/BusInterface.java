@@ -64,8 +64,7 @@ public class BusInterface {
    * @param data data to write
    * @param byteSelect format to write
    */
-  public static void doWriteRoutine(
-          Processor proc, int addr, int data, int byteSelect) {
+  public static void doWriteRoutine(Processor proc, int addr, int data, int byteSelect) {
     if (DebugShell.isDebuggingEnabled()) {
       proc.raiseEvent(new DebugEvent(proc, "Processor started write routine at address "
               + DebugShell.int32ToString(addr) + " of data " + DebugShell.int32ToString(data)));

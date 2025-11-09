@@ -1,7 +1,5 @@
 package microsim.simulation.component.device.keyboard;
 
-import java.util.LinkedList;
-import java.util.Queue;
 import microsim.simulation.Simulation;
 import microsim.simulation.component.bus.*;
 import microsim.simulation.component.device.IoDevice;

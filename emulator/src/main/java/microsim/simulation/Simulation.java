@@ -7,6 +7,7 @@ import microsim.simulation.component.memory.*;
 import microsim.simulation.component.device.video.*;
 import microsim.simulation.component.device.keyboard.*;
 import microsim.simulation.component.device.timer.*;
+import microsim.simulation.component.device.network.*;
 import microsim.simulation.event.*;
 import microsim.ui.DebugShell;
 
@@ -39,6 +40,11 @@ public class Simulation extends SimulationComponent implements SimulationListene
   public static final int TIMER_BASE = 0x00050000;
 
   /**
+   * Base address of network device.
+   */
+  public static final int NETWORK_BASE = 0x00060000;
+
+  /**
    * Simulated processor component.
    */
   public final Processor proc;
@@ -62,6 +68,11 @@ public class Simulation extends SimulationComponent implements SimulationListene
    * Simulated timer device component.
    */
   public final TimerDevice timer;
+
+  /**
+   * Simulated network device component
+   */
+  public final NetworkDevice network;
 
   /**
    * Is the simulation running?
@@ -101,6 +112,7 @@ public class Simulation extends SimulationComponent implements SimulationListene
     video = new VideoDevice(bus, VIDEO_BASE, this);
     keyboard = new KeyboardDevice(bus, KEYBOARD_BASE, this);
     timer = new TimerDevice(bus, TIMER_BASE, this);
+    network = new NetworkDevice(bus, NETWORK_BASE, this);
 
     // attach memory to video
     video.attachMemory(memory);
@@ -156,6 +168,7 @@ public class Simulation extends SimulationComponent implements SimulationListene
     video.step();
     keyboard.step();
     timer.step();
+    network.step();
   }
 
   /**

@@ -7,5 +7,6 @@
 #include "time/time.h"
 #include "util/util.h"
 #include "video/video.h"
+#include "network/network.h"
 
 #endif

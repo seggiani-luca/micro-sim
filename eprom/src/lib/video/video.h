@@ -1,5 +1,5 @@
-#ifndef LIB_VIDEO_H
-#define LIB_VIDEO_H
+#ifndef VIDEO_H
+#define VIDEO_H
 
 #include "../conf/hardware.h"
 
@@ -48,12 +48,12 @@ namespace vid {
 		/*
 		 * Constructs a coordinate pair from row and column indices.
 		 */
-		coords(int, int);
+		coords(int row, int col);
 
 		/*
 		 * Constructs a coordinate pair from a video array index.
 		 */
-		coords(int);
+		coords(int idx);
 
 	 /*
 	  * Get codepoint byte index in video array of coordinate pair.
@@ -84,7 +84,7 @@ namespace vid {
 	/*
 	 * Updates cursor, also writing position to cursor ports.
 	 */
-	void set_cursor(coords);
+	void set_cursor(coords new_coords);
 
 	/*
 	 * Clears video buffer.
@@ -118,54 +118,54 @@ namespace vid {
 	void backspace();
 
 	/*
-	 * Inserts enough space to reach the next TAB_SIZE column multiple.
+	 * Inserts enough characters to reach the next TAB_SIZE column multiple.
 	 */
-	void tabulate(char);
+	void tabulate(char c);
 
 	/*
 	 * Prints a character on the screen.
 	 */
-	void print_char(char);
+	void print_char(char c);
 
 	/*
 	 * Prints an unsigned integer on the screen.
 	 */
-	void print_uint(unsigned int);
+	void print_uint(unsigned int n);
 
 	/*
 	 * Prints an integer on the screen.
 	 */
-	void print_int(int);
+	void print_int(int n);
 
 	/*
 	 * Prints a string on the screen.
 	 */
-	void print_str(const char*);
+	void print_str(const char* s);
 
 	/*
 	 * Prints a string on the screen and jumps to new line.
 	 */
-	void print_strln(const char*);
+	void print_strln(const char* s);
 
 	/*
 	 * Puts a character on screen at the given coordinates.
 	 */
-	void put_char(coords, char);
+	void put_char(coords pos, char c);
 	
 	/*
 	 * Puts an unsigned integer on the screen at the given coordinates.
 	 */
-	void put_uint(coords, unsigned int);
+	void put_uint(coords pos, unsigned int n);
 
 	/*
 	 * Puts an integer on the screen at the given coordinates.
 	 */
-	void put_int(coords, int);
+	void put_int(coords pos, int n);
 
 	/*
 	 * Puts a string on screen at the given coordinates.
 	 */
-	void put_str(coords, const char*);
+	void put_str(coords pos , const char* s);
 } // vid::
 
 #endif

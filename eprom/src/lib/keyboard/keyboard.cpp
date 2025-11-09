@@ -12,8 +12,8 @@ namespace kyb {
 		return *keyboard.buf_reg;
 	}
 
-	unsigned get_uint(unsigned int base = 0) {
-		unsigned int res = base;
+	unsigned get_uint(unsigned int first) {
+		unsigned int res = first;
 
 		while(true) {
 			char c = get_char();
@@ -95,8 +95,8 @@ namespace kyb {
 		return c;
 	}
 	
-	unsigned read_uint(unsigned int base = 0) {
-		unsigned int res = base;
+	unsigned read_uint(unsigned int first) {
+		unsigned int res = first;
 
 		while(true) {
 			char c = read_char();

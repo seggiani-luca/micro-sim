@@ -121,6 +121,41 @@ namespace hwr {
 		 */
 		extern timer_device timer;
 
+		/*
+		 * Defines a network device.
+		 */
+		struct network_device {
+			/*
+			 * Transmit buffer.
+			 */
+			volatile uint32_t* tx_reg;
+			
+			/*
+			 * Transmit buffer ready (empty).
+			 */
+			volatile uint32_t* tx_rdy_reg;
+			
+			/*
+			 * Receive buffer.
+			 */
+			volatile uint32_t* rx_reg;
+			
+			/*
+			 * Receive buffer ready (full).
+			 */
+			volatile uint32_t* rx_rdy_reg;
+
+			/*
+			 * Address of this interface.
+			 */
+			uint32_t addr;
+		};
+
+		/*
+		 * Network device mounted on system.
+		 */
+		extern network_device network;
+
 	} // dev::
 } // hwr::
 

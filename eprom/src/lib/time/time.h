@@ -13,7 +13,7 @@ namespace tim {
 	/*
 	 * Waits for the given amount of timer ticks.
 	 */
-	void wait_ticks(int);
+	void wait_ticks(int ticks);
 }
 
 #endif

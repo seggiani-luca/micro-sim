@@ -15,8 +15,7 @@ LIB_OUT_C := $(subst $(LIB_SRC), $(LIB_OUT), $(LIB_SRC_C:.cpp=.o))
 LIB_OUT_S := $(subst $(LIB_SRC), $(LIB_OUT), $(LIB_SRC_S:.s=.o))
 
 EPROM_OUT := ../emulator/data/eprom
-EPROM_NAME := $(notdir $(EPROM_SRC:.cpp=.elf))
-EPROM_ELF := $(addprefix $(EPROM_OUT)/, $(EPROM_NAME))
+EPROM_ELF := $(patsubst $(SRC)/%.cpp,$(EPROM_OUT)/%.elf,$(EPROM_SRC))
 
 EX_EPROM_ELF := $(wildcard $(EPROM_OUT)/*.elf)
 EX_EPROM_NUM := $(words $(EX_EPROM_ELF))
@@ -31,7 +30,7 @@ RISCV_RELF := readelf
 # -- targets --
 all: $(LIB_OUT_C) $(LIB_OUT_S) $(EPROM_ELF)
 
-$(EPROM_OUT)/%.elf: $(EPROM_SRC) $(LIB_OUT_C) $(LIB_OUT_S) | $(EPROM_OUT)
+$(EPROM_OUT)/%.elf: $(SRC)/%.cpp $(LIB_OUT_C) $(LIB_OUT_S) | $(EPROM_OUT)
 	@echo "Compiling and linking EPROM source $@"
 	@$(RISCV_C) -march=rv32i -mabi=ilp32 -O2 -ffreestanding -nostdlib -fno-exceptions -fno-rtti -c $< -o $(OUT)/$*.o
 	@$(RISCV_L) -T $(MEM_MAP) $(OUT)/$*.o $(LIB_OUT_C) $(LIB_OUT_S) -o $@

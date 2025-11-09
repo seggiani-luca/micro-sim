@@ -834,8 +834,13 @@ void main() {
 			int line_idx = toks[0].payload.num;
 			insert_tokens(toks + 1, line_idx);
 		} else {
+			int prev_string = cur_string;
+
 			// repl, execute it now
 			exec_statement(toks);
+
+			// clean strings
+			cur_string = prev_string;
 		}
 
 	}
