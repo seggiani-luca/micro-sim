@@ -4,6 +4,7 @@ eprom/out/
 *.elf
 
 # allow docs
+!emulator/target/reports/
 !emulator/target/reports/apidocs/
 !emulator/target/reports/apidocs/**
 
