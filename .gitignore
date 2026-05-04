@@ -1,10 +1,7 @@
 #  objects
-emulator/target/*
+emulator/target/
 eprom/out/
 *.elf
-
-# allow docs
-!emulator/target/reports/
 
 # GIMP files (used for charset.bmp)
 *.xcf

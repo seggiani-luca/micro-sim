@@ -76,7 +76,7 @@ public class MainEnvironment {
   public List<SimulationInfo> simulationInfos = new ArrayList<>();
 
   /**
-   * Gets argument parameter following argument tag. With tag = "-t", from '-t "arg"' returns "arg".
+   * Gets argument parameter following argument tag. With tag = "-t", from "-t arg" returns "arg".
    * If no argument is found, returns null.
    *
    * @param args program's argument string Array
@@ -101,7 +101,7 @@ public class MainEnvironment {
   }
 
   /**
-   * Gets if argument tag is present (used for Boolean arguments). With tag = "-t", from '-t'
+   * Gets if argument tag is present (used for Boolean arguments). With tag = "-t", from "-t"
    * returns true. If no argument is found, returns false.
    *
    * @param args program's argument string Array
@@ -145,7 +145,7 @@ public class MainEnvironment {
     // load simulation EPROMs
     System.out.println(">> Loading simulation EPROM(s) from " + epromPath);
 
-    // get simulation configuration directory
+    // get EPROM data directory from path
     File epromDir = new File(epromPath);
     if (!epromDir.isDirectory()) {
       throw new IOException("Given simulation EPROM path is not a directory");

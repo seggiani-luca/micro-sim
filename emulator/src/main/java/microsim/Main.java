@@ -46,7 +46,7 @@ public class Main {
   private static DebugShell debugShell;
 
   /**
-   * Simulation instances.
+   * Global array of instantiated simulation instances.
    */
   private static final List<Simulation> simulationInstances = new ArrayList<>();
 

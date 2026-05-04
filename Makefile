@@ -14,7 +14,7 @@ debug:
 
 run: 
 	@echo ">> Running emulator..."
-	@cd $(EMULATOR) && java -jar $(EXECUTABLE) -s 1
+	@cd $(EMULATOR) && java -jar $(EXECUTABLE) -s 2
 
 emulator:
 	@echo ">> Building emulator..."
