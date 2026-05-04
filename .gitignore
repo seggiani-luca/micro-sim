@@ -3,6 +3,10 @@ emulator/target/
 eprom/out/
 *.elf
 
+# allow docs
+!emulator/target/apidocs/
+!emulator/target/apidocs/**
+
 # GIMP files (used for charset.bmp)
 *.xcf
 
