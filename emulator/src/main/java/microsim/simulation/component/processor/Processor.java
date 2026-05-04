@@ -9,11 +9,11 @@ import microsim.simulation.event.*;
 import microsim.ui.DebugShell;
 
 /**
- * A processor implementing the RISC-V rv32i ISA. This comprises basic memory movement, arithmetic
- * and logic operations (except MULs and DIvs), and basic branching and stack management. For more
- * info, see the {@link
- * <a href="www.cs.sfu.ca/~ashriram/Courses/CS295/assets/notebooks/RISCV/RISCV_CARD.pdf">green
- * card</a>}.
+ * A processor implementing the RISC-V RV32I ISA. This comprises basic memory movement, arithmetic
+ * and logic operations (except MULs and DIVs), and basic branching and stack management. For more
+ * info, see the
+ * <a href="https://www.cs.sfu.ca/~ashriram/Courses/CS295/assets/notebooks/RISCV/RISCV_CARD.pdf">
+ * green card</a>.
  */
 public class Processor extends SimulationComponent {
 
@@ -109,6 +109,7 @@ public class Processor extends SimulationComponent {
    * <td>t3-t6</td>
    * <td>Temporaries</td>
    * </tr>
+   * <caption>RV32I registers</caption>
    * </table>
    */
   int[] registers = new int[REGISTERS];
@@ -134,7 +135,7 @@ public class Processor extends SimulationComponent {
    * @param val value to set register to
    */
   void setRegister(int i, int val) {
-    registers[i] = val; // don't check, nobody uses it anyway
+    registers[i] = val; // don't check zero register, it isn't returned anyway
   }
 
   /**
@@ -157,11 +158,12 @@ public class Processor extends SimulationComponent {
   public Processor(Bus bus, Simulation simulation) {
     super(bus, simulation);
 
-    // processor  takes control of all lines but data and byteSelect
-    // leaks this in constructor but we don't expect TSLine objects to do anything with it
+    // processor  takes control of all lines but data
+    // leaks this in constructor but we don't expect TSLine objects to do anything with it just now
     bus.addressLine.drive(this, 0);
     bus.readEnable.drive(this, 0);
     bus.writeEnable.drive(this, 0);
+    bus.byteSelect.drive(this, 0);
 
     // reset instruction pointer
     pc = RESET_INSTRUCTION_ADDRESS;
@@ -208,20 +210,27 @@ public class Processor extends SimulationComponent {
    */
   @Override
   public final void step() {
+    // poll next microop
     MicroOp nextOp = opQueue.poll();
 
+    // fill the queue if empty, otherwise execute microop
     if (nextOp == null) {
+      // log fetch and decode cycle
       if (DebugShell.isDebuggingEnabled()) {
         raiseEvent(new DebugEvent(this,
                 "Processor found empty pipeline and started fetch-decode cycle"));
       }
+
+      // actually fetch and decode
       fetchDecode();
     } else {
+      // log microop
       if (DebugShell.isDebuggingEnabled()) {
         raiseEvent(new DebugEvent(this, "Processor found microop " + nextOp.toString()));
       }
+
+      // actually execute microop
       nextOp.execute(this);
     }
   }
-
 }

@@ -5,7 +5,9 @@ import microsim.simulation.component.SimulationComponent;
 
 /**
  * Models a 3-state logic line. Offers 2 main features: one driver/multiple readers functionality,
- * and step-synced buffering for received data.
+ * and step-synced buffering for received data. Only int lines are defined for performance reasons.
+ * Byte selection is done through an enum class. Booleans use the usual 0 = false, 1 = true
+ * convention.
  */
 public class TSLine extends SimulationComponent {
 
@@ -69,8 +71,8 @@ public class TSLine extends SimulationComponent {
 
   /**
    * Used by drivers to release line. Null drivers and drivers who don't own the line cannot release
-   * it. Releasing a line means setting {@link #bufferedData} to null. This means
-   * {@link #committedData} floats for one cycle: that is expected behavior.
+   * it. Releasing a line means doesn't clear it's {@link #bufferedData}. This means
+   * {@link #committedData} floats: that is expected behavior.
    *
    * @param driver driver requesting release
    */

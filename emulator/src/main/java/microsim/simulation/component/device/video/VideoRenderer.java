@@ -77,7 +77,7 @@ public final class VideoRenderer {
 
   /**
    * Reference to memory space. Used to directly access VRAM via the
-   * {@link simulation.component.memory.MemorySpace#getVRAM()} method.
+   * {@link microsim.simulation.component.memory.MemorySpace#getVRAM()} method.
    */
   private MemorySpace memory;
 
@@ -96,8 +96,10 @@ public final class VideoRenderer {
    */
   private final BufferedImage frame;
 
-  /*
+  /**
    * Gets the held frame buffer.
+   *
+   * @return frame buffer
    */
   public BufferedImage getFrame() {
     return frame;

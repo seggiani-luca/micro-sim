@@ -10,7 +10,7 @@ import microsim.simulation.event.*;
  * A component simulated within the {@link microsim.simulation.Simulation} class. Implements
  * functionality for stepping on simulation cycles, and for raising
  * {@link microsim.simulation.event.SimulationEvent} events. Components are expected to be mounted
- * on a bus and take a reference to it. They also keep the name of the simulation they belong to.
+ * on a bus and take a reference to it. They also keep a reference to the simulation they belong to.
  */
 public abstract class SimulationComponent {
 
@@ -30,7 +30,8 @@ public abstract class SimulationComponent {
   private final List<SimulationListener> listeners = new ArrayList<>();
 
   /**
-   * Instantiates component, taking a reference to the bus it's mounted to.
+   * Instantiates component, taking a reference to the bus it's mounted to and the simulation it
+   * belongs to.
    *
    * @param bus bus the component is mounted on
    * @param simulation simulation this component belongs to

@@ -13,6 +13,12 @@ import net.fornwall.jelf.*;
 public class ELF {
 
   /**
+   * Hide constructor.
+   */
+  private ELF() {
+  }
+
+  /**
    * Checks if the ELF header is valid, otherwise throws an exception.
    *
    * @param elf ELF header
@@ -43,7 +49,7 @@ public class ELF {
   /**
    * Checks if the rodata ELF segment is valid, otherwise throws an exception.
    *
-   * @param data rodata ELF segment
+   * @param rodata rodata ELF segment
    * @throws IOException if segment is invalid
    */
   private static void checkRodata(ElfSegment rodata) throws IOException {
@@ -98,6 +104,8 @@ public class ELF {
     // 3) bss (ignored)
     // 4) video (ignored)
     // 5) gnu stack (ignored)
+
+    // get needed program headers
     ElfSegment rodata = elf.getProgramHeader(1);
     ElfSegment data = elf.getProgramHeader(2);
 
@@ -113,8 +121,10 @@ public class ELF {
     int dataBeg = (int) data.p_offset;
     int dataSize = (int) data.p_filesz;
 
+    // initialize byte array
     byte[] eprom = new byte[rodataSize + dataSize];
-    // actually get segments
+
+    // actually read segments
     try (FileChannel channel = FileChannel.open(Paths.get(path), StandardOpenOption.READ)) {
       // read rodata segment
       channel.position(rodataBeg);

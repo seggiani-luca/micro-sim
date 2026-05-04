@@ -26,21 +26,34 @@ public class DebugShell implements SimulationListener {
   public static class DebugExceptionHandler implements Thread.UncaughtExceptionHandler {
 
     /**
-     * Gives thread information and dumps event info.
+     * Public empty constructor.
+     */
+    public DebugExceptionHandler() {
+    }
+
+    /**
+     * Gives exception information and dumps event queues.
      *
      * @param t thread that crashed
      * @param e exception that made it crash
      */
     @Override
     public void uncaughtException(Thread t, Throwable e) {
+      // show exception
       System.err.println("Thread " + t.getName() + " threw an exception: " + e.getMessage());
 
+      // get debug shell
       DebugShell main = DebugShell.getInstance();
 
+      // get all simulations
       for (int i = 0; i < main.simulationInstances.size(); i++) {
+        // get simulation
         Simulation instance = main.simulationInstances.get(i);
+
+        // get event queue
         Queue<SimulationEvent> eventQueue = main.eventQueues.get(i);
 
+        // dump event queue
         System.err.println("Event dump " + i + ", \"" + instance.name + "\":");
         while (!eventQueue.isEmpty()) {
           main.log(eventQueue.remove());
@@ -48,6 +61,7 @@ public class DebugShell implements SimulationListener {
         System.err.println();
       }
 
+      // exit on simulation error
       System.exit(2);
     }
   }
@@ -70,8 +84,10 @@ public class DebugShell implements SimulationListener {
     return singleton;
   }
 
+  /**
+   * Hide constructor.
+   */
   private DebugShell() {
-
   }
 
   /**
@@ -115,6 +131,9 @@ public class DebugShell implements SimulationListener {
    */
   private static volatile boolean isWorldStopped = false;
 
+  /**
+   * Stops the world.
+   */
   private static void stopTheWorld() {
     isWorldStopped = true;
 
@@ -126,6 +145,9 @@ public class DebugShell implements SimulationListener {
     }
   }
 
+  /**
+   * Starts the world.
+   */
   private static void startTheWorld() {
     isWorldStopped = false;
   }
@@ -163,6 +185,10 @@ public class DebugShell implements SimulationListener {
    */
   private final List<Simulation> simulationInstances = new ArrayList<>();
 
+  /**
+   * Event queues per simulation. Keep track of the events a simulation emitted: these will be
+   * displayed at the next cycle event of that simulation.
+   */
   private final List<Queue<SimulationEvent>> eventQueues = new ArrayList<>();
 
   /**
@@ -181,8 +207,8 @@ public class DebugShell implements SimulationListener {
 
   /**
    * Helper to convert an int to a hexadecimal string. Used by this class and as an utility to build
-   * {@link simulation.event.DebugEvent} messages. This method alone is fine for most messages as
-   * all rv32i registers are 32 bit.
+   * {@link microsim.simulation.event.DebugEvent} messages. This method alone is fine for most
+   * messages as all RV32I registers are 32 bit.
    *
    * @param val int to convert
    * @return hexadecimal hex string representing int
@@ -193,7 +219,7 @@ public class DebugShell implements SimulationListener {
 
   /**
    * Prints EPROM data array word by word. Used as an utility by whoever gets data from
-   * {@link file.ELF}.
+   * {@link microsim.file.ELF}.
    *
    * @param eprom EPROM data array
    */
@@ -319,7 +345,8 @@ public class DebugShell implements SimulationListener {
    * data and out of bound writes.
    *
    * @param idx index of simulation
-   * @param addr the address to read from
+   * @param addr the address to write at
+   * @param data data to write
    */
   private void writeMemoryAtAddress(int idx, String addr, String data) {
     MemorySpace memory = simulationInstances.get(idx).memory;
@@ -453,14 +480,28 @@ public class DebugShell implements SimulationListener {
    * Enum to index help pages.
    */
   private enum HelpPage {
+    /**
+     * General help page.
+     */
     GENERAL,
+    /**
+     * Processor command reference.
+     */
     PROC,
+    /**
+     * Memory command reference.
+     */
     MEM,
+    /**
+     * Thread command reference.
+     */
     THREAD
   }
 
   /**
-   * Shows help info.
+   * Shows an help page.
+   *
+   * @param page help page to show
    */
   private void help(HelpPage page) {
     switch (page) {

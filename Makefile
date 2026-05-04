@@ -1,9 +1,10 @@
-.PHONY: all run emulator eprom
+.PHONY: all run emulator eprom docs clean
 MAKEFLAGS += --no-print-directory
 
 EMULATOR := emulator
 EXECUTABLE := target/micro-sim-app.jar
 EPROM := eprom
+DOCS := docs
 
 all: emulator eprom 
 
@@ -13,7 +14,7 @@ debug:
 
 run: 
 	@echo ">> Running emulator..."
-	@cd $(EMULATOR) && java -jar $(EXECUTABLE) -s 2
+	@cd $(EMULATOR) && java -jar $(EXECUTABLE) -s 1
 
 emulator:
 	@echo ">> Building emulator..."
@@ -23,6 +24,11 @@ emulator:
 eprom:
 	@echo ">> Building EPROMs..."
 	@cd $(EPROM) && $(MAKE)
+	@echo
+
+docs:
+	@echo ">> Making documentation..."
+	@cd $(EMULATOR) && mvn javadoc:javadoc -Dshow=private
 	@echo
 
 clean:

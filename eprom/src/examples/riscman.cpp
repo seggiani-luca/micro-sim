@@ -3,33 +3,33 @@
 /*
  * Characters.
  */
-const char HORIZ      		= 0xc4;
-const char VERT       		= 0xb3;
-const char TOP_LEFT   		= 0xda;
-const char TOP_RIGHT  		= 0xbf;
-const char BOTTOM_LEFT		= 0xc0;
-const char BOTTOM_RIGHT		= 0xd9;
-const char T_LEFT     		= 0xb4;
-const char T_RIGHT    		= 0xc3;
-const char T_TOP      		= 0xc1;
-const char T_BOTTOM   		= 0xc2;
-const char CROSS      		= 0xc5;
+const char HORIZ          = 0xc4;
+const char VERT           = 0xb3;
+const char TOP_LEFT       = 0xda;
+const char TOP_RIGHT      = 0xbf;
+const char BOTTOM_LEFT    = 0xc0;
+const char BOTTOM_RIGHT   = 0xd9;
+const char T_LEFT         = 0xb4;
+const char T_RIGHT        = 0xc3;
+const char T_TOP          = 0xc1;
+const char T_BOTTOM       = 0xc2;
+const char CROSS          = 0xc5;
 
-const char HORIZ_D    		= 0xcd;
-const char VERT_D     		= 0xba;
-const char TOP_LEFT_D 		= 0xc9;
-const char TOP_RIGHT_D		= 0xbb;
-const char BOTTOM_LEFT_D	= 0xc8;
-const char BOTTOM_RIGHT_D	= 0xbc;
-const char T_LEFT_D   		= 0xb9;
-const char T_RIGHT_D  		= 0xcc;
-const char T_TOP_D    		= 0xca;
-const char T_BOTTOM_D 		= 0xcb;
-const char CROSS_D    		= 0xce;
+const char HORIZ_D        = 0xcd;
+const char VERT_D         = 0xba;
+const char TOP_LEFT_D     = 0xc9;
+const char TOP_RIGHT_D    = 0xbb;
+const char BOTTOM_LEFT_D  = 0xc8;
+const char BOTTOM_RIGHT_D = 0xbc;
+const char T_LEFT_D       = 0xb9;
+const char T_RIGHT_D      = 0xcc;
+const char T_TOP_D        = 0xca;
+const char T_BOTTOM_D     = 0xcb;
+const char CROSS_D        = 0xce;
 
-const char PELLET					= 0x07;
-const char SMILEY					= 0x02;
-const char BAD_SMILEY			= 0x01;
+const char PELLET         = 0x07;
+const char SMILEY         = 0x02;
+const char BAD_SMILEY     = 0x01;
 
 /*
  * Map.

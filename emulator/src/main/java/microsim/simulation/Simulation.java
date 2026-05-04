@@ -15,7 +15,7 @@ import microsim.ui.DebugShell;
  * Represents a simulation instance by keeping references to simulated components. Pipes
  * {@link microsim.simulation.event.FrameEvent} events from
  * {@link microsim.simulation.component.SimulationComponent} components to external
- * {@link microsim.simulation.event.SimulationListener} listeners (usually interfaces).
+ * {@link microsim.simulation.event.SimulationListener} listeners.
  */
 public class Simulation extends SimulationComponent implements SimulationListener {
 
@@ -89,16 +89,17 @@ public class Simulation extends SimulationComponent implements SimulationListene
   }
 
   /**
-   * Instantiates simulation, loading EPROM data in memory and configuring devices and components.
-   * Sets self as listener of the simulation components involved.
+   * Instantiates simulation configuring devices and components. Sets self as listener of the
+   * simulation components involved.
    *
    * @param name name of this simulation
    */
   @SuppressWarnings("LeakingThisInConstructor")
   public Simulation(String name) {
     // simulation instances don't attach to buses (they instead own one)
-    // they also don't have a reference to a simulation they belong to (they are one)
     super(null, null);
+
+    // they also don't have a reference to a simulation they belong to (they are one)
     simulation = this;
 
     this.name = name;
@@ -118,13 +119,14 @@ public class Simulation extends SimulationComponent implements SimulationListene
     video.attachMemory(memory);
 
     // set self as listener
-    // this leaks a this reference but we don't expect listeners to use it before event is raised
+    // this leaks a this reference but we don't expect listeners to use it just now
     bus.addListener(this);
     proc.addListener(this);
     memory.addListener(this);
     video.addListener(this);
     keyboard.addListener(this);
     timer.addListener(this);
+    network.addListener(this);
   }
 
   /**
@@ -192,11 +194,12 @@ public class Simulation extends SimulationComponent implements SimulationListene
       cycle++;
     }
 
+    // when this is reached, simulation is powering off
     System.out.println("\n>> Simulation: \"" + name + "\" powering off\n");
   }
 
   /**
-   * Executes simulation. All components on local bus update as fast as possible. Threaded devices
+   * Executes simulation. All components on local bus run as fast as possible. Threaded devices
    * (like video and timer) run on separate threads at fixed frequency.
    */
   public void begin() {
@@ -212,7 +215,7 @@ public class Simulation extends SimulationComponent implements SimulationListene
   }
 
   /**
-   * Stops execution of simulation. Threaded devices are stopped before the simulation.
+   * Stops execution of simulation. Threaded devices are stopped before the local bus.
    */
   public void poweroff() {
     // stop other threads

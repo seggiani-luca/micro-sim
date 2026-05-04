@@ -83,6 +83,12 @@ public abstract class IoDevice extends SimulationComponent {
    */
   @Override
   public final void step() {
+    // release if driving
+    if (driving) {
+      bus.dataLine.release(this);
+      driving = false;
+    }
+
     // read address lines to check if device was queried
     int addr = bus.addressLine.read();
     if (!inBounds(addr)) {
@@ -96,48 +102,47 @@ public abstract class IoDevice extends SimulationComponent {
     boolean readEnable = bus.readEnable.read() == 1;
     boolean writeEnable = bus.writeEnable.read() == 1;
 
+    // if someone is reading, offer data
     if (readEnable) {
+      // log that read operation was seen
       if (DebugShell.isDebuggingEnabled()) {
         raiseEvent(new DebugEvent(this, "Device " + getDeviceName() + " saw read operation at addr "
                 + DebugShell.int32ToString(addr)));
       }
 
-      // read port
+      // read at port
       int portValue = getPort(portIdx);
-      bus.dataLine.drive(this, portValue);
 
+      // log result of read operation
       if (DebugShell.isDebuggingEnabled()) {
         raiseEvent(new DebugEvent(this, "Device " + getDeviceName() + " read operation gave data "
                 + DebugShell.int32ToString(portValue)));
       }
 
+      // drive data line with word
+      bus.dataLine.drive(this, portValue);
       driving = true;
     }
 
+    // if someone is writing, execute write operation
     if (writeEnable) {
       // get data
       int data = bus.dataLine.read();
 
+      // log that write operation was seen
       if (DebugShell.isDebuggingEnabled()) {
         raiseEvent(new DebugEvent(this, "Device " + getDeviceName()
                 + " saw write operation at addr " + DebugShell.int32ToString(addr) + " of data "
                 + DebugShell.int32ToString(data)));
       }
 
-      // write port
+      // write at port
       setPort(portIdx, data);
 
+      // log result of write operation
       if (DebugShell.isDebuggingEnabled()) {
         raiseEvent(new DebugEvent(this, "Device " + getDeviceName() + " write operation finished"));
       }
-
-    }
-
-    // release if driving
-    if (driving) {
-      bus.dataLine.release(this);
-      driving = false;
     }
   }
-
 }

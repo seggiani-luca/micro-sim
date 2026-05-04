@@ -14,18 +14,22 @@ import microsim.MainEnvironment.SimulationInfo;
 public class Main {
 
   /**
+   * Hide constructor.
+   */
+  private Main() {
+  }
+
+  /**
    * Version of emulator.
    */
   public static final String VERSION;
 
-  /**
-   * Year. <!-- TODO --> For now manually set, might eventually want to read it from MANIFEST.
-   */
-  public static final String YEAR = "2025";
-
   // get version from MANIFEST, if present
   static {
+    // get package manifest
     Package pkg = Main.class.getPackage();
+
+    // get version
     VERSION = (pkg != null && pkg.getImplementationVersion() != null)
             ? pkg.getImplementationVersion()
             : "DEV_BUILD";
@@ -47,11 +51,10 @@ public class Main {
   private static final List<Simulation> simulationInstances = new ArrayList<>();
 
   /**
-   * Shows project name, version, year and authorship.
+   * Shows project name, version and authorship.
    */
   private static void greet() {
-    System.out.println("micro-sim emulator " + VERSION);
-    System.out.println(YEAR + " - Luca Seggiani\n");
+    System.out.println("micro-sim emulator " + VERSION + " - Luca Seggiani");
   }
 
   /**
@@ -98,23 +101,22 @@ public class Main {
    * <li>Instantiate a {@link microsim.simulation.Simulation} object with said configuration and
    * data.</li>
    * <li>Load EPROM data into simulation memory.</li>
-   * <li>Attach interfaces to simulation. These include {@link ui.VideoWindow},
-   * {@link ui.DebugShell}, and keyboard source for the keyboard device. Attachment is handled by
-   * the {@link #initInterfaces(microsim.simulation.Simulation)} method.</li>
+   * <li>Attach interfaces to simulation. These include {@link microsim.ui.VideoWindow},
+   * {@link microsim.ui.DebugShell}, and keyboard source for the keyboard device. Attachment is
+   * handled by the {@link #initInterfaces(microsim.simulation.Simulation)} method.</li>
    * </ol>
    *
-   * @param epromData EPROM data to load into memory
-   * @param simulationName name of simulated simulation
+   * @param info simulation info, with EPROM data to load into memory and name
    * @return simulation that was instantiated
    */
-  public static Simulation initSimulation(String simulationName, byte[] epromData) {
-    System.out.println(">> Initializing simulation: \"" + simulationName + "\"");
+  public static Simulation initSimulation(SimulationInfo info) {
+    System.out.println(">> Initializing simulation: \"" + info.simulationName + "\"");
 
     // 1. initialize simulation
-    Simulation simulation = new Simulation(simulationName);
+    Simulation simulation = new Simulation(info.simulationName);
 
     // 2. load EPROM
-    simulation.memory.loadEPROM(epromData);
+    simulation.memory.loadEPROM(info.epromData);
 
     // 3. initialize interfaces: video window, debug shell and keyboard
     try {
@@ -134,7 +136,7 @@ public class Main {
    * simulation info objects.</li>
    * <li>Instantiate these simulation info objects into actual simulations, attach interfaces to
    * them, and execute them. Instantiation is handled by
-   * {@link #initSimulation(java.lang.String, byte[])}.</li>
+   * {@link #initSimulation(microsim.MainEnvironment.SimulationInfo)}.</li>
    * <li>Begin simulations.</li>
    * </ol>
    * Any simulation instantiation failure aborts the entire program.
@@ -167,7 +169,7 @@ public class Main {
     // 2. instantiate simulations from simulation infos in main environment, and attach interfaces
     debugShell = DebugShell.getInstance(); // has to be unique
     for (SimulationInfo info : env.simulationInfos) {
-      Simulation simulation = initSimulation(info.simulationName, info.epromData);
+      Simulation simulation = initSimulation(info);
       simulationInstances.add(simulation);
     }
 

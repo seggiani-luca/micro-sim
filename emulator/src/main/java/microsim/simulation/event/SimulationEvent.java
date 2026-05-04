@@ -13,9 +13,9 @@ public abstract class SimulationEvent {
   public SimulationComponent owner;
 
   /**
-   * Instantiates SimulationEvent getting a reference to the SimulationComponent that raised it.
+   * Instantiates SimulationEvent getting a reference to the simulation component that raised it.
    *
-   * @param owner SimulationComponent that raised SimulationEvent
+   * @param owner simulation component that raised this event
    */
   public SimulationEvent(SimulationComponent owner) {
     this.owner = owner;

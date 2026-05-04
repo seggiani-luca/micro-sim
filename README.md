@@ -4,9 +4,7 @@ micro-sim è un emulatore scritto in Java per un sistema basato su [RISC-V](risc
 Le componenti simulate sono:
 - Processore che implementa l'ISA RV32I;
 - Spazio di memoria a 32 bit, composto da EPROM in sola lettura, RAM e VRAM;
-- Interfaccia video in modalità testo;
-- Interfaccia tastiera;
-- Interfaccia timer.
+- Supporto per interfacce simulate, e.g. video, tastiera, ecc... 
 
 Il firmware (caricato nelle EPROM simulate) dei sistemi emulati deve essere compilato o assemblato 
 per architettura RISC-V, ISA RV32I. Per compilare il proprio firmware viene resa disponibile una 
@@ -37,13 +35,16 @@ $ make eprom
 
 # pulisce le directory degli oggetti e il firmware compilato 
 $ make eprom
+
+# genera la documentazione
+make docs
 ```
 
 ## Compilare l'emulatore 
 La directory `emulator` contiene il sorgente dell'emulatore (`emulator/src`) e i dati relativi 
 all'EPROM e alla ROM caratteri del sistema (`emulator/data`).
 
-Il progetto viene gestito attraverso [Maven](https://maven.apache.org/).
+La compilazione del progetto viene gestito attraverso [Maven](https://maven.apache.org/).
 
 Dalla directory `emulator`, per compilare inserire:
 ```shell
@@ -56,6 +57,7 @@ Questo creerà due pacchetti `.jar` in `emulator/target`:
 -   `micro-sim-app.jar`, che contiene tutte le dipendenze, definisce un entry point, e può quindi 
     essere eseguito.
 
+A questo punto l'emulatore può essere eseguito dal pacchetto `micro-sim-app.jar`:
 ```shell
 # esegui il pacchetto dell'emulatore
 $ java -jar target/micro-sim-app.jar

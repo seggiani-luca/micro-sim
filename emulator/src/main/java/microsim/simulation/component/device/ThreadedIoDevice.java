@@ -19,6 +19,12 @@ public abstract class ThreadedIoDevice extends IoDevice {
   private class DeviceThread implements Runnable {
 
     /**
+     * Hide constructor.
+     */
+    private DeviceThread() {
+    }
+
+    /**
      * Run method should just hook into the subclass redefinition of {@link #deviceThread()}.
      */
     @Override

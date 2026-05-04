@@ -3,8 +3,6 @@
 
 #include "../conf/hardware.h"
 
-#define MAX_PAYLOAD_SIZE 50
-
 namespace net {
 	/*
 	 * Reference to network device.
@@ -31,11 +29,19 @@ namespace net {
 	 */
 	uint32_t recv_word();
 
+	/*
+	 * Max size (in bytes) of a packet payload.
+	 */
+	const int max_payload_size = 50;
+
+	/*
+	 * Structure of a network packet sent on the network.
+	 */
 	struct packet {
 		uint32_t src_addr;
 		uint32_t dest_addr;
 		uint32_t len;
-		char payload[MAX_PAYLOAD_SIZE];
+		char payload[max_payload_size];
 	};
 
 	/*
@@ -49,15 +55,14 @@ namespace net {
 	packet recv_pckt();
 
 	/*
-	 * Sends a payload of given size to a given address.
+	 * Makes a packet from a payload of given size and sends that packet to a given address.
 	 */
-	void send(void* payload, int payload_size, uint32_t to);
+	void sendto(void* payload, int payload_size, uint32_t to);
 
 	/*
-	 * Receives a payload destined to this host. The fill flag signals if the function should wait 
-	 * for the buffer to be completely filled. Otherwise reads number of read bytes.
+	 * Receives a packet destined to this host, and returns its payload the address it comes from. 
 	 */
-	int recv(void* buf, int buf_size, bool fill = false);
+	int recvfrom(void* buf, int buf_size, int& from);
 } // net::
 
 #endif

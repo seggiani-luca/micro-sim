@@ -1,56 +1,59 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" 
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  
-  <modelVersion>4.0.0</modelVersion>
-  <groupId>luca</groupId>
-  <artifactId>micro-sim</artifactId>
-  <version>0.0</version>
+				 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+				 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
+	<!-- Project information -->
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>luca</groupId>
+	<artifactId>micro-sim</artifactId>
+	<version>0.0</version>
+
+	<!-- Dependencies -->
 	<dependencies>
-    <dependency>
-      <!-- for elf parsing -->
-      <groupId>net.fornwall</groupId>
-      <artifactId>jelf</artifactId>
-      <version>0.10.0</version>
+		<dependency>
+			<!-- jel - ELF parsing -->
+			<groupId>net.fornwall</groupId>
+			<artifactId>jelf</artifactId>
+			<version>0.10.0</version>
 		</dependency>
-  </dependencies>
+	</dependencies>
 
+	<!-- Build system -->
 	<build>
-    <finalName>micro-sim</finalName>
+		<finalName>micro-sim</finalName>
 		<plugins> 
-      <plugin>
-        <!-- builds jar archive -->
-        <artifactId>maven-assembly-plugin</artifactId>
-        <executions>
-          <execution>
-            <phase>package</phase>
-            <goals>
-              <goal>single</goal>
-            </goals>
-          </execution>
-        </executions>
-        <configuration>
-          <archive>
-            <manifest>
-              <mainClass>microsim.Main</mainClass>
-              <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
-            </manifest>
-          </archive>
-          <descriptorRefs>
-            <descriptorRef>jar-with-dependencies</descriptorRef>
+			<plugin>
+				<!-- maven-assembly-plugin - builds JAR archive -->
+				<artifactId>maven-assembly-plugin</artifactId>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<archive>
+						<manifest>
+							<mainClass>microsim.Main</mainClass>
+							<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+						</manifest>
+					</archive>
+					<descriptorRefs>
+						<descriptorRef>jar-with-dependencies</descriptorRef>
 					</descriptorRefs>
 					<appendAssemblyId>false</appendAssemblyId>
 					<finalName>micro-sim-app</finalName>
-        </configuration>
-      </plugin>
+				</configuration>
+			</plugin>
 		</plugins>
 	</build>
 
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <maven.compiler.release>21</maven.compiler.release>
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<maven.compiler.release>21</maven.compiler.release>
 	</properties>
-  
+	
 </project>

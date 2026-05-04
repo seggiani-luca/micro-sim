@@ -31,8 +31,8 @@ public class MainEnvironment {
     /**
      * Constructs simulation info from EPROM data and name.
      *
-     * @param epromData
-     * @param simulationName
+     * @param epromData EPROM data of simulation
+     * @param simulationName simulation name
      */
     public SimulationInfo(byte[] epromData, String simulationName) {
       this.epromData = epromData;
@@ -126,9 +126,10 @@ public class MainEnvironment {
    * @throws java.io.IOException if reading or parsing fails
    */
   public MainEnvironment(String[] args) throws IOException {
-    // get arguments
+    // get debug argument
     debugMode = hasArgument(args, DEBUG_TAG);
 
+    // get window scale argument
     String windowScaleArg = getArgument(args, SCALE_TAG);
     if (windowScaleArg != null) {
       try {
@@ -138,6 +139,7 @@ public class MainEnvironment {
       }
     }
 
+    // get EPROM data path argument
     epromPath = Objects.requireNonNullElse(getArgument(args, EPROM_TAG), epromPath);
 
     // load simulation EPROMs

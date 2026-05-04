@@ -10,7 +10,7 @@ import microsim.simulation.component.device.IoDevice;
 
 /**
  * Implements a network device that offers communication, through a hub, of words (32 bit) to all
- * other devices. Ports are same as an UART serial device:
+ * other devices. Ports are same as an UART serial device (except ADDR):
  * <ol>
  * <li>TX (transmit buffer)</li>
  * <li>TXRDY (transmit buffer ready, that is empty)</li>
@@ -22,7 +22,14 @@ import microsim.simulation.component.device.IoDevice;
  */
 public class NetworkDevice extends IoDevice {
 
+  /**
+   * Capacity of receive buffer.
+   */
   public static final int BUF_CAPACITY = 4096;
+
+  /**
+   * Size of assigned address pool.
+   */
   public static final int ADDR_POOL_SIZE = 100;
 
   /**

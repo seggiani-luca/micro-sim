@@ -56,7 +56,7 @@ namespace net {
 
 	// helper to construct an outbound packet 
 	packet pack(void* payload, int payload_size, uint32_t to) {
-		if(payload_size > MAX_PAYLOAD_SIZE) {
+		if(payload_size > max_payload_size) {
 			utl::panic("Dimensione pacchetto troppo grande");
 		}
 
@@ -70,45 +70,20 @@ namespace net {
 		return pckt;
 	}
 		
-	void send(void* payload, int payload_size, uint32_t to) {
-		while(true) {
-			if(payload_size > MAX_PAYLOAD_SIZE) {
-				// split
-				packet pckt = pack(payload, MAX_PAYLOAD_SIZE, to);
-				send_pckt(pckt);
-				payload = ((char*) payload) + MAX_PAYLOAD_SIZE;
-				payload_size -= MAX_PAYLOAD_SIZE;
-			} else {
-				// last packet, put everything
-				packet pckt = pack(payload, payload_size, to);
-				send_pckt(pckt);
-				break; // payload_size = 0
-			}
-		}
+	void sendto(void* payload, int payload_size, uint32_t to) {
+		packet pckt = pack(payload, payload_size, to);
+		send_pckt(pckt);
 	}
 
-	int recv(void* buf, int buf_size, bool fill) {
-		int size = 0;
+	int recvfrom(void* buf, int buf_size, int& from) {	
+		packet pckt;
+		do {
+			pckt = recv_pckt(); 
+		} while(pckt.dest_addr != network.addr);
 
-		while(size < buf_size) {
-			packet pckt = recv_pckt();
-			if(pckt.dest_addr != network.addr) continue;
-
-			if(size + pckt.len > buf_size) {
-				// read what you can and return it
-				int to_copy = buf_size - size;
-				str::mcpy(buf, pckt.payload, to_copy);
-				break;
-			}
-
-			// append this packet
-			str::mcpy(buf, pckt.payload, pckt.len);
-			buf = ((char*) buf) + pckt.len;
-			size += pckt.len;
-
-			if(!fill) break; // quit on first packet if non filling
-		}
-
+		from = pckt.src_addr;		
+		int size = buf_size < pckt.len ? buf_size : pckt.len;
+		str::mcpy(buf, pckt.payload, size);
 		return size;
 	}
 	

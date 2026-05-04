@@ -3,7 +3,7 @@ package microsim.simulation.event;
 import microsim.simulation.component.processor.Processor;
 
 /**
- * SimulationEvent that signals simulation {@link ui.DebugShell} instance to activate.
+ * SimulationEvent that signals simulation {@link microsim.ui.DebugShell} instance to activate.
  */
 public class BreakEvent extends SimulationEvent {
 

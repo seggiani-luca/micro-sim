@@ -8,7 +8,7 @@ import microsim.simulation.event.*;
 
 /**
  * Extends JPanel to display frame buffers rendered by
- * {@link simulation.component.device.video.VideoDevice} components.
+ * {@link microsim.simulation.component.device.video.VideoDevice} components.
  */
 class VideoPanel extends JPanel {
 
@@ -26,7 +26,7 @@ class VideoPanel extends JPanel {
 
   /**
    * Instantiates panel, setting preferred size to scaled frame buffer size. Frame buffer size is
-   * obtained from a {@link simulation.component.device.video.VideoDevice} instance.
+   * obtained from a {@link microsim.simulation.component.device.video.VideoDevice} instance.
    *
    * @param video video device to get frame buffer size from
    * @param scale scale factor of the frame buffer
@@ -59,8 +59,8 @@ class VideoPanel extends JPanel {
 
   /**
    * Updates the frame buffer. Gets called on FrameEvents raised by the
-   * {@link simulation.component.device.video.VideoDevice} component attached to the main video
-   * window (which should be the same that the panel was initialized on).
+   * {@link microsim.simulation.component.device.video.VideoDevice} component attached to the main
+   * video window (which should be the same that the panel was initialized on).
    *
    * @param frame the new frame buffer
    */

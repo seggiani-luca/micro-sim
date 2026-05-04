@@ -13,9 +13,23 @@ import microsim.ui.DebugShell;
 class Trie {
 
   /**
+   * Creates a blank trie.
+   */
+  public Trie() {
+    // initialize root
+    root = new TrieNode();
+  }
+
+  /**
    * Trie node. Holds a hash map to children and a (possibly null) data field.
    */
-  class TrieNode {
+  private class TrieNode {
+
+    /**
+     * Hide constructor.
+     */
+    private TrieNode() {
+    }
 
     /**
      * Map of children trie nodes.
@@ -32,7 +46,7 @@ class Trie {
   /**
    * Root of trie.
    */
-  private final TrieNode root = new TrieNode();
+  private final TrieNode root;
 
   /**
    * Put an item in the trie at the given key. Fields of interest used as keys are given as lists
@@ -56,7 +70,7 @@ class Trie {
 
   /**
    * Get an item from the trie at the given key. Fields of interest are converted from the keys
-   * argument (opcode, funct3 and funct7), which is expected to be a valid rv32i opcode. This is
+   * argument (opcode, funct3 and funct7), which is expected to be a valid RV32I opcode. This is
    * mainly done for performance (extracting from an int should be faster than constructing and
    * passing an int). Returns null if no such item is found. Shorcircuits at the first valid data
    * node.
@@ -94,11 +108,17 @@ class Trie {
 }
 
 /**
- * Decodes rv32i instructions into microop sequences through a static
+ * Decodes RV32I instructions into microop sequences through a static
  * {@link #decode(simulation.component.processor.Processor, int)} method, using the
  * {@link microsim.simulation.component.processor.Trie} class to index.
  */
 public class Decoder {
+
+  /**
+   * Hide constructor.
+   */
+  private Decoder() {
+  }
 
   /**
    * Sign extends to 32 bits an integer smaller than 32 bits.
@@ -113,7 +133,7 @@ public class Decoder {
   }
 
   /**
-   * Extracts opcode from an rv32i instruction.
+   * Extracts opcode from an RV32I instruction.
    *
    * @param inst instruction
    * @return opcode field
@@ -123,7 +143,7 @@ public class Decoder {
   }
 
   /**
-   * Extracts funct3 from an rv32i instruction.
+   * Extracts funct3 from an RV32I instruction.
    *
    * @param inst instruction
    * @return funct3 field
@@ -133,7 +153,7 @@ public class Decoder {
   }
 
   /**
-   * Extracts funct7 from an rv32i instruction.
+   * Extracts funct7 from an RV32I instruction.
    *
    * @param inst instruction
    * @return funct7 field
@@ -143,7 +163,7 @@ public class Decoder {
   }
 
   /**
-   * Extracts first source register index from an rv32i instruction.
+   * Extracts first source register index from an RV32I instruction.
    *
    * @param inst instruction
    * @return rs1 field
@@ -153,7 +173,7 @@ public class Decoder {
   }
 
   /**
-   * Extracts second source register from an rv32i instruction.
+   * Extracts second source register from an RV32I instruction.
    *
    * @param inst instruction
    * @return rs2 field
@@ -163,7 +183,7 @@ public class Decoder {
   }
 
   /**
-   * Extracts target register from an rv32i instruction.
+   * Extracts target register from an RV32I instruction.
    *
    * @param inst instruction
    * @return rd field
@@ -173,7 +193,7 @@ public class Decoder {
   }
 
   /**
-   * Extracts I format immediate from an rv32i instruction.
+   * Extracts I format immediate from an RV32I instruction.
    *
    * @param inst instruction
    * @return immediate field
@@ -184,7 +204,7 @@ public class Decoder {
   }
 
   /**
-   * Extracts S format immediate from an rv32i instruction.
+   * Extracts S format immediate from an RV32I instruction.
    *
    * @param inst instruction
    * @return immediate field
@@ -198,7 +218,7 @@ public class Decoder {
   }
 
   /**
-   * Extracts B format immediate from an rv32i instruction.
+   * Extracts B format immediate from an RV32I instruction.
    *
    * @param inst instruction
    * @return immediate field
@@ -214,7 +234,7 @@ public class Decoder {
   }
 
   /**
-   * Extracts U format immediate from an rv32i instruction.
+   * Extracts U format immediate from an RV32I instruction.
    *
    * @param inst instruction
    * @return immediate field
@@ -225,7 +245,7 @@ public class Decoder {
   }
 
   /**
-   * Extracts J format immediate from an rv32i instruction.
+   * Extracts J format immediate from an RV32I instruction.
    *
    * @param inst instruction
    * @return immediate field

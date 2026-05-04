@@ -8,6 +8,9 @@ import microsim.simulation.component.SimulationComponent;
  */
 public class DebugEvent extends SimulationEvent {
 
+  /**
+   * Debug message associated to this event.
+   */
   private final String message;
 
   /**

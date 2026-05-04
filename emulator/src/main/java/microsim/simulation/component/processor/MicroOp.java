@@ -17,60 +17,178 @@ public class MicroOp {
    * Enum of microop types. These are a superset of the implemented ISA.
    */
   public static enum OpType {
+    /**
+     * Decodes a microop, parses the instruction in temp and appends it to the pipeline.
+     */
     DECODE,
-    // R format
+    /**
+     * Integer arithmetic addition.
+     */
     ADD,
+    /**
+     * Integer arithmetic subtraction.
+     */
     SUB,
+    /**
+     * Boolean arithmetic XOR.
+     */
     XOR,
+    /**
+     * Boolean arithmetic OR.
+     */
     OR,
+    /**
+     * Boolean arithmetic AND.
+     */
     AND,
+    /**
+     * Boolean arithmetic logical shift left.
+     */
     SLL,
+    /**
+     * Boolean arithmetic logical shift right.
+     */
     SRL,
+    /**
+     * Boolean arithmetic arithmetic shift right.
+     */
     SRA,
+    /**
+     * Set if less.
+     */
     SLT,
+    /**
+     * Set if less unsigned.
+     */
     SLTU,
-    // I format (immediate)
+    /**
+     * Integer arithmetic immediate addition.
+     */
     ADD_I,
+    /**
+     * Boolean arithmetic immediate XOR.
+     */
     XOR_I,
+    /**
+     * Boolean arithmetic immediate OR.
+     */
     OR_I,
+    /**
+     * Boolean arithmetic immediate AND.
+     */
     AND_I,
+    /**
+     * Boolean arithmetic immediate logical shift left.
+     */
     SLL_I,
+    /**
+     * Boolean arithmetic immediate logical shift right.
+     */
     SRL_I,
+    /**
+     * Boolean arithmetic immediate arithmetic shift left.
+     */
     SRA_I,
+    /**
+     * Set if less than immediate.
+     */
     SLT_I,
+    /**
+     * Set if less than immediate unsigned.
+     */
     SLTU_I,
-    // I format (load)
+    /**
+     * Loads a byte into temp.
+     */
     LOAD_BYTE,
+    /**
+     * Loads an half into temp.
+     */
     LOAD_HALF,
+    /**
+     * Loads a word into temp.
+     */
     LOAD_WORD,
+    /**
+     * Loads data from temp to target register.
+     */
     LOAD_POST,
+    /**
+     * Loads unsigned data from temp to target register.
+     */
     LOAD_POST_U,
-    // S format
+    /**
+     * Stores a byte to memory.
+     */
     STORE_BYTE,
+    /**
+     * Stores an half to memory.
+     */
     STORE_HALF,
+    /**
+     * Stores a word to memory.
+     */
     STORE_WORD,
-    // B format
+    /**
+     * Branch on equal.
+     */
     BRANCH_EQ,
+    /**
+     * Branch on not equal.
+     */
     BRANCH_NE,
+    /**
+     * Branch on less than.
+     */
     BRANCH_LT,
+    /**
+     * Branch on greater or equal.
+     */
     BRANCH_GE,
+    /**
+     * Branch on less than unsigned.
+     */
     BRANCH_LTU,
+    /**
+     * Branch on greater or equal unsigned.
+     */
     BRANCH_GEU,
-    // I format (jump)
+    /**
+     * Jump and link.
+     */
     JAL,
+    /**
+     * Jump and link with register.
+     */
     JAL_REG,
-    // U format
+    /**
+     * Load upper immediate.
+     */
     LUI,
+    /**
+     * Add upper immediate to program counter.
+     */
     AUIPC,
-    // I format (environment)
+    /**
+     * Environment call (call or break).
+     */
     ENV,
-    // post execution
+    /**
+     * Steps execution (increases program counter).
+     */
     EXEC_POST,
-    // memory read routine
-    MEM_READ0,
+    /**
+     * Step 1 of read routine
+     */
     MEM_READ1,
-    // memory write routine
-    MEM_WRITE0,
+    /**
+     * Step 2 of read routine
+     */
+    MEM_READ2,
+    /**
+     * Step 1 of write routine
+     */
+    MEM_WRITE1,
   }
 
   /**
@@ -388,24 +506,31 @@ public class MicroOp {
         proc.pc += 4;
       }
 
-      // memory read routine
-      case MEM_READ0 -> {
+      // memory read routine (step 0 is done by bus interface)
+      case MEM_READ1 -> {
+        // lower control line
         proc.bus.readEnable.drive(proc, 0);
       }
-      case MEM_READ1 -> {
+      case MEM_READ2 -> {
+        // read data from bus
         proc.temp = proc.bus.dataLine.read();
 
+        // log read data
         if (DebugShell.isDebuggingEnabled()) {
           proc.raiseEvent(new DebugEvent(proc, "Processor read routine finished and got value "
                   + DebugShell.int32ToString(proc.temp)));
         }
       }
 
-      // memory write routine
-      case MEM_WRITE0 -> {
+      // memory write routine (step 0 is done by bus interface)
+      case MEM_WRITE1 -> {
+        // lower control line
         proc.bus.writeEnable.drive(proc, 0);
+
+        // release data line
         proc.bus.dataLine.release(proc);
 
+        // log data routine finished
         if (DebugShell.isDebuggingEnabled()) {
           proc.raiseEvent(new DebugEvent(proc, "Processor write routine finished"));
         }

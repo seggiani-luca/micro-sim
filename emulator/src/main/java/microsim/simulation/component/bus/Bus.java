@@ -11,8 +11,8 @@ import microsim.simulation.component.SimulationComponent;
  * <li>
  * Control lines (active high):
  * <ul>
- * <li>Read enable line.</li>
- * <li>Write enable line.</li>
+ * <li>Read Enable line.</li>
+ * <li>Write Enable line.</li>
  * <li>A byte select line with states:
  * <ol>
  * <li>Byte.</li>
@@ -24,25 +24,42 @@ import microsim.simulation.component.SimulationComponent;
  * </li>
  * </ul>
  * Lines are implemented by {@link microsim.simulation.component.bus.TSLine} objects, modeling
- * 3-state logic. Only int lines are defined for performance reasons, byte selection is done through
- * an enum class, while booleans use the usual 0 = false, 1 = true convention.
+ * 3-state logic.
  */
 public class Bus extends SimulationComponent {
 
   /**
    * Byte select modes.
    */
-  public static class ByteSelect {
+  public class ByteSelect {
 
-    public static final int BYTE = 0; // 8 bits
-    public static final int HALF = 1; // 16 bits
-    public static final int WORD = 2; // 32 bits
+    /**
+     * Hide constructor.
+     */
+    private ByteSelect() {
+    }
+
+    /**
+     * Selects the first 8 bits of the data line.
+     */
+    public final static int BYTE = 0;
+
+    /**
+     * Selects the first 16 bits of the data line.
+     */
+    public final static int HALF = 1;
+
+    /**
+     * Selects the first 32 bits of the data line.
+     */
+    public final static int WORD = 2;
   }
 
   /**
    * 32 bit address line.
    */
   public TSLine addressLine;
+
   /**
    * 32 bit data line.
    */
@@ -59,7 +76,8 @@ public class Bus extends SimulationComponent {
   public TSLine writeEnable;
 
   /**
-   * Byte select mode control line (thorugh {@link simulation.component.bus.Bus.ByteSelect} enum).
+   * Byte select mode control line (thorugh {@link microsim.simulation.component.bus.Bus.ByteSelect}
+   * enum).
    */
   public TSLine byteSelect;
 
@@ -72,6 +90,7 @@ public class Bus extends SimulationComponent {
     // buses aren't mounted to buses
     super(null, simulation);
 
+    // init lines
     addressLine = new TSLine(this, simulation);
     dataLine = new TSLine(this, simulation);
     readEnable = new TSLine(this, simulation);
@@ -106,23 +125,25 @@ public class Bus extends SimulationComponent {
    */
   @Override
   public final void step() {
+    // step each line
     addressLine.step();
     dataLine.step();
     readEnable.step();
     writeEnable.step();
     byteSelect.step();
 
-    // perform checks
+    // get current address and byte select
     int addr = addressLine.read();
     int byteSel = byteSelect.read();
 
+    // check address alignment
     if (!checkAlignment(addr, byteSel)) {
       throw new RuntimeException("Unaligned memory access");
     }
 
+    // check read/write enable conflict
     boolean readEnb = readEnable.read() == 1;
     boolean writeEnb = writeEnable.read() == 1;
-
     if (readEnb && writeEnb) {
       throw new RuntimeException("Read Enable and Write Enable simultaneously high");
     }
