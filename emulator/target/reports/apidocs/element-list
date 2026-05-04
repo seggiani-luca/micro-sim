@@ -1,0 +1,14 @@
+microsim
+microsim.file
+microsim.simulation
+microsim.simulation.component
+microsim.simulation.component.bus
+microsim.simulation.component.device
+microsim.simulation.component.device.keyboard
+microsim.simulation.component.device.network
+microsim.simulation.component.device.timer
+microsim.simulation.component.device.video
+microsim.simulation.component.memory
+microsim.simulation.component.processor
+microsim.simulation.event
+microsim.ui
