@@ -4,13 +4,13 @@
 
 namespace net {
 	void send_byte(char byte) {
-		while(*network.tx_rdy_reg != 1); // busy wait
-		*network.tx_reg = byte;	
+		while(*network.txr_prt != 1); // busy wait
+		*network.txb_prt = byte;	
 	}
 
 	char recv_byte() {
-		while(*network.rx_rdy_reg != 1); // busy wait
-		return *network.rx_reg;
+		while(*network.rxr_prt != 1); // busy wait
+		return *network.rxb_prt;
 	}
 
 	void send_word(uint32_t word) {
@@ -54,7 +54,13 @@ namespace net {
 		return pckt;
 	}
 
-	// helper to construct an outbound packet 
+	/**
+	 * Helper that constructs a packet from given data.
+	 *
+	 * @param payload pointer to payload of packet
+	 * @param payload_size size of payload
+	 * @param to destination address
+	 */
 	packet pack(void* payload, int payload_size, uint32_t to) {
 		if(payload_size > max_payload_size) {
 			utl::panic("Dimensione pacchetto troppo grande");
@@ -85,6 +91,5 @@ namespace net {
 		int size = buf_size < pckt.len ? buf_size : pckt.len;
 		str::mcpy(buf, pckt.payload, size);
 		return size;
-	}
-	
+	}	
 } // net::

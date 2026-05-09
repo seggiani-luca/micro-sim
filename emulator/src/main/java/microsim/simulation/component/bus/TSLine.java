@@ -1,20 +1,20 @@
 package microsim.simulation.component.bus;
 
 import microsim.simulation.Simulation;
-import microsim.simulation.component.SimulationComponent;
+import microsim.simulation.component.BusComponent;
 
 /**
  * Models a 3-state logic line. Offers 2 main features: one driver/multiple readers functionality,
  * and step-synced buffering for received data. Only int lines are defined for performance reasons.
  * Byte selection is done through an enum class. Booleans use the usual 0 = false, 1 = true
- * convention.
+ * convention. Helpers are defined to handle booleans accordingly.
  */
-public class TSLine extends SimulationComponent {
+public class TSLine extends BusComponent {
 
   /**
    * Component that is currently driving this line.
    */
-  private SimulationComponent driver;
+  private BusComponent driver;
 
   /**
    * Committed data (visible from reads), gets {@link #bufferedData}'s value when component is
@@ -53,7 +53,7 @@ public class TSLine extends SimulationComponent {
    * @param driver component requesting to become driver
    * @param data data to drive line with
    */
-  public void drive(SimulationComponent driver, int data) {
+  public void drive(BusComponent driver, int data) {
     // driver can't be null
     if (driver == null) {
       throw new RuntimeException("Null driver cannot drive TSLine");
@@ -70,13 +70,23 @@ public class TSLine extends SimulationComponent {
   }
 
   /**
+   * Boolean version of {@link #drive(microsim.simulation.component.BusComponent, int)}.
+   *
+   * @param driver component requesting to become driver
+   * @param data data (as bool) to drive line with
+   */
+  public void driveBool(BusComponent driver, boolean data) {
+    drive(driver, data ? 1 : 0);
+  }
+
+  /**
    * Used by drivers to release line. Null drivers and drivers who don't own the line cannot release
    * it. Releasing a line means doesn't clear it's {@link #bufferedData}. This means
    * {@link #committedData} floats: that is expected behavior.
    *
    * @param driver driver requesting release
    */
-  public void release(SimulationComponent driver) {
+  public void release(BusComponent driver) {
     if (driver == null) {
       throw new RuntimeException("Null driver cannot release TSLine");
     }
@@ -98,5 +108,14 @@ public class TSLine extends SimulationComponent {
    */
   public int read() {
     return committedData;
+  }
+
+  /**
+   * Reads data as bool (commited)
+   *
+   * @return commited data on line, as bool
+   */
+  public boolean readBool() {
+    return committedData == 1;
   }
 }

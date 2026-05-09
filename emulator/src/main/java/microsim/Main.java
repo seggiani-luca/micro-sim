@@ -89,7 +89,7 @@ public class Main {
 
     // 3. handle keyboard
     System.out.println("Attaching keyboard source");
-    KeyboardSource keyboardSource = new KeyboardSource(window.getPanel());
+    KeyboardSource keyboardSource = new KeyboardSource(window.getPanel(), KeyboardSource.set1);
     simulation.keyboard.attachSource(keyboardSource);
 
     System.out.println();

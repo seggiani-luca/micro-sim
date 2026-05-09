@@ -1,7 +1,7 @@
 package microsim.simulation.component.device;
 
 import microsim.simulation.Simulation;
-import microsim.simulation.component.SimulationComponent;
+import microsim.simulation.component.BusComponent;
 import microsim.simulation.component.bus.*;
 import microsim.simulation.event.DebugEvent;
 import microsim.ui.DebugShell;
@@ -10,7 +10,7 @@ import microsim.ui.DebugShell;
  * Implements a device that exposes ports on the bus from a certain address. Memory and devices are
  * expected to share the same addressing space.
  */
-public abstract class IoDevice extends SimulationComponent {
+public abstract class IoDevice extends BusComponent {
 
   /**
    * Base address of IO device.
@@ -99,25 +99,22 @@ public abstract class IoDevice extends SimulationComponent {
     int portIdx = (addr - base) / 4;
 
     // read control lines
-    boolean readEnable = bus.readEnable.read() == 1;
-    boolean writeEnable = bus.writeEnable.read() == 1;
+    boolean readEnable = bus.readEnable.readBool();
+    boolean writeEnable = bus.writeEnable.readBool();
 
     // if someone is reading, offer data
     if (readEnable) {
       // log that read operation was seen
-      if (DebugShell.isDebuggingEnabled()) {
-        raiseEvent(new DebugEvent(this, "Device " + getDeviceName() + " saw read operation at addr "
-                + DebugShell.int32ToString(addr)));
-      }
+      raiseDebugEvent(new DebugEvent(this, "Device " + getDeviceName()
+              + " saw read operation at addr " + DebugShell.int32ToString(addr)));
+
 
       // read at port
       int portValue = getPort(portIdx);
 
       // log result of read operation
-      if (DebugShell.isDebuggingEnabled()) {
-        raiseEvent(new DebugEvent(this, "Device " + getDeviceName() + " read operation gave data "
-                + DebugShell.int32ToString(portValue)));
-      }
+      raiseEvent(new DebugEvent(this, "Device " + getDeviceName() + " read operation gave data "
+              + DebugShell.int32ToString(portValue)));
 
       // drive data line with word
       bus.dataLine.drive(this, portValue);
@@ -130,19 +127,14 @@ public abstract class IoDevice extends SimulationComponent {
       int data = bus.dataLine.read();
 
       // log that write operation was seen
-      if (DebugShell.isDebuggingEnabled()) {
-        raiseEvent(new DebugEvent(this, "Device " + getDeviceName()
-                + " saw write operation at addr " + DebugShell.int32ToString(addr) + " of data "
-                + DebugShell.int32ToString(data)));
-      }
+      raiseEvent(new DebugEvent(this, "Device " + getDeviceName() + " saw write operation at addr "
+              + DebugShell.int32ToString(addr) + " of data " + DebugShell.int32ToString(data)));
 
       // write at port
       setPort(portIdx, data);
 
       // log result of write operation
-      if (DebugShell.isDebuggingEnabled()) {
-        raiseEvent(new DebugEvent(this, "Device " + getDeviceName() + " write operation finished"));
-      }
+      raiseEvent(new DebugEvent(this, "Device " + getDeviceName() + " write operation finished"));
     }
   }
 }

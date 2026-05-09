@@ -6,7 +6,6 @@ import microsim.simulation.Simulation;
 import microsim.simulation.component.*;
 import microsim.simulation.component.bus.*;
 import microsim.simulation.event.*;
-import microsim.ui.DebugShell;
 
 /**
  * A processor implementing the RISC-V RV32I ISA. This comprises basic memory movement, arithmetic
@@ -15,7 +14,7 @@ import microsim.ui.DebugShell;
  * <a href="https://www.cs.sfu.ca/~ashriram/Courses/CS295/assets/notebooks/RISCV/RISCV_CARD.pdf">
  * green card</a>.
  */
-public class Processor extends SimulationComponent {
+public class Processor extends BusComponent {
 
   /**
    * Reset value of program counter {@link #pc}.
@@ -160,10 +159,10 @@ public class Processor extends SimulationComponent {
 
     // processor  takes control of all lines but data
     // leaks this in constructor but we don't expect TSLine objects to do anything with it just now
-    bus.addressLine.drive(this, 0);
-    bus.readEnable.drive(this, 0);
-    bus.writeEnable.drive(this, 0);
-    bus.byteSelect.drive(this, 0);
+    bus.addressLine.driveBool(this, false);
+    bus.readEnable.driveBool(this, false);
+    bus.writeEnable.driveBool(this, false);
+    bus.byteSelect.driveBool(this, false);
 
     // reset instruction pointer
     pc = RESET_INSTRUCTION_ADDRESS;
@@ -180,7 +179,7 @@ public class Processor extends SimulationComponent {
   int byteSelect;
 
   /**
-   * Queue of microops to execute, basically acts as a pipeline.
+   * Queue of microops to execute.
    */
   Deque<MicroOp> opQueue = new LinkedList<>();
 
@@ -216,18 +215,14 @@ public class Processor extends SimulationComponent {
     // fill the queue if empty, otherwise execute microop
     if (nextOp == null) {
       // log fetch and decode cycle
-      if (DebugShell.isDebuggingEnabled()) {
-        raiseEvent(new DebugEvent(this,
-                "Processor found empty pipeline and started fetch-decode cycle"));
-      }
+      raiseEvent(new DebugEvent(this,
+              "Processor found empty queue and started fetch-decode cycle"));
 
       // actually fetch and decode
       fetchDecode();
     } else {
       // log microop
-      if (DebugShell.isDebuggingEnabled()) {
-        raiseEvent(new DebugEvent(this, "Processor found microop " + nextOp.toString()));
-      }
+      raiseEvent(new DebugEvent(this, "Processor found microop " + nextOp.toString()));
 
       // actually execute microop
       nextOp.execute(this);

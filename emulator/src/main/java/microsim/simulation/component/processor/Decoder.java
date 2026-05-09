@@ -490,7 +490,7 @@ public class Decoder {
    * @param inst instruction to decode
    */
   public static void decode(Processor proc, int inst) {
-    // get microop
+    // get microops
     List<OpType> opList = instTrie.get(inst);
     if (opList == null) {
       throw new RuntimeException("Unknown instruction " + DebugShell.int32ToString(inst));

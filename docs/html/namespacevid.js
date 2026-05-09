@@ -1,0 +1,27 @@
+var namespacevid =
+[
+    [ "coords", "structvid_1_1coords.html", "structvid_1_1coords" ],
+    [ "backspace", "namespacevid.html#a521b2d28e81bc371e03118a8a0912908", null ],
+    [ "clear", "namespacevid.html#a6dfe2c314c18207ef92fade18fe097ba", null ],
+    [ "dec_cur", "namespacevid.html#a239d263329518c8760ee2c7cfda671be", null ],
+    [ "inc_cur", "namespacevid.html#a99ea6d895503f6f3327642c8a75ff205", null ],
+    [ "newline", "namespacevid.html#addbc550f9802ffaf4c56bfc306db6ef5", null ],
+    [ "print_char", "namespacevid.html#aee0175d3c5a19ffccba72df3010babee", null ],
+    [ "print_int", "namespacevid.html#a10f4cc2de5c7c23e9497d104a30c5904", null ],
+    [ "print_str", "namespacevid.html#acd07a9854285034a040dfdc2e2ae4894", null ],
+    [ "print_strln", "namespacevid.html#a90fe1f15c835e153c127e10cc08ad041", null ],
+    [ "print_uint", "namespacevid.html#aff7b901a5c6cbf23a2ffd4ee9bcfe029", null ],
+    [ "put_char", "namespacevid.html#a0ab5b662ebde6fbe6a2d9b873d19e470", null ],
+    [ "put_int", "namespacevid.html#ae6a730b471e460c9ee75beaa41126c68", null ],
+    [ "put_str", "namespacevid.html#add16bc157ba0d7ab77fb1295ec3c76d3", null ],
+    [ "put_uint", "namespacevid.html#a5d56174503c83c19206e7c7745a421b7", null ],
+    [ "scroll", "namespacevid.html#aa2d1aee38b269e49bc6761546b43ad42", null ],
+    [ "set_cursor", "namespacevid.html#a022d7418f3fc78bf7d5af6193c9b86e5", null ],
+    [ "tabulate", "namespacevid.html#a02aec266cca2bcd29ff8a4feec061339", null ],
+    [ "COLS", "namespacevid.html#a5c2f1f4e8df0fd8e2e47091cdc56ae8d", null ],
+    [ "cur", "namespacevid.html#afa0a7043f8c960c655d5e27911aa1bbd", null ],
+    [ "ROWS", "namespacevid.html#a555c153ebb05384d83e66e12ec7ff56c", null ],
+    [ "TAB_SIZE", "namespacevid.html#a24ab55debc6f845ddbd66ca84d64cb90", null ],
+    [ "video", "namespacevid.html#ad4fac66fea6a7409637ac35f1f1524fd", null ],
+    [ "vram", "namespacevid.html#a645764ba570227c9d6cf891ebb6e0e91", null ]
+];

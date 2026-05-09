@@ -18,7 +18,7 @@ public class MicroOp {
    */
   public static enum OpType {
     /**
-     * Decodes a microop, parses the instruction in temp and appends it to the pipeline.
+     * Decodes a microop, parses the instruction in temp and appends it to the queue.
      */
     DECODE,
     /**
@@ -509,31 +509,27 @@ public class MicroOp {
       // memory read routine (step 0 is done by bus interface)
       case MEM_READ1 -> {
         // lower control line
-        proc.bus.readEnable.drive(proc, 0);
+        proc.bus.readEnable.driveBool(proc, false);
       }
       case MEM_READ2 -> {
         // read data from bus
         proc.temp = proc.bus.dataLine.read();
 
         // log read data
-        if (DebugShell.isDebuggingEnabled()) {
-          proc.raiseEvent(new DebugEvent(proc, "Processor read routine finished and got value "
-                  + DebugShell.int32ToString(proc.temp)));
-        }
+        proc.raiseEvent(new DebugEvent(proc, "Processor read routine finished and got value "
+                + DebugShell.int32ToString(proc.temp)));
       }
 
       // memory write routine (step 0 is done by bus interface)
       case MEM_WRITE1 -> {
         // lower control line
-        proc.bus.writeEnable.drive(proc, 0);
+        proc.bus.writeEnable.driveBool(proc, false);
 
         // release data line
         proc.bus.dataLine.release(proc);
 
         // log data routine finished
-        if (DebugShell.isDebuggingEnabled()) {
-          proc.raiseEvent(new DebugEvent(proc, "Processor write routine finished"));
-        }
+        proc.raiseEvent(new DebugEvent(proc, "Processor write routine finished"));
       }
     }
   }

@@ -9,7 +9,11 @@ import microsim.simulation.component.device.ThreadedIoDevice;
 /**
  * Implements a video device that renders a frame buffer by reading from VRAM. Actual rendering is
  * delegated to a {@link microsim.simulation.component.device.video.VideoRenderer} instance. Device
- * ports are 2 and used to set cursor position of the renderer instance.
+ * ports are:
+ * <ul>
+ * <li>Row: sets row of cursor;</li>
+ * <li>Column: sets column of cursor.</li>
+ * </ul>
  */
 public class VideoDevice extends ThreadedIoDevice {
 
@@ -84,8 +88,10 @@ public class VideoDevice extends ThreadedIoDevice {
   public void setPort(int index, int data) {
     switch (index) {
       case 0 ->
+        // row port
         renderer.setCursorRow(data);
       case 1 ->
+        // column port
         renderer.setCursorColumn(data);
     }
   }

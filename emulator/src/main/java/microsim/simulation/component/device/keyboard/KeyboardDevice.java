@@ -1,18 +1,35 @@
 package microsim.simulation.component.device.keyboard;
 
+import java.util.LinkedList;
+import java.util.Queue;
 import microsim.simulation.Simulation;
 import microsim.simulation.component.bus.*;
 import microsim.simulation.component.device.IoDevice;
 
 /**
- * Implements a keyboard device that returns characters via a status and a data port.
+ * Implements an IBM PC AT compliant keyboard device. Device ports are:
+ * <ul>
+ * <li>Status: 1 on available key code, 0 otherwise;</li>
+ * <li>Data: next key make/break code.</li>
+ * Key make/break code mapping is based on IBM PS/2 PC scan sets, with translation performed by an
+ * attached {@link microsim.simulation.component.device.keyboard.KeyboardSource}.
+ * </ul>
  */
 public class KeyboardDevice extends IoDevice {
 
   /**
-   * Last key pressed.
+   * Queue of received key codes.
    */
-  byte key = '\0';
+  private final Queue<Byte> keyCodes = new LinkedList<>();
+
+  /**
+   * Pushes a key code to the key code queue.
+   *
+   * @param code key code to add
+   */
+  public void accept(Byte code) {
+    keyCodes.add(code);
+  }
 
   /**
    * Attaches keyboard device to a
@@ -47,12 +64,12 @@ public class KeyboardDevice extends IoDevice {
   public int getPort(int index) {
     switch (index) {
       case 0 -> {
-        return (key == '\0') ? 0 : 1;
+        // status register
+        return keyCodes.isEmpty() ? 0 : 1;
       }
       case 1 -> {
-        byte prevKey = key;
-        key = '\0';
-        return prevKey;
+        // data register
+        return keyCodes.isEmpty() ? 0 : keyCodes.remove();
       }
     }
 

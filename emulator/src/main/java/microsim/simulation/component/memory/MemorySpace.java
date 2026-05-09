@@ -19,7 +19,7 @@ import microsim.ui.DebugShell;
  * Regions are defined by begin/end address pairs. End addresses are inclusive (0x000 to 0x0ff means
  * 0x0ff is in the region and 0x100 isn't).
  */
-public class MemorySpace extends SimulationComponent {
+public class MemorySpace extends BusComponent {
 
   /**
    * Beginning of EPROM region.
@@ -56,7 +56,7 @@ public class MemorySpace extends SimulationComponent {
   public static final boolean ALLOW_EPROM_WRITES = false;
 
   /**
-   * Should VRAM1 reads be allowed?
+   * Should VRAM reads be allowed?
    */
   public static final boolean ALLOW_VRAM_READS = true;
 
@@ -166,8 +166,8 @@ public class MemorySpace extends SimulationComponent {
     }
 
     // read control lines
-    boolean readEnable = bus.readEnable.read() == 1;
-    boolean writeEnable = bus.writeEnable.read() == 1;
+    boolean readEnable = bus.readEnable.readBool();
+    boolean writeEnable = bus.writeEnable.readBool();
     int byteSelect = bus.byteSelect.read();
 
     // if someone is reading, offer data
@@ -176,10 +176,8 @@ public class MemorySpace extends SimulationComponent {
       int data = 0x0;
 
       // log that read operation was seen
-      if (DebugShell.isDebuggingEnabled()) {
-        raiseEvent(new DebugEvent(this, "Memory saw read operation at addr "
-                + DebugShell.int32ToString(addr)));
-      }
+      raiseEvent(new DebugEvent(this, "Memory saw read operation at addr "
+              + DebugShell.int32ToString(addr)));
 
       // read word in (max) four byte reads
       switch (byteSelect) {
@@ -193,10 +191,8 @@ public class MemorySpace extends SimulationComponent {
       }
 
       // log result of read operation
-      if (DebugShell.isDebuggingEnabled()) {
-        raiseEvent(new DebugEvent(this, "Memory read operation gave data "
-                + DebugShell.int32ToString(data)));
-      }
+      raiseEvent(new DebugEvent(this, "Memory read operation gave data "
+              + DebugShell.int32ToString(data)));
 
       // drive data line with word
       bus.dataLine.drive(this, data);
@@ -209,10 +205,8 @@ public class MemorySpace extends SimulationComponent {
       int data = bus.dataLine.read();
 
       // log that write operation was seen
-      if (DebugShell.isDebuggingEnabled()) {
-        raiseEvent(new DebugEvent(this, "Memory saw write operation at addr "
-                + DebugShell.int32ToString(addr) + " of data " + DebugShell.int32ToString(data)));
-      }
+      raiseEvent(new DebugEvent(this, "Memory saw write operation at addr "
+              + DebugShell.int32ToString(addr) + " of data " + DebugShell.int32ToString(data)));
 
       // write word in (max) four byte writes
       switch (byteSelect) {
@@ -226,9 +220,7 @@ public class MemorySpace extends SimulationComponent {
       }
 
       // log result of write operation
-      if (DebugShell.isDebuggingEnabled()) {
-        raiseEvent(new DebugEvent(this, "Memory write operation finished"));
-      }
+      raiseEvent(new DebugEvent(this, "Memory write operation finished"));
     }
   }
 

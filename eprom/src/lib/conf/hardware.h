@@ -3,155 +3,180 @@
 
 #include <cstdint>
 
-/*
- * Namespace including hardware definitions, including memory layout and devices.
+/**
+ * Namespace for hardware definitions, including memory layout and devices.
  */
 namespace hwr {
-	/*
+	/**
 	 * Specifies memory layout.
 	 */
 	namespace mem {
-		/*
+		/**
 		 * EPROM byte array.
 		 */
 		extern volatile uint8_t eprom[];
 
-		/*
+		/**
 		 * Size of EPROM byte array.
 		 */
 		extern uint32_t eprom_size;
 
-		/*
+		/**
 		 * RAM byte array.
 		 */
 		extern volatile uint8_t ram[];
 		
-		/*
-		 * RAM byte array.
+		/**
+		 * Size of RAM byte array.
 		 */
 		extern uint32_t ram_size;
 
-		/*
+		/**
 		 * VRAM byte array.
 		 */
 		extern volatile uint8_t vram[];
 		
-		/*
-		 * VRAM byte array.
+		/**
+		 * Size of VRAM byte array.
 		 */
 		extern uint32_t vram_size;
 
-		/*
+		/**
 		 * Does hardware allow EPROM writes?
 		 */
 		extern bool eprom_writes_allowed;
 
-		/*
+		/**
 		 * Does hardware allow VRAM reads?
 		 */
 		extern bool vram_reads_allowed;
 	} // mem::
 
-	/*
+	/**
 	 * Specifies devices.
 	 */
 	namespace dev {
-		/*
+		/**
 		 * Defines a video device.
 		 */
 		struct video_device {
-			/*
-			 * Cursor row register.
+			/**
+			 * Cursor row port.
 			 */
-			volatile uint32_t* cur_row_reg;
+			volatile uint32_t* row_prt;
 			
-			/*
-			 * Cursor column register.
+			/**
+			 * Cursor column port.
 			 */
-			volatile uint32_t* cur_col_reg;
+			volatile uint32_t* col_prt;
 
-			/*
-			 * Text mode columns.
+			/**
+			 * Text mode column number.
 			 */
 			int cols;
 			
-			/*
-			 * Text mode rows.
+			/**
+			 * Text mode row number.
 			 */
 			int rows;
 		};
 
-		/*
+		/**
 		 * Video device mounted on system.
 		 */
 		extern video_device video;
 
-		/*
+		/**
 		 * Defines a keyboard device.
 		 */
 		struct keyboard_device {
-			/*
-			 * Status register, signals if buffer is full.
+			/**
+			 * Status port, signals if buffer is full.
 			 */
-			volatile uint32_t* sts_reg;
+			volatile uint32_t* sts_prt;
 			
-			/*
-			 * Buffer register, contains character.
+			/**
+			 * Data port, contains next key make/break code.
 			 */
-			volatile uint32_t* buf_reg;
+			volatile uint32_t* dat_prt;
 		};
 		
-		/*
+		/**
 		 * Keyboard device mounted on system.
 		 */
 		extern keyboard_device keyboard;
 
-		/*
+		/**
 		 * Defines a timer device.
 		 */
 		struct timer_device {
-			/*
-			 * Status register, sets on timer ticks and resets on reads.
+			/**
+			 * Timer 0 gate register.
 			 */
-			volatile uint32_t* sts_reg;
+			volatile uint32_t* gat0_prt;
+
+			/**
+			 * Timer 1 gate register.
+			 */
+			volatile uint32_t* gat1_prt;
+			
+			/**
+			 * Timer 2 gate register.
+			 */
+			volatile uint32_t* gat2_prt;
+			
+			/**
+			 * Timer 0 configuration register.
+			 */
+			volatile uint32_t* con0_prt;
+
+			/**
+			 * Timer 1 configuration register.
+			 */
+			volatile uint32_t* con1_prt;
+			
+			/**
+			 * Timer 2 configuration register.
+			 */
+			volatile uint32_t* con2_prt;
 		};
 		
-		/*
+		/**
 		 * Timer device mounted on system.
 		 */
 		extern timer_device timer;
 
-		/*
+		/**
 		 * Defines a network device.
 		 */
 		struct network_device {
-			/*
-			 * Transmit buffer.
+			/**
+			 * Transmit buffer port.
 			 */
-			volatile uint32_t* tx_reg;
+			volatile uint32_t* txb_prt;
 			
-			/*
-			 * Transmit buffer ready (empty).
+			/**
+			 * Transmit buffer ready (empty) port.
 			 */
-			volatile uint32_t* tx_rdy_reg;
+			volatile uint32_t* txr_prt;
 			
-			/*
-			 * Receive buffer.
+			/**
+			 * Receive buffer port.
 			 */
-			volatile uint32_t* rx_reg;
+			volatile uint32_t* rxb_prt;
 			
-			/*
-			 * Receive buffer ready (full).
+			/**
+			 * Receive buffer ready (full) port.
 			 */
-			volatile uint32_t* rx_rdy_reg;
+			volatile uint32_t* rxr_prt;
 
-			/*
+			/**
 			 * Address of this interface.
 			 */
 			uint32_t addr;
 		};
 
-		/*
+		/**
 		 * Network device mounted on system.
 		 */
 		extern network_device network;

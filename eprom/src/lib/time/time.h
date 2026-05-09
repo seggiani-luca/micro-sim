@@ -4,16 +4,21 @@
 #include <stdint.h>
 #include "../conf/hardware.h"
 
+/**
+ * Namespace for time-related functions, and timer handling.
+ */
 namespace tim {
-	/*
+	/**
 	 * Reference to timer device.
 	 */
 	inline hwr::dev::timer_device& timer = hwr::dev::timer;
-	
-	/*
-	 * Waits for the given amount of timer ticks.
+
+	/**
+	 * Sleeps for the specified amount of time.
+	 *
+	 * @param millis time to sleep for (in milliseconds)
 	 */
-	void wait_ticks(int ticks);
-}
+	void sleep(int millis);
+} // tim::
 
 #endif

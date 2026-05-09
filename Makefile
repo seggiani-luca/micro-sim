@@ -34,4 +34,5 @@ docs:
 clean:
 	@echo ">> Cleaning EPROMs..."
 	@cd $(EPROM) && $(MAKE) clean
+	@cd $(EMULATOR) && mvn clean
 	@echo

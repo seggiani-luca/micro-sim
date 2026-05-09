@@ -35,8 +35,8 @@ namespace vid {
 		cur.row = new_coords.row;
 		cur.col = new_coords.col;
 
-		*video.cur_row_reg = cur.row;
-		*video.cur_col_reg = cur.col;
+		*video.row_prt = cur.row;
+		*video.col_prt = cur.col;
 	}
 
 
@@ -47,10 +47,12 @@ namespace vid {
 
 	void scroll() {
 		// copy video memory back one row
-		str::mmove((void*) vram, (void*) (vram + video.cols), video.cols * (video.rows - 1));
+		str::mmove((void*) vram, (void*) (vram + video.cols), video.cols * 
+				(video.rows - 1));
 		
 		// clean last line
-		str::mset((void*) (vram + (video.rows - 1) * video.cols), ' ', video.cols);
+		str::mset((void*) (vram + (video.rows - 1) * video.cols), ' ', 
+				video.cols);
 				
 		if(cur.row > 0) set_cursor({cur.row - 1, cur.col});
 	}
@@ -172,9 +174,10 @@ namespace vid {
 		coords last_pos = coords(pos_idx + 10);
 
 		if(!pos.validate() || !last_pos.validate()) {
-			utl::panic("Coordinate non valide per put_uint() (il numero puo' occupare 10 caratteri)");
+			utl::panic("Coordinate non valide per put_uint()");
 		}
-		str::mset((void*) (vram + pos_idx), '\0', last_pos.get_idx() - pos_idx);
+		str::mset((void*) (vram + pos_idx), '\0', last_pos.get_idx() - 
+				pos_idx);
 
 		char temp[10];
 		int i = 0;
@@ -213,7 +216,7 @@ namespace vid {
 		coords last_pos = coords(pos_idx + len);
 
 		if(!pos.validate() || !last_pos.validate()) {
-			utl::panic("Coordinate non valide per put_string() (forse la stringa e' troppo lunga?)");
+			utl::panic("Coordinate non valide per put_string()");
 		}
 
 		for(int i = 0; i < len; i++) {

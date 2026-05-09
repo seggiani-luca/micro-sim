@@ -46,7 +46,7 @@ public abstract class ThreadedIoDevice extends IoDevice {
 
   /**
    * Instantiates device, taking a reference to the bus it's mounted on, the base address it should
-   * respond from and the number of ports it offers..
+   * respond from and the number of ports it offers.
    *
    * @param bus bus the device is mounted on
    * @param simulation simulation this device belongs to

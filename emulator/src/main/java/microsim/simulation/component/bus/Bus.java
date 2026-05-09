@@ -87,8 +87,7 @@ public class Bus extends SimulationComponent {
    * @param simulation simulation this bus belongs to
    */
   public Bus(Simulation simulation) {
-    // buses aren't mounted to buses
-    super(null, simulation);
+    super(simulation);
 
     // init lines
     addressLine = new TSLine(this, simulation);
@@ -142,8 +141,8 @@ public class Bus extends SimulationComponent {
     }
 
     // check read/write enable conflict
-    boolean readEnb = readEnable.read() == 1;
-    boolean writeEnb = writeEnable.read() == 1;
+    boolean readEnb = readEnable.readBool();
+    boolean writeEnb = writeEnable.readBool();
     if (readEnb && writeEnb) {
       throw new RuntimeException("Read Enable and Write Enable simultaneously high");
     }

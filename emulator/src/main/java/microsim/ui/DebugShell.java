@@ -519,7 +519,7 @@ public class DebugShell implements SimulationListener {
       case PROC -> {
         System.out.println("Available proc options:");
         System.out.println("\tregisters: prints all registers");
-        System.out.println("\tpipeline: prints pipeline information");
+        System.out.println("\tqueue: prints muop queue information");
       }
       case MEM -> {
         System.out.println("Available mem options:");
@@ -630,7 +630,7 @@ public class DebugShell implements SimulationListener {
               printProcessorRegisters(idx);
               continue;
             }
-            case "p", "pipeline" -> {
+            case "q", "queue" -> {
               printProcessorMicroOps(idx);
               continue;
             }

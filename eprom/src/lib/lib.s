@@ -1,15 +1,16 @@
-	.section .start
-	.extern main 
+# start section, used for start routine
+.section .start
 
-/* start routine */
+.extern main 
+.global _start
 
-	.global _start
+# start routine
 _start:
 
-	/* init stack to top */
+	# init stack top
 	la sp, __stack_top
 
-	/* copy data to RAM */
+	# copy EPROM data to RAM
 	la a0, __data_ram_start
 	la a1, __data_ram_end
 	la a2, __data_eprom_start
@@ -26,7 +27,7 @@ _data_cpy_loop:
 
 _data_cpy_end:
 
-	/* call static constructors */
+	# call C++ static constructors
 	la s0, __init_array_start
 	la s1, __init_array_end
 
@@ -39,25 +40,27 @@ _static_const_loop:
 
 _static_const_end:
 
-	/* jump to entry point */
+	# jump to entry point
 	call main 
 
-	/* halt */
+	# on return from entry point, halt the system
 	call halt 
 
+# text section, used for utility functions
 .section .text
+.global spin
+.global halt
+.global debugger
 
-/* utility functions */
-
-	.global spin
+# spins the processor indefinitely
 spin:
 	j spin
-	
-	.global halt
+
+# halts the system
 halt:
 	ecall
 
-	.global debugger
+# calls the debugger
 debugger:
 	ebreak
 	ret

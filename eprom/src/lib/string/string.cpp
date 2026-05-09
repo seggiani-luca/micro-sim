@@ -8,37 +8,37 @@ namespace str {
 		return i;
 	}
 
-	char* cpy(char* dest, const char* src) {
-		char* ret = dest;
-		while(*dest++ = *src++);
+	char* cpy(char* dst, const char* src) {
+		char* ret = dst;
+		while((*dst++ = *src++));
 		return ret;
 	}
 	
-	char* ncpy(char* dest, const char* src, unsigned int n) {
-		char* ret = dest;
-		while(n > 0 && (*dest++ = *src++)) {
+	char* ncpy(char* dst, const char* src, unsigned int n) {
+		char* ret = dst;
+		while(n > 0 && (*dst++ = *src++)) {
 			n--;
 		}
 
 		// pad
 		while(n > 0) {
-			*dest++ = '\0';
+			*dst++ = '\0';
 			n--;
 		}
 
 		return ret;
 	}
 	
-	char* cat(char* dest, const char* src) {
-		int i = len(dest);
-		cpy(dest + i, src);
-		return dest;
+	char* cat(char* dst, const char* src) {
+		int i = len(dst);
+		cpy(dst + i, src);
+		return dst;
 	}
 
-	char* ncat(char* dest, const char* src, unsigned int n) {
-		int i = len(dest);
-		ncpy(dest + i, src, n);
-		return dest;
+	char* ncat(char* dst, const char* src, unsigned int n) {
+		int i = len(dst);
+		ncpy(dst + i, src, n);
+		return dst;
 	}
 
 	int cmp(const char* str1, const char* str2) {
@@ -64,41 +64,41 @@ namespace str {
 		return (unsigned char) *str1 - (unsigned char) *str2;
 	}
 
-	void* mcpy(void* dest, const void* src, unsigned int n) {
-		uint8_t* b_dptr = (uint8_t*) dest;
+	void* mcpy(void* dst, const void* src, unsigned int n) {
+		uint8_t* b_dptr = (uint8_t*) dst;
 		const uint8_t* b_sptr = (const uint8_t*) src;
 
 		for(int i = 0; i < n; i++) {
 			*b_dptr++ = *b_sptr++;
 		}
 	
-		return dest;
+		return dst;
 	}
 	
-	void* mmove(void* dest, const void* src, unsigned int n) {
-		if((uint32_t) dest < (uint32_t) src) {
-			return mcpy(dest, src, n); // fotward copy
+	void* mmove(void* dst, const void* src, unsigned int n) {
+		if((uint32_t) dst < (uint32_t) src) {
+			return mcpy(dst, src, n); // fotward copy
 		} 
 
 		// backwards copy
-		uint8_t* b_dptr = (uint8_t*) dest + n - 1;
+		uint8_t* b_dptr = (uint8_t*) dst + n - 1;
 		const uint8_t* b_sptr = (const uint8_t*) src + n - 1;
 		for(int i = 0; i < n; i++) {
 			*b_dptr-- = *b_sptr--;
 		}
 
-		return dest;
+		return dst;
 	}
 
-	void* mset(void* dest, char data, unsigned int n) {
+	void* mset(void* dst, char data, unsigned int n) {
 		uint8_t b_dat = data;
-		uint8_t* b_dptr = (uint8_t*) dest;
+		uint8_t* b_dptr = (uint8_t*) dst;
 		
 		for(int i = 0; i < n; i++) {
 			*b_dptr++ = b_dat;
 		}
 
-		return dest;
+		return dst;
 	}
 
 	int mcmp(const void* buf1, const void* buf2, unsigned int n) {
@@ -113,5 +113,4 @@ namespace str {
 
 		return 0;
 	}
-
 } // str::

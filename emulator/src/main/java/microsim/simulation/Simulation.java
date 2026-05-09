@@ -45,6 +45,11 @@ public class Simulation extends SimulationComponent implements SimulationListene
   public static final int NETWORK_BASE = 0x00060000;
 
   /**
+   * Bus simulated components are mounted on.
+   */
+  public Bus bus;
+
+  /**
    * Simulated processor component.
    */
   public final Processor proc;
@@ -96,12 +101,9 @@ public class Simulation extends SimulationComponent implements SimulationListene
    */
   @SuppressWarnings("LeakingThisInConstructor")
   public Simulation(String name) {
-    // simulation instances don't attach to buses (they instead own one)
-    super(null, null);
-
-    // they also don't have a reference to a simulation they belong to (they are one)
+    // set simulation reference as self
+    super(null);
     simulation = this;
-
     this.name = name;
 
     // init bus
@@ -118,8 +120,7 @@ public class Simulation extends SimulationComponent implements SimulationListene
     // attach memory to video
     video.attachMemory(memory);
 
-    // set self as listener
-    // this leaks a this reference but we don't expect listeners to use it just now
+    // set self as listener: leaks a this reference but we don't expect listeners to use it just now
     bus.addListener(this);
     proc.addListener(this);
     memory.addListener(this);
@@ -139,10 +140,12 @@ public class Simulation extends SimulationComponent implements SimulationListene
    */
   @Override
   public void onSimulationEvent(SimulationEvent e) {
+    // power off on halt
     if (e instanceof HaltEvent) {
       poweroff();
     }
 
+    // propagate
     raiseEvent(e);
   }
 
@@ -183,9 +186,7 @@ public class Simulation extends SimulationComponent implements SimulationListene
     // enter simulation loop
     while (running) {
       // if debugging signal cycle to show debug shell
-      if (DebugShell.isDebuggingEnabled()) {
-        raiseEvent(new CycleEvent(this, cycle));
-      }
+      raiseDebugEvent(new CycleEvent(this, cycle));
 
       // actually perform simulation step
       step();

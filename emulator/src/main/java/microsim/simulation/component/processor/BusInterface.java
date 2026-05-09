@@ -10,7 +10,6 @@ import microsim.ui.DebugShell;
  */
 public class BusInterface {
 
-
   /**
    * Hide constructor.
    */
@@ -53,10 +52,8 @@ public class BusInterface {
    */
   public static void doReadRoutine(Processor proc, int addr, int byteSelect) {
     // log beginning of read routine
-    if (DebugShell.isDebuggingEnabled()) {
-      proc.raiseEvent(new DebugEvent(proc, "Processor started read routine at address "
-              + DebugShell.int32ToString(addr)));
-    }
+    proc.raiseEvent(new DebugEvent(proc, "Processor started read routine at address "
+            + DebugShell.int32ToString(addr)));
 
     // keep track of byte select
     proc.byteSelect = byteSelect;
@@ -64,7 +61,7 @@ public class BusInterface {
     // start driving address and control lines
     proc.bus.addressLine.drive(proc, addr);
     proc.bus.byteSelect.drive(proc, byteSelect);
-    proc.bus.readEnable.drive(proc, 1);
+    proc.bus.readEnable.driveBool(proc, true);
 
     // emit microops
     readRoutine(proc);
@@ -90,10 +87,8 @@ public class BusInterface {
    */
   public static void doWriteRoutine(Processor proc, int addr, int data, int byteSelect) {
     // log beginning of write routine
-    if (DebugShell.isDebuggingEnabled()) {
-      proc.raiseEvent(new DebugEvent(proc, "Processor started write routine at address "
-              + DebugShell.int32ToString(addr) + " of data " + DebugShell.int32ToString(data)));
-    }
+    proc.raiseEvent(new DebugEvent(proc, "Processor started write routine at address "
+            + DebugShell.int32ToString(addr) + " of data " + DebugShell.int32ToString(data)));
 
     // keep track of byte select
     proc.byteSelect = byteSelect;
@@ -102,7 +97,7 @@ public class BusInterface {
     proc.bus.dataLine.drive(proc, data);
     proc.bus.addressLine.drive(proc, addr);
     proc.bus.byteSelect.drive(proc, byteSelect);
-    proc.bus.writeEnable.drive(proc, 1);
+    proc.bus.writeEnable.driveBool(proc, true);
 
     // emit microops
     writeRoutine(proc);

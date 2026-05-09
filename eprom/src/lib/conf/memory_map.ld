@@ -1,7 +1,7 @@
 MEMORY {
-	EPROM (rx)	: ORIGIN = 0x00000000, LENGTH = 64K
-	RAM (rwx)		: ORIGIN = 0x00010000, LENGTH = 64K
-	VRAM (rx)		: ORIGIN = 0x00020000, LENGTH = 64K
+	EPROM (rx) : ORIGIN = 0x00000000, LENGTH = 64K
+	RAM (rwx)  : ORIGIN = 0x00010000, LENGTH = 64K
+	VRAM (rx)  : ORIGIN = 0x00020000, LENGTH = 64K
 }
 
 ENTRY(_start)
@@ -20,9 +20,9 @@ SECTIONS {
 		*(.rodata*)
 
 		. = ALIGN(4);
-    __init_array_start = .;
-    KEEP(*(.init_array*))
-    __init_array_end = .;
+		__init_array_start = .;
+		KEEP(*(.init_array*))
+		__init_array_end = .;
 	} > EPROM
 
 	/*
