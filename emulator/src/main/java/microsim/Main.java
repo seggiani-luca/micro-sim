@@ -2,11 +2,13 @@ package microsim;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import microsim.ui.*;
 import microsim.simulation.*;
 import microsim.simulation.component.device.keyboard.*;
 import microsim.MainEnvironment.SimulationInfo;
+import microsim.file.IMG;
 
 /**
  * Contains program entry point. Loads EPROM data and instantiates simulations based on them.
@@ -100,7 +102,7 @@ public class Main {
    * <ol>
    * <li>Instantiate a {@link microsim.simulation.Simulation} object with said configuration and
    * data.</li>
-   * <li>Load EPROM data into simulation memory.</li>
+   * <li>Load EPROM and disk data into simulation memory.</li>
    * <li>Attach interfaces to simulation. These include {@link microsim.ui.VideoWindow},
    * {@link microsim.ui.DebugShell}, and keyboard source for the keyboard device. Attachment is
    * handled by the {@link #initInterfaces(microsim.simulation.Simulation)} method.</li>
@@ -115,8 +117,11 @@ public class Main {
     // 1. initialize simulation
     Simulation simulation = new Simulation(info.simulationName);
 
-    // 2. load EPROM
+    // 2. load EPROM and disk
     simulation.memory.loadEPROM(info.epromData);
+    if (info.diskImage != null) {
+      simulation.disk.loadDisk(info.diskImage);
+    }
 
     // 3. initialize interfaces: video window, debug shell and keyboard
     try {
@@ -138,6 +143,7 @@ public class Main {
    * them, and execute them. Instantiation is handled by
    * {@link #initSimulation(microsim.MainEnvironment.SimulationInfo)}.</li>
    * <li>Begin simulations.</li>
+   * <li>Wait for simulations, storing state at the end (mainly disk images).</li>
    * </ol>
    * Any simulation instantiation failure aborts the entire program.
    *
@@ -173,10 +179,31 @@ public class Main {
       simulationInstances.add(simulation);
     }
 
+
     // 3. begin simulations
+    List<Thread> simulationThreads = new LinkedList<>();
     for (Simulation simulation : simulationInstances) {
       System.out.println(">> Simulation \"" + simulation.name + "\" powering on\n");
-      simulation.begin();
+      simulationThreads.add(simulation.begin());
+    }
+
+    // 4. wait and store state
+    for (Thread thread : simulationThreads) {
+      try {
+        thread.join();
+      } catch (InterruptedException ex) {
+        throw new RuntimeException("Main thread was interrupted while waiting for simulations.");
+      }
+    }
+
+    System.out.println(">> Syncing state...");
+    for (Simulation simulation : simulationInstances) {
+      try {
+        // write simulation disk image
+        IMG.writeIMG(simulation.name, env.diskPath, simulation.disk.getStorage());
+      } catch (IOException ex) {
+        System.err.println("Failed to write disk image for simulation " + simulation.name);
+      }
     }
   }
 }

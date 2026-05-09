@@ -138,6 +138,7 @@ public class KeyboardSource {
    *
    * @param e key event to handle
    * @param set set to get make/break translations from
+   * @param breakCode should a break code be generated?
    */
   private void handleKeyEvent(KeyEvent e, Map<Integer, Byte> set, boolean breakCode) {
     // translate event to make/break code

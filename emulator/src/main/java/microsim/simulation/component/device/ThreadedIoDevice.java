@@ -39,8 +39,7 @@ public abstract class ThreadedIoDevice extends IoDevice {
   private final Runnable runnableInstance;
 
   /**
-   * Is the device thread running? Note that this should be used by threads if they want to be
-   * terminated correctly.
+   * Is the device thread running?
    */
   protected volatile boolean running = true;
 
@@ -62,8 +61,8 @@ public abstract class ThreadedIoDevice extends IoDevice {
 
   /**
    * Method that implements the actual device thread. To be implemented by subclass. The
-   * implementation should loop on {@link #running} if it wants to be terminated correctly, and use
-   * {@link #smartSpin(long)} to sleep, if it wants to obey debugger policy.
+   * implementation should loop on {@link #isRunning()} if it wants to be terminated correctly and
+   * use {@link #smartSpin(long)} to sleep if it wants to obey debugger policy.
    */
   protected abstract void deviceThread();
 
@@ -85,11 +84,8 @@ public abstract class ThreadedIoDevice extends IoDevice {
     }
 
     // wait for time
-    long now = System.nanoTime();
-    long remaining = time - now;
-
-    if (remaining > 1_000_000) { // over 1 ms
-      LockSupport.parkNanos(remaining - 500_000);
+    if (time > 1_000_000) { // over 1 ms
+      LockSupport.parkNanos(time - 500_000);
     }
     while (System.nanoTime() < time) {
       // more granular wait

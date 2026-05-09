@@ -35,8 +35,16 @@ public class TimerDevice extends ThreadedIoDevice {
    */
   public static final long MASTER_TIME = 1_000_000_000 / MASTER_FREQ; // in ns
 
-
+  /**
+   * Represents state of a timer channel.
+   */
   private class TimerInfo {
+
+    /**
+     * Default constructor.
+     */
+    public TimerInfo() {
+    }
 
     /**
      * Signals if the timer has ticked.
@@ -98,15 +106,17 @@ public class TimerDevice extends ThreadedIoDevice {
     TimerInfo info = timerInfos[index];
 
     // return if ticked
-    if (info.ticked) {
-      // if periodic, reset counter
-      if (info.periodic) {
-        info.counter = 0;
-      }
+    synchronized (info) {
+      if (info.ticked) {
+        // if periodic, reset counter
+        if (info.periodic) {
+          info.counter = 0;
+        }
 
-      // reset
-      info.ticked = false;
-      return 1;
+        // reset
+        info.ticked = false;
+        return 1;
+      }
     }
 
     return 0;
@@ -129,13 +139,15 @@ public class TimerDevice extends ThreadedIoDevice {
     // get timer info
     TimerInfo info = timerInfos[index];
 
-    // set up with given control word
-    info.max = data & 0x7fffffff;
-    info.periodic = (data & 0x80000000) != 0;
+    synchronized (info) {
+      // set up with given control word
+      info.max = data & 0x7fffffff;
+      info.periodic = (data & 0x80000000) != 0;
 
-    // start timer
-    info.ticked = false;
-    info.counter = 0;
+      // start timer
+      info.ticked = false;
+      info.counter = 0;
+    }
   }
 
   /**
@@ -143,7 +155,6 @@ public class TimerDevice extends ThreadedIoDevice {
    */
   @Override
   protected void deviceThread() {
-    long waitTime = System.nanoTime();
     while (running) {
       // increment each timer
       for (int i = 0; i < NUM_CHANNELS; i++) {
@@ -151,18 +162,20 @@ public class TimerDevice extends ThreadedIoDevice {
         TimerInfo info = timerInfos[i];
 
         // increment
-        if (info.counter < info.max) {
-          info.counter++;
+        synchronized (info) {
+          if (info.counter < info.max) {
+            info.counter++;
 
-          // if reached max, tick
-          if (info.counter == info.max) {
-            info.ticked = true;
+            // if reached max, tick
+            if (info.counter == info.max) {
+              info.ticked = true;
+            }
           }
         }
       }
 
-      waitTime += MASTER_TIME;
-      smartSpin(waitTime);
+      // wait for master clock
+      smartSpin(MASTER_TIME);
     }
   }
 }

@@ -2,6 +2,7 @@ package microsim.simulation;
 
 import microsim.simulation.component.*;
 import microsim.simulation.component.bus.*;
+import microsim.simulation.component.device.block.BlockDevice;
 import microsim.simulation.component.processor.*;
 import microsim.simulation.component.memory.*;
 import microsim.simulation.component.device.video.*;
@@ -45,6 +46,11 @@ public class Simulation extends SimulationComponent implements SimulationListene
   public static final int NETWORK_BASE = 0x00060000;
 
   /**
+   * Base address of block device.
+   */
+  public static final int DISK_BASE = 0x00070000;
+
+  /**
    * Bus simulated components are mounted on.
    */
   public Bus bus;
@@ -78,6 +84,12 @@ public class Simulation extends SimulationComponent implements SimulationListene
    * Simulated network device component
    */
   public final NetworkDevice network;
+
+  /**
+   * Simulated block device component
+   */
+  public final BlockDevice disk;
+
 
   /**
    * Is the simulation running?
@@ -116,6 +128,7 @@ public class Simulation extends SimulationComponent implements SimulationListene
     keyboard = new KeyboardDevice(bus, KEYBOARD_BASE, this);
     timer = new TimerDevice(bus, TIMER_BASE, this);
     network = new NetworkDevice(bus, NETWORK_BASE, this);
+    disk = new BlockDevice(bus, DISK_BASE, this);
 
     // attach memory to video
     video.attachMemory(memory);
@@ -128,6 +141,7 @@ public class Simulation extends SimulationComponent implements SimulationListene
     keyboard.addListener(this);
     timer.addListener(this);
     network.addListener(this);
+    disk.addListener(this);
   }
 
   /**
@@ -174,6 +188,7 @@ public class Simulation extends SimulationComponent implements SimulationListene
     keyboard.step();
     timer.step();
     network.step();
+    disk.step();
   }
 
   /**
@@ -202,8 +217,10 @@ public class Simulation extends SimulationComponent implements SimulationListene
   /**
    * Executes simulation. All components on local bus run as fast as possible. Threaded devices
    * (like video and timer) run on separate threads at fixed frequency.
+   *
+   * @return thread of simulation
    */
-  public void begin() {
+  public Thread begin() {
     // start other threads
     video.begin();
     timer.begin();
@@ -213,6 +230,8 @@ public class Simulation extends SimulationComponent implements SimulationListene
     simulationThread.setName(name + ": Main");
     simulationThread.setUncaughtExceptionHandler(new DebugShell.DebugExceptionHandler());
     simulationThread.start();
+
+    return simulationThread;
   }
 
   /**

@@ -29,6 +29,7 @@ eprom:
 docs:
 	@echo ">> Making documentation..."
 	@cd $(EMULATOR) && mvn javadoc:javadoc -Dshow=private
+	@cd $(EPROM) && doxygen
 	@echo
 
 clean:

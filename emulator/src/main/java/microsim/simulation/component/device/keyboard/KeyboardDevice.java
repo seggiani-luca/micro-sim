@@ -11,9 +11,9 @@ import microsim.simulation.component.device.IoDevice;
  * <ul>
  * <li>Status: 1 on available key code, 0 otherwise;</li>
  * <li>Data: next key make/break code.</li>
+ * </ul>
  * Key make/break code mapping is based on IBM PS/2 PC scan sets, with translation performed by an
  * attached {@link microsim.simulation.component.device.keyboard.KeyboardSource}.
- * </ul>
  */
 public class KeyboardDevice extends IoDevice {
 

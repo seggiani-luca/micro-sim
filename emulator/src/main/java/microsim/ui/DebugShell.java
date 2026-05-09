@@ -1,7 +1,5 @@
 package microsim.ui;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.LinkedList;
@@ -26,7 +24,7 @@ public class DebugShell implements SimulationListener {
   public static class DebugExceptionHandler implements Thread.UncaughtExceptionHandler {
 
     /**
-     * Public empty constructor.
+     * Default constructor.
      */
     public DebugExceptionHandler() {
     }
@@ -109,14 +107,14 @@ public class DebugShell implements SimulationListener {
   /**
    * Activates debug shell.
    */
-  public synchronized void activate() {
+  public void activate() {
     debuggingEnabled = true;
   }
 
   /**
    * Deactivates debug shell.
    */
-  public synchronized void deactivate() {
+  public void deactivate() {
     debuggingEnabled = false;
 
     // clear event queues
@@ -127,9 +125,21 @@ public class DebugShell implements SimulationListener {
 
   /**
    * Static flag that signals whether the world is stopped. This is static as the first debug shell
-   * instance that stops the world stops it for all simulation instances.
+   * instance that stops the world sets it for all simulation instances.
    */
   private static volatile boolean isWorldStopped = false;
+
+  /**
+   * Returns whether world is stopped. {@link microsim.simulation.component.device.ThreadedIoDevice}
+   * devices are meant to check this, via the
+   * {@link microsim.simulation.component.device.ThreadedIoDevice#smartSpin(long)} method, to
+   * correctly stop when asked to.
+   *
+   * @return is world stopped?
+   */
+  public static boolean isWorldStopped() {
+    return isWorldStopped;
+  }
 
   /**
    * Stops the world.
@@ -153,30 +163,18 @@ public class DebugShell implements SimulationListener {
   }
 
   /**
-   * Returns whether world is stopped. {@link microsim.simulation.component.device.ThreadedIoDevice}
-   * devices are meant to check this, via the
-   * {@link microsim.simulation.component.device.ThreadedIoDevice#smartSpin(long)} method, to
-   * correctly stop when asked to.
-   *
-   * @return is world stopped?
+   * Cycle counter for multi-cycle stepping. 0 signals that multi-cycle stepping is not enabled.
    */
-  public static boolean isWorldStopped() {
-    return isWorldStopped;
-  }
-
-  /**
-   * Cycle counter for multi-cycle stepping.
-   */
-  private long remainingCycles = -1;
+  private long remainingCycles = 0;
 
   /**
    * Keeps track of which instance we are multi-cycle stepping on.
    */
-  private long cycleInstance;
+  private Simulation cycleInstance;
 
   /**
-   * Flag that signals whether the shell should greet the user. Set to false at first greet to have
-   * it greet on startup.
+   * Flag that signals whether the shell should greet the user. Defaults to true. Set to false at
+   * first greet to have shell greet once, on startup.
    */
   private static volatile boolean shouldGreet = true;
 
@@ -198,9 +196,11 @@ public class DebugShell implements SimulationListener {
    * @param simulationInstance simulation instance to attach
    */
   public void attachSimulation(Simulation simulationInstance) {
+    // make self listener
     simulationInstances.add(simulationInstance);
     simulationInstance.addListener(this);
 
+    // initialize simulation event queue
     Queue<SimulationEvent> eventQueue = new LinkedList<>();
     eventQueues.add(eventQueue);
   }
@@ -215,37 +215,6 @@ public class DebugShell implements SimulationListener {
    */
   public static String int32ToString(int val) {
     return String.format("0x%08x", val);
-  }
-
-  /**
-   * Prints EPROM data array word by word. Used as an utility by whoever gets data from
-   * {@link microsim.file.ELF}.
-   *
-   * @param eprom EPROM data array
-   */
-  public static void printEPROM(byte[] eprom) {
-    System.out.println("Read EPROM data:");
-
-    // wrap in ByteBuffer
-    ByteBuffer epromBuffer = ByteBuffer.wrap(eprom).order(ByteOrder.LITTLE_ENDIAN);
-
-    // print as many words as possible
-    while (epromBuffer.remaining() >= 4) {
-      System.out.println("\t" + DebugShell.int32ToString(epromBuffer.position()) + ": "
-              + DebugShell.int32ToString(epromBuffer.getInt()));
-    }
-
-    // print last word
-    int lastPos = epromBuffer.position();
-
-    int last = 0, shift = 0;
-    while (epromBuffer.remaining() >= 1) {
-      last |= (epromBuffer.get() & 0xff) << shift;
-      shift += 8;
-    }
-
-    System.out.println("\t" + DebugShell.int32ToString(lastPos) + ": "
-            + DebugShell.int32ToString(last) + "\n");
   }
 
   /**
@@ -388,7 +357,7 @@ public class DebugShell implements SimulationListener {
    * @param e simulation event
    */
   @Override
-  public synchronized void onSimulationEvent(SimulationEvent e) {
+  public void onSimulationEvent(SimulationEvent e) {
     // only respond if debugging
     if (!debuggingEnabled && !(e instanceof BreakEvent)) {
       return;
@@ -405,43 +374,44 @@ public class DebugShell implements SimulationListener {
     }
 
     // handle multi-cycling
-    if (remainingCycles != -1 && (e instanceof CycleEvent)) {
-      if (simulationInstances.indexOf(e.owner.simulation) == cycleInstance) {
+    if (remainingCycles != 0 && (e instanceof CycleEvent)) {
+      if (e.owner.simulation == cycleInstance) {
         remainingCycles--;
-        if (remainingCycles == 0) {
-          remainingCycles = -1;
-        }
       }
     }
 
-    // check for waits on powered off instances
-    if (remainingCycles != -1 && (e instanceof HaltEvent)) {
-      if (simulationInstances.indexOf(e.owner.simulation) == cycleInstance) {
-        remainingCycles = -1;
+    // dont wait on powered off instances
+    if (remainingCycles != 0 && (e instanceof HaltEvent)) {
+      if (e.owner.simulation == cycleInstance) {
+        remainingCycles = 0;
       }
     }
 
-    // normal event, queue it or enter shell
+    // normal event, queue it or enter shell. first obtain event queue:
     int idx = simulationInstances.indexOf(e.owner.simulation);
     Queue<SimulationEvent> eventQueue = eventQueues.get(idx);
 
-    if (remainingCycles == -1 && e instanceof CycleEvent ce) {
+    // then check if is instance of a cycle event. event queue will be used anyways
+    if (remainingCycles == 0 && e instanceof CycleEvent ce) {
       // greet if needed
       if (shouldGreet) {
         greet();
       }
 
-      // print buffered events
+      // log buffered events
       while (!eventQueue.isEmpty()) {
         log(eventQueue.remove());
       }
+
+      // log cycle event
       log(ce);
 
-      // enter shell
+      // enter shell (making sure world is stopped as we enter)
       stopTheWorld();
       shell();
       startTheWorld();
     } else {
+      // not cycle event, just queue it
       eventQueue.add(e);
     }
   }
@@ -470,8 +440,8 @@ public class DebugShell implements SimulationListener {
       System.out.println();
     }
 
-    System.out.println("For more info see the documentation at docs/index.html. "
-            + "If not found build with make docs.\n");
+    System.out.println("For more info see the documentation at docs/, "
+            + "if not found build with 'make docs'.\n");
 
     shouldGreet = false;
   }
@@ -507,29 +477,29 @@ public class DebugShell implements SimulationListener {
     switch (page) {
       case GENERAL -> {
         System.out.println("Available commands:");
-        System.out.println("\tstep: steps past 1 or more cycles");
-        System.out.println("\tcontinue: resumes normal execution");
-        System.out.println("\tquit: halts executions and quits");
-        System.out.println("\tproc: offers processor information");
-        System.out.println("\tmem: offers memory information");
-        System.out.println("\trender: forces screen rendering");
-        System.out.println("\tthread: controls device threads");
-        System.out.println("\tinstance: shows current instances");
+        System.out.println("\tstep:      steps past 1 or more cycles");
+        System.out.println("\tcontinue:  resumes normal execution");
+        System.out.println("\tquit:      halts executions and quits");
+        System.out.println("\tproc:      offers processor information");
+        System.out.println("\tmem:       offers memory information");
+        System.out.println("\trender:    forces screen rendering");
+        System.out.println("\tthread:    controls device threads");
+        System.out.println("\tinstance:  shows current instances");
       }
       case PROC -> {
         System.out.println("Available proc options:");
         System.out.println("\tregisters: prints all registers");
-        System.out.println("\tqueue: prints muop queue information");
+        System.out.println("\tqueue:     prints muop queue information");
       }
       case MEM -> {
         System.out.println("Available mem options:");
-        System.out.println("\tread: reads memory at address");
-        System.out.println("\twrite: reads memory at address");
+        System.out.println("\tread:      reads memory at address");
+        System.out.println("\twrite:     reads memory at address");
       }
       case THREAD -> {
         System.out.println("Available thread options:");
-        System.out.println("\tstop: stops all device threads");
-        System.out.println("\tresume: resumes all device threads");
+        System.out.println("\tstop:      stops all device threads");
+        System.out.println("\tresume:    resumes all device threads");
       }
       default ->
         throw new RuntimeException("Unknown help page");
@@ -587,20 +557,33 @@ public class DebugShell implements SimulationListener {
       switch (tokens[0]) {
         case "s":
         case "step":
-          if (tokens.length == 3) {
-            int gotCycleInstance = getSimulationIndex(tokens[1]);
-            if (gotCycleInstance == -1) {
-              continue;
-            }
-            cycleInstance = gotCycleInstance;
-
-            try {
-              remainingCycles = Integer.parseInt(tokens[2]);
-            } catch (NumberFormatException e) {
-              System.out.println("Invalid cycle amount");
-              continue;
-            }
+          if (tokens.length == 1) {
+            // no argument version, just return
+            return;
           }
+          if (tokens.length < 3) {
+            System.out.println("Usage: step <simulation> <cycles> | step");
+            continue;
+          }
+
+          // 2 argument version for multi-cycling: <simulation> <cycles>
+
+          // get instance we're multi-cycling on and remember it
+          int instanceIndex = getSimulationIndex(tokens[1]);
+          if (instanceIndex == -1) {
+            continue;
+          }
+          cycleInstance = simulationInstances.get(instanceIndex);
+
+          // parse cycles and remember them
+          try {
+            remainingCycles = Integer.parseInt(tokens[2]);
+          } catch (NumberFormatException e) {
+            System.out.println("Invalid cycle amount");
+            continue;
+          }
+
+          // return to start multi-cycling
           return;
 
         case "c":
@@ -610,16 +593,18 @@ public class DebugShell implements SimulationListener {
 
         case "q":
         case "quit":
-          System.exit(0);
+          System.exit(1);
 
         case "p":
         case "proc": {
-          // print help on empty options
-          if (tokens.length < 3) {
+          if (tokens.length < 2) {
             help(HelpPage.PROC);
             continue;
           }
-
+          if (tokens.length < 3) {
+            System.out.println("\tUsage: proc [register|queue] <simulation>");
+            continue;
+          }
           int idx = getSimulationIndex(tokens[2]);
           if (idx == -1) {
             continue;
@@ -634,7 +619,6 @@ public class DebugShell implements SimulationListener {
               printProcessorMicroOps(idx);
               continue;
             }
-
             default -> {
               System.out.println("Unknown proc option: " + cmd);
               continue;
@@ -643,12 +627,14 @@ public class DebugShell implements SimulationListener {
         }
         case "m":
         case "mem": {
-          // print help on empty options
-          if (tokens.length < 3) {
+          if (tokens.length < 2) {
             help(HelpPage.MEM);
             continue;
           }
-
+          if (tokens.length < 3) {
+            System.out.println("\tUsage: mem [read|write] <simulation> <address> ?<data>");
+            continue;
+          }
           int idx = getSimulationIndex(tokens[2]);
           if (idx == -1) {
             continue;
@@ -662,7 +648,6 @@ public class DebugShell implements SimulationListener {
               }
 
               String addr = tokens[3];
-
               readMemoryAtAddress(idx, addr);
               continue;
             }
@@ -674,7 +659,6 @@ public class DebugShell implements SimulationListener {
 
               String addr = tokens[3];
               String data = tokens[4];
-
               writeMemoryAtAddress(idx, addr, data);
               continue;
             }
@@ -689,10 +673,9 @@ public class DebugShell implements SimulationListener {
         case "r":
         case "render": {
           if (tokens.length < 2) {
-            System.out.println("Please specify simulation index");
+            System.out.println("Usage: render <simulation>");
             continue;
           }
-
           int idx = getSimulationIndex(tokens[1]);
           if (idx == -1) {
             continue;
@@ -705,7 +688,6 @@ public class DebugShell implements SimulationListener {
 
         case "t":
         case "thread": {
-          // print help on empty options
           if (tokens.length < 2) {
             help(HelpPage.THREAD);
             continue;
@@ -715,7 +697,6 @@ public class DebugShell implements SimulationListener {
             case "s", "stop" -> {
               System.out.println("Stopping all device threads...");
               stopTheWorld();
-
               continue;
             }
             case "r", "resume" -> {
@@ -723,7 +704,6 @@ public class DebugShell implements SimulationListener {
               startTheWorld();
               continue;
             }
-
             default -> {
               System.out.println("Unknown thread option: " + cmd);
               continue;

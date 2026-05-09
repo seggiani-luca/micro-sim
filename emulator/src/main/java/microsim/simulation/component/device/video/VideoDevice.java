@@ -101,14 +101,12 @@ public class VideoDevice extends ThreadedIoDevice {
    */
   @Override
   protected void deviceThread() {
-    long updateTime = System.nanoTime();
     while (running) {
       // render to buffer
       render();
 
       // wait for frame time
-      updateTime += FRAME_TIME;
-      smartSpin(updateTime);
+      smartSpin(FRAME_TIME);
     }
   }
 
@@ -122,5 +120,4 @@ public class VideoDevice extends ThreadedIoDevice {
     // raise frame event to notify interfaces
     raiseEvent(new FrameEvent(this, renderer.getFrame()));
   }
-
 }

@@ -83,10 +83,11 @@ public class ELF {
    * @return EPROM data array
    * @throws IOException if fails to open file or parse ELF headers
    */
-  public static byte[] readEPROM(String path) throws IOException {
-    // open ELF
-    File file = new File(path);
+  public static byte[] readEPROM(Path path) throws IOException {
+    // convert to old file library to use jelf
+    File file = new File(path.toString());
 
+    // parse ELF header with jelf
     ElfFile elf = null;
     try {
       elf = ElfFile.from(file);
@@ -125,7 +126,7 @@ public class ELF {
     byte[] eprom = new byte[rodataSize + dataSize];
 
     // actually read segments
-    try (FileChannel channel = FileChannel.open(Paths.get(path), StandardOpenOption.READ)) {
+    try (FileChannel channel = FileChannel.open(path, StandardOpenOption.READ)) {
       // read rodata segment
       channel.position(rodataBeg);
       ByteBuffer dataBuffer = ByteBuffer.wrap(eprom, 0, rodataSize);
