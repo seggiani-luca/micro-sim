@@ -98,6 +98,7 @@ Classes</h2></td></tr>
 <tr class="memitem:keyboard_5Fdevice" id="r_keyboard_5Fdevice"><td class="memItemLeft">struct &#160;</td><td class="memItemRight"><a class="el" href="structhwr_1_1dev_1_1keyboard__device.html">keyboard_device</a></td></tr>
 <tr class="memitem:timer_5Fdevice" id="r_timer_5Fdevice"><td class="memItemLeft">struct &#160;</td><td class="memItemRight"><a class="el" href="structhwr_1_1dev_1_1timer__device.html">timer_device</a></td></tr>
 <tr class="memitem:network_5Fdevice" id="r_network_5Fdevice"><td class="memItemLeft">struct &#160;</td><td class="memItemRight"><a class="el" href="structhwr_1_1dev_1_1network__device.html">network_device</a></td></tr>
+<tr class="memitem:block_5Fdevice" id="r_block_5Fdevice"><td class="memItemLeft">struct &#160;</td><td class="memItemRight"><a class="el" href="structhwr_1_1dev_1_1block__device.html">block_device</a></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-var-members" class="groupheader"><a id="var-members" name="var-members"></a>
 Variables</h2></td></tr>
@@ -105,10 +106,33 @@ Variables</h2></td></tr>
 <tr class="memitem:a33ec93b569ca15485501cad4b340b785" id="r_a33ec93b569ca15485501cad4b340b785"><td class="memItemLeft"><a class="el" href="structhwr_1_1dev_1_1keyboard__device.html">keyboard_device</a>&#160;</td><td class="memItemRight"><a class="el" href="#a33ec93b569ca15485501cad4b340b785">keyboard</a></td></tr>
 <tr class="memitem:abc532c6c0fecafaee0b42944b3df6e45" id="r_abc532c6c0fecafaee0b42944b3df6e45"><td class="memItemLeft"><a class="el" href="structhwr_1_1dev_1_1timer__device.html">timer_device</a>&#160;</td><td class="memItemRight"><a class="el" href="#abc532c6c0fecafaee0b42944b3df6e45">timer</a></td></tr>
 <tr class="memitem:a60c219e1aa4d42cc38566432f026fb43" id="r_a60c219e1aa4d42cc38566432f026fb43"><td class="memItemLeft"><a class="el" href="structhwr_1_1dev_1_1network__device.html">network_device</a>&#160;</td><td class="memItemRight"><a class="el" href="#a60c219e1aa4d42cc38566432f026fb43">network</a></td></tr>
+<tr class="memitem:afceb398eb8559748026cca40da06f17c" id="r_afceb398eb8559748026cca40da06f17c"><td class="memItemLeft"><a class="el" href="structhwr_1_1dev_1_1block__device.html">block_device</a>&#160;</td><td class="memItemRight"><a class="el" href="#afceb398eb8559748026cca40da06f17c">disk</a></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Specifies devices. </p>
 </div><a name="doc-var-members" id="doc-var-members"></a><h2 id="header-doc-var-members" class="groupheader">Variable Documentation</h2>
+<a id="afceb398eb8559748026cca40da06f17c" name="afceb398eb8559748026cca40da06f17c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afceb398eb8559748026cca40da06f17c">&#9670;&#160;</a></span>disk</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structhwr_1_1dev_1_1block__device.html">block_device</a> hwr::dev::disk</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<b>Initial value:</b><div class="fragment"><div class="line">          = {</div>
+<div class="line">    .buf_prt = (<span class="keyword">volatile</span> uint32_t*) 0x00070000,</div>
+<div class="line">    .err_prt = (<span class="keyword">volatile</span> uint32_t*) 0x00070004,</div>
+<div class="line">    .lba_prt = (<span class="keyword">volatile</span> uint32_t*) 0x00070008,</div>
+<div class="line">    .scn_prt = (<span class="keyword">volatile</span> uint32_t*) 0x0007000c,</div>
+<div class="line">    .ctl_prt = (<span class="keyword">volatile</span> uint32_t*) 0x00070010,</div>
+<div class="line">}</div>
+</div><!-- fragment --><p>Block device (disk) mounted on system. </p>
+
+</div>
+</div>
 <a id="a33ec93b569ca15485501cad4b340b785" name="a33ec93b569ca15485501cad4b340b785"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a33ec93b569ca15485501cad4b340b785">&#9670;&#160;</a></span>keyboard</h2>
 
@@ -144,7 +168,7 @@ Variables</h2></td></tr>
 <div class="line">    .txr_prt = (<span class="keyword">volatile</span> uint32_t*) 0x00060004,</div>
 <div class="line">    .rxb_prt = (<span class="keyword">volatile</span> uint32_t*) 0x00060008,</div>
 <div class="line">    .rxr_prt = (<span class="keyword">volatile</span> uint32_t*) 0x0006000c,</div>
-<div class="line">    .addr = *((<span class="keyword">volatile</span> uint32_t*) 0x00060010)</div>
+<div class="line">    .addr  = *((<span class="keyword">volatile</span> uint32_t*) 0x00060010)</div>
 <div class="line">}</div>
 </div><!-- fragment --><p>Network device mounted on system. </p>
 

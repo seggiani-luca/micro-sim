@@ -17,5 +17,6 @@ var searchData=
   ['contr_5ftable_14',['contr_table',['../namespacekyb.html#a7b2536576d87339b9db040432eca0179',1,'kyb']]],
   ['coords_15',['coords',['../structvid_1_1coords.html',1,'vid::coords'],['../structvid_1_1coords.html#a093ada2aa16e111a9ac9f06ffd388755',1,'vid::coords::coords()'],['../structvid_1_1coords.html#a07076a78d669cc70c9d363afb8ad2987',1,'vid::coords::coords(int row, int col)'],['../structvid_1_1coords.html#a95d248449fdf20ba8ce8054131ee48a6',1,'vid::coords::coords(int idx)']]],
   ['cpy_16',['cpy',['../namespacestr.html#a5b664e28a52198f31d65031931c7af4a',1,'str']]],
-  ['cur_17',['cur',['../namespacevid.html#afa0a7043f8c960c655d5e27911aa1bbd',1,'vid']]]
+  ['ctl_5fprt_17',['ctl_prt',['../structhwr_1_1dev_1_1block__device.html#a30e6350a430bcdebc2e42da5f7a5732f',1,'hwr::dev::block_device']]],
+  ['cur_18',['cur',['../namespacevid.html#afa0a7043f8c960c655d5e27911aa1bbd',1,'vid']]]
 ];

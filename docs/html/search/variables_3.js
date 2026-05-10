@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['eprom_0',['eprom',['../namespacehwr_1_1mem.html#a56c843f95f7635f89ca8b8c923fe4967',1,'hwr::mem']]],
-  ['eprom_5fsize_1',['eprom_size',['../namespacehwr_1_1mem.html#a43aaccf9f5a092b0101204b13fb6f4b4',1,'hwr::mem']]],
-  ['eprom_5fwrites_5fallowed_2',['eprom_writes_allowed',['../namespacehwr_1_1mem.html#afd7b912c573d935b7053ac2c65da628b',1,'hwr::mem']]]
+  ['dat_5fprt_0',['dat_prt',['../structhwr_1_1dev_1_1keyboard__device.html#ac4adcaa9defca216ded11947c1042cd0',1,'hwr::dev::keyboard_device']]],
+  ['dest_5faddr_1',['dest_addr',['../structnet_1_1packet.html#a656c403ed7ada973459af7a37d153c1a',1,'net::packet']]],
+  ['disk_2',['disk',['../namespaceblk.html#ad9614566fb7380b666875123cb236499',1,'blk::disk'],['../namespacehwr_1_1dev.html#afceb398eb8559748026cca40da06f17c',1,'hwr::dev::disk']]]
 ];

@@ -1,6 +1,7 @@
 var searchData=
 [
-  ['gat0_5fprt_0',['gat0_prt',['../structhwr_1_1dev_1_1timer__device.html#a69e0a1f16f4bbbdc0df4c4b7eca8ecba',1,'hwr::dev::timer_device']]],
-  ['gat1_5fprt_1',['gat1_prt',['../structhwr_1_1dev_1_1timer__device.html#ae9fde4d7c62085a458b6f3dd1e930b97',1,'hwr::dev::timer_device']]],
-  ['gat2_5fprt_2',['gat2_prt',['../structhwr_1_1dev_1_1timer__device.html#a61252f483d843bee40ed951f07a7cd7a',1,'hwr::dev::timer_device']]]
+  ['eprom_0',['eprom',['../namespacehwr_1_1mem.html#a56c843f95f7635f89ca8b8c923fe4967',1,'hwr::mem']]],
+  ['eprom_5fsize_1',['eprom_size',['../namespacehwr_1_1mem.html#a43aaccf9f5a092b0101204b13fb6f4b4',1,'hwr::mem']]],
+  ['eprom_5fwrites_5fallowed_2',['eprom_writes_allowed',['../namespacehwr_1_1mem.html#afd7b912c573d935b7053ac2c65da628b',1,'hwr::mem']]],
+  ['err_5fprt_3',['err_prt',['../structhwr_1_1dev_1_1block__device.html#a11b521742b5742c0f0ed71d8fd0a31e9',1,'hwr::dev::block_device']]]
 ];

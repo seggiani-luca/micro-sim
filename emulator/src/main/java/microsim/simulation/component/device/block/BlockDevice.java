@@ -114,9 +114,9 @@ public class BlockDevice extends IoDevice {
   private DiskOp nextOp = new DiskOp();
 
   /**
-   * Gets index of next byte pair to read. Shouldn't be called if currentOp is null.
+   * Gets index of next byte pair to read or write. Shouldn't be called if currentOp is null.
    *
-   * @return
+   * @return next index
    */
   private int getIndex() {
     // store previous index

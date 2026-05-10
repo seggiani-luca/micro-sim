@@ -5,7 +5,8 @@ var annotated_dup =
         [ "video_device", "structhwr_1_1dev_1_1video__device.html", "structhwr_1_1dev_1_1video__device" ],
         [ "keyboard_device", "structhwr_1_1dev_1_1keyboard__device.html", "structhwr_1_1dev_1_1keyboard__device" ],
         [ "timer_device", "structhwr_1_1dev_1_1timer__device.html", "structhwr_1_1dev_1_1timer__device" ],
-        [ "network_device", "structhwr_1_1dev_1_1network__device.html", "structhwr_1_1dev_1_1network__device" ]
+        [ "network_device", "structhwr_1_1dev_1_1network__device.html", "structhwr_1_1dev_1_1network__device" ],
+        [ "block_device", "structhwr_1_1dev_1_1block__device.html", "structhwr_1_1dev_1_1block__device" ]
       ] ]
     ] ],
     [ "kyb", "namespacekyb.html", [

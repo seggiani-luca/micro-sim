@@ -1,5 +1,11 @@
 var namespaces_dup =
 [
+    [ "blk", "namespaceblk.html", [
+      [ "disk", "namespaceblk.html#ad9614566fb7380b666875123cb236499", null ],
+      [ "read_cmd", "namespaceblk.html#a883d25137dcdaaae7999a56ea7d0fcde", null ],
+      [ "storage_size", "namespaceblk.html#a1418975bf9b99f1b768ef5b0f7e7c471", null ],
+      [ "write_cmd", "namespaceblk.html#a6693adc07a2fd82616aa58a826346660", null ]
+    ] ],
     [ "hwr", "namespacehwr.html", "namespacehwr" ],
     [ "kyb", "namespacekyb.html", "namespacekyb" ],
     [ "net", "namespacenet.html", "namespacenet" ],

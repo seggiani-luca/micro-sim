@@ -1,9 +1,8 @@
 var searchData=
 [
-  ['tab_5fsize_0',['TAB_SIZE',['../namespacevid.html#a24ab55debc6f845ddbd66ca84d64cb90',1,'vid']]],
-  ['timer_1',['timer',['../namespacehwr_1_1dev.html#abc532c6c0fecafaee0b42944b3df6e45',1,'hwr::dev::timer'],['../namespacetim.html#aa63533868c064758be74ba3078d35fff',1,'tim::timer']]],
-  ['trans_5fnum_2',['trans_num',['../namespacekyb.html#a1121f90d17740115ce3c0b3bd985573c',1,'kyb']]],
-  ['trans_5ftable_3',['trans_table',['../namespacekyb.html#a965a3b383f9fda2f1df2ea7b2e5e5f1b',1,'kyb']]],
-  ['txb_5fprt_4',['txb_prt',['../structhwr_1_1dev_1_1network__device.html#a6b40f31b442a03026f66233eeac58385',1,'hwr::dev::network_device']]],
-  ['txr_5fprt_5',['txr_prt',['../structhwr_1_1dev_1_1network__device.html#aa1cfb2ba1ae1f3ce8fc9e0caec5b96ba',1,'hwr::dev::network_device']]]
+  ['scn_5fprt_0',['scn_prt',['../structhwr_1_1dev_1_1block__device.html#a9828cfd716a17033d8291d08f062bd16',1,'hwr::dev::block_device']]],
+  ['src_5faddr_1',['src_addr',['../structnet_1_1packet.html#a6e3d57cb98b82af9c0140ee435bf9123',1,'net::packet']]],
+  ['status_2',['status',['../structkyb_1_1code__contr.html#ae226634dfe3ab60aab2ef520e50bc75e',1,'kyb::code_contr']]],
+  ['storage_5fsize_3',['storage_size',['../namespaceblk.html#a1418975bf9b99f1b768ef5b0f7e7c471',1,'blk']]],
+  ['sts_5fprt_4',['sts_prt',['../structhwr_1_1dev_1_1keyboard__device.html#ade6a33ceb6795dd7c5f78d2a52bb77a7',1,'hwr::dev::keyboard_device']]]
 ];
