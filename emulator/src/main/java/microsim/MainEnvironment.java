@@ -31,8 +31,8 @@ public class MainEnvironment {
      */
     public byte[] diskImage;
 
-    /*
-    * Name of simulation.
+    /**
+     * Name of simulation.
      */
     public String simulationName;
 
@@ -167,6 +167,8 @@ public class MainEnvironment {
 
   /**
    * Loads EPROMs and corresponding disks if found, building the list of simulation infos.
+   *
+   * @throws IOException on file errors
    */
   private void getInfos() throws IOException {
     // get EPROM data directory from path

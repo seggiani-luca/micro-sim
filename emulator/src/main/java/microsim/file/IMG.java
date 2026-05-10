@@ -10,6 +10,12 @@ import java.nio.file.Path;
 public class IMG {
 
   /**
+   * Hide constructor.
+   */
+  private IMG() {
+  }
+
+  /**
    * Takes a path string, a simulation name, and returns the corresponding disk image byte array (if
    * found).
    *

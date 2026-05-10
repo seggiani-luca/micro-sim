@@ -27,23 +27,26 @@ RISCV_L := riscv32-unknown-elf-ld
 RISCV_DUMP := riscv32-unknown-elf-objdump
 RISCV_RELF := readelf
 
+CFLAGS := -march=rv32i -mabi=ilp32 -O2 -ffreestanding -nostdlib -fno-exceptions -fno-rtti -mno-small-data-limit=0
+SFLAGS := -march=rv32i -mabi=ilp32
+
 # -- targets --
 all: $(LIB_OUT_C) $(LIB_OUT_S) $(EPROM_ELF)
 
 $(EPROM_OUT)/%.elf: $(SRC)/%.cpp $(LIB_OUT_C) $(LIB_OUT_S) | $(EPROM_OUT)
 	@echo "Compiling and linking EPROM source $@"
-	@$(RISCV_C) -march=rv32i -mabi=ilp32 -O2 -ffreestanding -nostdlib -fno-exceptions -fno-rtti -c $< -o $(OUT)/$*.o
+	@$(RISCV_C) $(CFLAGS) -c $< -o $(OUT)/$*.o
 	@$(RISCV_L) -T $(MEM_MAP) $(OUT)/$*.o $(LIB_OUT_C) $(LIB_OUT_S) -o $@
 
 $(LIB_OUT)/%.o: $(LIB_SRC)/%.cpp | $(LIB_OUT)
 	@echo "Compiling lib source $<"
 	@mkdir -p $(dir $@)
-	@$(RISCV_C) -march=rv32i -mabi=ilp32 -O2 -ffreestanding -nostdlib -fno-exceptions -fno-rtti -mno-small-data-limit=0 -c $< -o $@
+	@$(RISCV_C) $(CFLAGS) -c $< -o $@
 
 $(LIB_OUT)/%.o: $(LIB_SRC)/%.s | $(LIB_OUT)
 	@echo "Assembling lib source $<"
 	@mkdir -p $(dir $@)
-	@$(RISCV_S) -march=rv32i -mabi=ilp32 $< -o $@
+	@$(RISCV_S) $(SFLAGS) $< -o $@
 
 $(LIB_OUT):
 	@mkdir -p $(LIB_OUT)

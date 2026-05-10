@@ -61,8 +61,8 @@ public abstract class ThreadedIoDevice extends IoDevice {
 
   /**
    * Method that implements the actual device thread. To be implemented by subclass. The
-   * implementation should loop on {@link #isRunning()} if it wants to be terminated correctly and
-   * use {@link #smartSpin(long)} to sleep if it wants to obey debugger policy.
+   * implementation should loop on {@link #running} if it wants to be terminated correctly and use
+   * {@link #smartSpin(long)} to sleep if it wants to obey debugger policy.
    */
   protected abstract void deviceThread();
 

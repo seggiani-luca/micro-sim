@@ -42,7 +42,7 @@ SECTIONS {
 	 * - uninitialized data
 	 * - unallocated symbols
 	 */
-	.data (NOLOAD) : AT(__data_eprom_start) {
+	.bss (NOLOAD) : AT(__data_eprom_start) {
 		*(.bss*)
 		*(.sbss*)
 		*(COMMON)

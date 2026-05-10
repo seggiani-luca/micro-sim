@@ -37,7 +37,15 @@ namespace hwr {
 			.txr_prt = (volatile uint32_t*) 0x00060004,
 			.rxb_prt = (volatile uint32_t*) 0x00060008,
 			.rxr_prt = (volatile uint32_t*) 0x0006000c,
-			.addr = *((volatile uint32_t*) 0x00060010)
+			.addr  = *((volatile uint32_t*) 0x00060010)
+		};
+
+		block_device disk = {
+			.buf_prt = (volatile uint32_t*) 0x00070000,
+			.err_prt = (volatile uint32_t*) 0x00070004,
+			.lba_prt = (volatile uint32_t*) 0x00070008,
+			.scn_prt = (volatile uint32_t*) 0x0007000c,
+			.ctl_prt = (volatile uint32_t*) 0x00070010,
 		};
 	} // dev::
 } // hwr::

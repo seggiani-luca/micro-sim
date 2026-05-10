@@ -181,6 +181,41 @@ namespace hwr {
 		 */
 		extern network_device network;
 
+		/**
+		 * Defines a block device.
+		 */
+		struct block_device {
+			/**
+			 * Data port.
+			 */
+			volatile uint32_t* buf_prt;
+			
+			/**
+			 * Error port.
+			 */
+			volatile uint32_t* err_prt;
+			
+			/**
+			 * LBA address port.
+			 */
+			volatile uint32_t* lba_prt;
+			
+			/**
+			 * Sector number port.
+			 */
+			volatile uint32_t* scn_prt;
+			
+			/**
+			 * Status/command port.
+			 */
+			volatile uint32_t* ctl_prt;
+		};
+		
+		/**
+		 * Block device (disk) mounted on system.
+		 */
+		extern block_device disk;
+
 	} // dev::
 } // hwr::
 

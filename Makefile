@@ -6,15 +6,17 @@ EXECUTABLE := target/micro-sim-app.jar
 EPROM := eprom
 DOCS := docs
 
+SCALE := 1
+
 all: emulator eprom 
 
 debug: 
 	@echo ">> Running emulator with debug shell..."
-	@cd $(EMULATOR) && java -jar $(EXECUTABLE) -d
+	@cd $(EMULATOR) && java -jar $(EXECUTABLE) -d -s $(SCALE)
 
 run: 
 	@echo ">> Running emulator..."
-	@cd $(EMULATOR) && java -jar $(EXECUTABLE) -s 2
+	@cd $(EMULATOR) && java -jar $(EXECUTABLE) -s $(SCALE)
 
 emulator:
 	@echo ">> Building emulator..."

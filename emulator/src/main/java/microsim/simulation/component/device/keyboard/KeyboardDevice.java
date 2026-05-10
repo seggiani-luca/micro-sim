@@ -60,15 +60,14 @@ public class KeyboardDevice extends IoDevice {
    * @return value port should return
    */
   @Override
-  @SuppressWarnings("null")
   public int getPort(int index) {
     switch (index) {
       case 0 -> {
-        // status register
+        // status port
         return keyCodes.isEmpty() ? 0 : 1;
       }
       case 1 -> {
-        // data register
+        // data port
         return keyCodes.isEmpty() ? 0 : keyCodes.remove();
       }
     }

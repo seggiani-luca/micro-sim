@@ -8,5 +8,6 @@
 #include "util/util.h"
 #include "video/video.h"
 #include "network/network.h"
+#include "block/block.h"
 
 #endif
