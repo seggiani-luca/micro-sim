@@ -2,6 +2,7 @@
 .section .start
 
 .extern main 
+.extern check_disk 
 .global _start
 
 # start routine
@@ -39,6 +40,9 @@ _static_const_loop:
 	j _static_const_loop
 
 _static_const_end:
+
+	# format disk
+	call check_disk
 
 	# jump to entry point
 	call main 

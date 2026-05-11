@@ -33,6 +33,8 @@ public class DebugEvent extends SimulationEvent {
   public DebugEvent(SimulationComponent owner, String message) {
     super(owner);
     this.message = message;
+    int0 = null;
+    int1 = null;
   }
 
   /**
@@ -49,9 +51,8 @@ public class DebugEvent extends SimulationEvent {
     this.int1 = null;
   }
 
-
   /**
-   * Instantiates debug event getting debug information with two intes.
+   * Instantiates debug event getting debug information with two ints.
    *
    * @param owner component that raised event
    * @param message debug message
@@ -65,7 +66,6 @@ public class DebugEvent extends SimulationEvent {
     this.int1 = int1;
   }
 
-
   /**
    * Returns information about the event.
    *
@@ -73,6 +73,17 @@ public class DebugEvent extends SimulationEvent {
    */
   @Override
   public String getDebugMessage() {
-    String ret = message + " " DebugShell.int32ToString(int0);
+
+    String ret = message;
+
+    // lazy concatenate ints
+    if (int0 != null) {
+      ret += " " + DebugShell.int32ToString(int1);
+    }
+    if (int1 != null) {
+      ret += ", " + DebugShell.int32ToString(int1);
+    }
+
+    return ret;
   }
 }
