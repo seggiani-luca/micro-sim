@@ -21,17 +21,17 @@ namespace vid {
 	/**
 	 * Reference to screen width.
 	 */
-	inline const int COLS = hwr::dev::video.cols;
+	inline const int cols = hwr::dev::video.cols;
 	
 	/**
 	 * Reference to screen height.
 	 */
-	inline const int ROWS = hwr::dev::video.rows;
+	inline const int rows = hwr::dev::video.rows;
 	
 	/**
 	 * Size of tabulation.
 	 */
-	inline const int TAB_SIZE = 4;
+	inline const int tab_size = 4;
 
 	/**
 	 * Defines coordinates on screen, allows conversion to video array index 
@@ -144,7 +144,7 @@ namespace vid {
 	void backspace();
 
 	/**
-	 * Inserts enough tabulation characters to reach the next TAB_SIZE column 
+	 * Inserts enough tabulation characters to reach the next tab_size column 
 	 * multiple.
 	 *
 	 * @param c tabulation character 

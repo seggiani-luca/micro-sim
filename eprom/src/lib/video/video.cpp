@@ -101,7 +101,7 @@ namespace vid {
 			vram[cur.get_idx()] = c;
 			
 			inc_cur();
-		} while(cur.col % TAB_SIZE);
+		} while(cur.col % tab_size);
 	}
 
 	void print_char(char c) {

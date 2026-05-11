@@ -2,7 +2,6 @@ package microsim.simulation.component.processor;
 
 import microsim.simulation.component.processor.MicroOp.OpType;
 import microsim.simulation.event.*;
-import microsim.ui.DebugShell;
 
 /**
  * Implements an interface a {@link microsim.simulation.component.processor.Processor} instance can
@@ -52,8 +51,7 @@ public class BusInterface {
    */
   public static void doReadRoutine(Processor proc, int addr, int byteSelect) {
     // log beginning of read routine
-    proc.raiseEvent(new DebugEvent(proc, "Processor started read routine at address "
-            + DebugShell.int32ToString(addr)));
+    proc.raiseDebugEvent(new DebugEvent(proc, "Processor started read routine at address ", addr));
 
     // keep track of byte select
     proc.byteSelect = byteSelect;
@@ -87,8 +85,8 @@ public class BusInterface {
    */
   public static void doWriteRoutine(Processor proc, int addr, int data, int byteSelect) {
     // log beginning of write routine
-    proc.raiseEvent(new DebugEvent(proc, "Processor started write routine at address "
-            + DebugShell.int32ToString(addr) + " of data " + DebugShell.int32ToString(data)));
+    proc.raiseDebugEvent(new DebugEvent(proc, "Processor started write routine at address of data ",
+            addr, data));
 
     // keep track of byte select
     proc.byteSelect = byteSelect;

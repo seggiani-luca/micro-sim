@@ -215,14 +215,14 @@ public class Processor extends BusComponent {
     // fill the queue if empty, otherwise execute microop
     if (nextOp == null) {
       // log fetch and decode cycle
-      raiseEvent(new DebugEvent(this,
+      raiseDebugEvent(new DebugEvent(this,
               "Processor found empty queue and started fetch-decode cycle"));
 
       // actually fetch and decode
       fetchDecode();
     } else {
       // log microop
-      raiseEvent(new DebugEvent(this, "Processor found microop " + nextOp.toString()));
+      raiseDebugEvent(new DebugEvent(this, "Processor found microop " + nextOp.toString()));
 
       // actually execute microop
       nextOp.execute(this);

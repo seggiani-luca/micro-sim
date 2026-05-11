@@ -516,8 +516,8 @@ public class MicroOp {
         proc.temp = proc.bus.dataLine.read();
 
         // log read data
-        proc.raiseEvent(new DebugEvent(proc, "Processor read routine finished and got value "
-                + DebugShell.int32ToString(proc.temp)));
+        proc.raiseDebugEvent(new DebugEvent(proc, "Processor read routine finished and got value ",
+                proc.temp));
       }
 
       // memory write routine (step 0 is done by bus interface)
@@ -529,7 +529,7 @@ public class MicroOp {
         proc.bus.dataLine.release(proc);
 
         // log data routine finished
-        proc.raiseEvent(new DebugEvent(proc, "Processor write routine finished"));
+        proc.raiseDebugEvent(new DebugEvent(proc, "Processor write routine finished"));
       }
     }
   }

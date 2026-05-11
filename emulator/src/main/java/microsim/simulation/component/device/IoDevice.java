@@ -4,7 +4,6 @@ import microsim.simulation.Simulation;
 import microsim.simulation.component.BusComponent;
 import microsim.simulation.component.bus.*;
 import microsim.simulation.event.DebugEvent;
-import microsim.ui.DebugShell;
 
 /**
  * Implements a device that exposes ports on the bus from a certain address. Memory and devices are
@@ -106,15 +105,15 @@ public abstract class IoDevice extends BusComponent {
     if (readEnable) {
       // log that read operation was seen
       raiseDebugEvent(new DebugEvent(this, "Device " + getDeviceName()
-              + " saw read operation at addr " + DebugShell.int32ToString(addr)));
+              + " saw read operation at address ", addr));
 
 
       // read at port
       int portValue = getPort(portIdx);
 
       // log result of read operation
-      raiseEvent(new DebugEvent(this, "Device " + getDeviceName() + " read operation gave data "
-              + DebugShell.int32ToString(portValue)));
+      raiseDebugEvent(new DebugEvent(this, "Device " + getDeviceName()
+              + " read operation gave data ", portValue));
 
       // drive data line with word
       bus.dataLine.drive(this, portValue);
@@ -127,14 +126,15 @@ public abstract class IoDevice extends BusComponent {
       int data = bus.dataLine.read();
 
       // log that write operation was seen
-      raiseEvent(new DebugEvent(this, "Device " + getDeviceName() + " saw write operation at addr "
-              + DebugShell.int32ToString(addr) + " of data " + DebugShell.int32ToString(data)));
+      raiseDebugEvent(new DebugEvent(this, "Device " + getDeviceName()
+              + " saw write operation at address of data ", addr, data));
 
       // write at port
       setPort(portIdx, data);
 
       // log result of write operation
-      raiseEvent(new DebugEvent(this, "Device " + getDeviceName() + " write operation finished"));
+      raiseDebugEvent(new DebugEvent(this, "Device " + getDeviceName()
+              + " write operation finished"));
     }
   }
 }

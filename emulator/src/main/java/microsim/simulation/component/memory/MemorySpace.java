@@ -5,7 +5,6 @@ import microsim.simulation.component.*;
 import microsim.simulation.component.bus.*;
 import microsim.simulation.component.bus.Bus.ByteSelect;
 import microsim.simulation.event.*;
-import microsim.ui.DebugShell;
 
 /**
  * Implements a memory space as a (to outside users) contiguous array of byte locations. Memory is
@@ -176,8 +175,7 @@ public class MemorySpace extends BusComponent {
       int data = 0x0;
 
       // log that read operation was seen
-      raiseEvent(new DebugEvent(this, "Memory saw read operation at addr "
-              + DebugShell.int32ToString(addr)));
+      raiseDebugEvent(new DebugEvent(this, "Memory saw read operation at addr ", addr));
 
       // read word in (max) four byte reads
       switch (byteSelect) {
@@ -191,8 +189,7 @@ public class MemorySpace extends BusComponent {
       }
 
       // log result of read operation
-      raiseEvent(new DebugEvent(this, "Memory read operation gave data "
-              + DebugShell.int32ToString(data)));
+      raiseDebugEvent(new DebugEvent(this, "Memory read operation gave data ", data));
 
       // drive data line with word
       bus.dataLine.drive(this, data);
@@ -205,8 +202,8 @@ public class MemorySpace extends BusComponent {
       int data = bus.dataLine.read();
 
       // log that write operation was seen
-      raiseEvent(new DebugEvent(this, "Memory saw write operation at addr "
-              + DebugShell.int32ToString(addr) + " of data " + DebugShell.int32ToString(data)));
+      raiseDebugEvent(new DebugEvent(this, "Memory saw write operation at address of data", addr,
+              data));
 
       // write word in (max) four byte writes
       switch (byteSelect) {
@@ -220,7 +217,7 @@ public class MemorySpace extends BusComponent {
       }
 
       // log result of write operation
-      raiseEvent(new DebugEvent(this, "Memory write operation finished"));
+      raiseDebugEvent(new DebugEvent(this, "Memory write operation finished"));
     }
   }
 
