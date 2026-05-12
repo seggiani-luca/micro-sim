@@ -1,10 +1,9 @@
 #include "lib/lib.h"
 
 void main() {
-	blk::fat::vbr bs;
-	blk::read_sector(0, &bs);
-
-	vid::print_strln(bs.oem_name);
-
+	vid::print_str("sizeof(vbr): ");
+	vid::print_int(sizeof(blk::fat::vbr)); vid::newline();
+	vid::print_str("sizeof(dir): ");
+	vid::print_int(sizeof(blk::fat::dir)); vid::newline();
 	utl::wait();
 }

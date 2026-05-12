@@ -39,3 +39,7 @@ clean:
 	@cd $(EPROM) && $(MAKE) clean
 	@cd $(EMULATOR) && mvn clean
 	@echo
+
+format:
+	@echo ">> Clearing disks..."
+	@rm $(EMULATOR)/data/disk/*

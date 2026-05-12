@@ -81,9 +81,77 @@ namespace blk {
 	extern fat::vbr def_vbr;
 
 	/**
+	 * Boot sector of mounted disk.
+	 */
+	extern fat::vbr cur_vbr;
+
+	/**
 	 * Checks mounted disk and formats if needed.
 	 */
 	extern "C" void check_disk();
-} // blk::
+
+	/**
+	 * Reads a single cluster into a buffer.
+	 *
+	 * @param addr index of clusser
+	 * @param data buffer to write into
+	 */
+	void read_cluster(int idx, void* data);
+
+	/**
+	 * Writes a single cluster from a buffer.
+	 *
+	 * @param addr index of sector
+	 * @param data buffer to read from 
+	 */
+	void write_cluster(int idx, void* data);
+
+	/**
+	 * Looks up a given fat entry.
+	 *
+	 * @param fat entry to look up
+	 * @return the fat entry
+	 */
+	uint16_t fat_lookup(uint16_t entry);
+
+	/**
+	 * Allocates a fat entry (inserting end of chain) and returns its index.
+	 *
+	 * @return the allocated fat entry
+	 */
+	uint16_t fat_allocate();
+
+	/**
+	 * Writes into a fat entry.
+	 *
+	 * @param entry to write in
+	 * @param val what to write in entry
+	 */
+	void fat_write(uint16_t entry, uint16_t val);
+
+	/**
+	 * Reads a file into a buffer. Assuming buffer to be sized to file.
+	 *
+	 * @param entry directory entry of file to read
+	 * @param buf buffer to read file into
+	 */
+	void read_file(fat::dir_ent entry, void* buf);
+	
+	/**
+	 * Writes a buffer into a file, truncating original file.
+	 *
+	 * @param entry directory entry of file to write 
+	 * @param buf buffer to write to file 
+	 */
+	void trunc_file(fat::dir_ent entry, void* buf);
+	
+	/**
+	 * Writes a buffer into a file, appending to original file.
+	 *
+	 * @param entry directory entry of file to write 
+	 * @param buf buffer to write to file 
+	 */
+	void append_file(fat::dir_ent entry, void* buf);
+} // blk::table
 
 #endif
