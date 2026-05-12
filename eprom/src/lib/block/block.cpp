@@ -97,6 +97,8 @@ namespace blk {
 		.magic = 0xaa55
 	};
 
+	fat::vbr cur_vbr;
+
 	void check_disk() {
 		// load (supposed) boot sector from disk
 		read_sector(0, &cur_vbr);
@@ -188,15 +190,102 @@ namespace blk {
 		return sector[entry];	
 	}
 	
-	uint16_t fat_allocate() {
-		// scan fat table, get first unused entry and return
+	uint16_t fat_find(uint16_t ignore) {
+		// get fat beginning
+		int beg = fat::get_fat(cur_vbr, 0);
+
+		// go through each fat sector
+		int sec_entries = sector_size / 2;
+		for(int i = 0; i < fat::get_fat_len(cur_vbr); i++) {
+			uint16_t sector[sec_entries];
+			read_sector(beg + i, sector);
+
+			// go through each fat sector entry
+			for(int j = 0; j < sec_entries; j++) {
+				uint16_t val = sector[j];
+				uint16_t entry = j + i * sec_entries;
+				if(val == fat::free_cluster && entry != ignore) {
+					// found it, return free cluster 
+					return entry;
+				}
+			}
+		}
+
+		// no suitable sectors found
+		utl::panic("Spazio su disco esaurito");
 	}
 
-	void fat_write(uint16_t entry, uint16_t val) {
-		// lookup fat and write to it
+	void fat_set(uint16_t entry, uint16_t val) {
+		// get fat beginning
+		int beg = fat::get_fat(cur_vbr, 0);
+
+		// get sector from beginning entry is in, and entry in sector
+		int sec_entries = sector_size / 2;
+		int sec_addr = entry / sec_entries + beg;
+		entry = entry % sec_entries;
+		
+		// read sector
+		uint16_t sector[sec_entries];
+		read_sector(sec_addr, sector);
+
+		// modify sector
+		sector[entry] = val;
+
+		// write sector
+		write_sector(sec_addr, sector);
 	}
 
-	void read_file(fat::dir_ent entry, void* buf) {
+	uint16_t fat_chain(int size) {
+		// get number of clusters
+		int cluster_len = fat::get_cluster_len(cur_vbr);
+		int n_clusters = (size + cluster_len - 1) / cluster_len;
+
+		// init pointers
+		uint16_t first;
+		uint16_t prev = 0;
+
+		// go through all needed clusters
+		for(int i = 0; i < n_clusters; i++) {
+			// allocate a cluster
+			uint16_t free = fat_find(prev);
+
+			// if first, keep track
+			if(i == 0) first = free;
+			// if not first, set previous to point to this
+			else fat_set(prev, free);
+
+			// update previous
+			prev = free;
+		}
+
+		// close chain
+		fat_set(prev, fat::end_of_chain);
+
+		// return first
+		return first;
+	}
+
+	void fat_unchain(uint16_t beg) {
+		// get fat beginning
+		int fat_beg = fat::get_fat(cur_vbr, 0);
+
+		// unroll chain to end
+		while(true) {
+			// get next cluster
+			uint16_t next = fat_lookup(beg);
+
+			// free it
+			fat_set(beg, fat::free_cluster);
+
+			// return at end of chain
+			if(fat::is_end_of_chain(beg)) return;
+
+			// update beginning (current)
+			beg = next;
+		}
+	}
+
+	void read_file(fat::dir_ent entry, void* buf) { // THIS WASNT CHECKED
 		// get filesize and first cluster
 		int size = entry.filesize;
 		uint16_t cluster_idx = entry.cluster_lo;

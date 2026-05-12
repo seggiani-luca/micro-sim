@@ -93,7 +93,7 @@ namespace blk {
 	/**
 	 * Reads a single cluster into a buffer.
 	 *
-	 * @param addr index of clusser
+	 * @param idx index of cluster (in cluster space)
 	 * @param data buffer to write into
 	 */
 	void read_cluster(int idx, void* data);
@@ -101,7 +101,7 @@ namespace blk {
 	/**
 	 * Writes a single cluster from a buffer.
 	 *
-	 * @param addr index of sector
+	 * @param idx index of cluster (in cluster space)
 	 * @param data buffer to read from 
 	 */
 	void write_cluster(int idx, void* data);
@@ -109,25 +109,41 @@ namespace blk {
 	/**
 	 * Looks up a given fat entry.
 	 *
-	 * @param fat entry to look up
+	 * @param fat entry to look up (in fat space)
 	 * @return the fat entry
 	 */
 	uint16_t fat_lookup(uint16_t entry);
 
 	/**
-	 * Allocates a fat entry (inserting end of chain) and returns its index.
+	 * Finds the first free entry in the fat table.
 	 *
-	 * @return the allocated fat entry
+	 * @param ignore entry to ignore (used for chaining)
+	 * @return first free entry (in fat space)
 	 */
-	uint16_t fat_allocate();
+	uint16_t fat_find(uint16_t ignore = 0);
 
 	/**
-	 * Writes into a fat entry.
+	 * Sets an entry of the fat table.
 	 *
-	 * @param entry to write in
-	 * @param val what to write in entry
+	 * @param entry entry to set (in fat space)
+	 * @param val value to set entry to
 	 */
-	void fat_write(uint16_t entry, uint16_t val);
+	void fat_set(uint16_t entry, uint16_t val);
+
+	/**
+	 * Gets a fat chain of the given size.
+	 *
+	 * @param size size (in bytes) of fat chain
+	 * @return beginning of fat chain (in fat space)
+	 */
+	uint16_t fat_chain(int size);
+
+	/**
+	 * Clears the fat chain beg points to.
+	 *
+	 * @param beginning of fat chain (in fat space)
+	 */
+	void fat_unchain(uint16_t beg);
 
 	/**
 	 * Reads a file into a buffer. Assuming buffer to be sized to file.

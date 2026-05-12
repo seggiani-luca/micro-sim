@@ -119,7 +119,7 @@ namespace blk {
 		}
 
 		/**
-		 * Returns size of cluster in sctors.
+		 * Returns size of cluster in sectors.
 		 */
 		inline int get_cluster_secs(const vbr& bs) {
 			return bs.param.cluster_len;
