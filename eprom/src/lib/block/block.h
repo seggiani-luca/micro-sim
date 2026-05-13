@@ -95,16 +95,18 @@ namespace blk {
 	 *
 	 * @param idx index of cluster (in cluster space)
 	 * @param data buffer to write into
+	 * @param size size of buffer
 	 */
-	void read_cluster(int idx, void* data);
+	void read_cluster(int idx, void* data, int size);
 
 	/**
 	 * Writes a single cluster from a buffer.
 	 *
 	 * @param idx index of cluster (in cluster space)
-	 * @param data buffer to read from 
+	 * @param data buffer to read from
+	 * @param size size of buffer
 	 */
-	void write_cluster(int idx, void* data);
+	void write_cluster(int idx, const void* data, int size);
 
 	/**
 	 * Looks up a given fat entry.
@@ -146,28 +148,67 @@ namespace blk {
 	void fat_unchain(uint16_t beg);
 
 	/**
-	 * Reads a file into a buffer. Assuming buffer to be sized to file.
+	 * Allocates a fat chain and writes a buffer to it.
 	 *
-	 * @param entry directory entry of file to read
-	 * @param buf buffer to read file into
+	 * @param buf buffer to write
+	 * @param size size of buffer
+	 * @return first cluster of allocated chain
 	 */
-	void read_file(fat::dir_ent entry, void* buf);
-	
+	uint16_t fat_creat_file(const void* buf, int size);
+
 	/**
-	 * Writes a buffer into a file, truncating original file.
+	 * Reads a buffer from an allocated fat chain. 
 	 *
-	 * @param entry directory entry of file to write 
-	 * @param buf buffer to write to file 
+	 * @param which first cluster of chain to read from
+	 * @param buf buffer to read
+	 * @param size size of buffer
+	 * @return first cluster of allocated chain
 	 */
-	void trunc_file(fat::dir_ent entry, void* buf);
-	
+	uint16_t fat_read_file(uint16_t which, void* buf, int size);
+
 	/**
-	 * Writes a buffer into a file, appending to original file.
+	 * Updates the buffer allocated fat chain. For now deallocates the original
+	 * chain and allocates a new one.
 	 *
-	 * @param entry directory entry of file to write 
-	 * @param buf buffer to write to file 
+	 * @param which first cluster of chain to update 
+	 * @param buf buffer to write 
+	 * @param size size of buffer
+	 * @return first cluster of newly allocated chain
 	 */
-	void append_file(fat::dir_ent entry, void* buf);
+	uint16_t fat_update_file(uint16_t which, void* buf, int size);
+
+	/**
+	 * Deletes an allocated fat chain.
+	 *
+	 * @param which first cluster of chain to delete 
+	 */
+	void fat_delete_file(uint16_t which);
+
+	/**
+	 * Fat index of current directory. 0xffff means root.
+	 */
+	#define ROOT_ALIAS 0xffff
+	extern uint16_t cur_dir;
+
+	/**
+	 * Lists contents of current directory.
+	 */
+	void list_dir();
+
+	/**
+	 * Changes current dir to directory with given filename (if found).
+	 *
+	 * @param name name of directory to change to 
+	 * @return boolean representing if operation was succesful
+	 */
+	bool change_dir(const char* name);
+
+	/**
+	 * Creates a new directory.
+	 *
+	 * @param name name of new directory
+	 */
+	bool make_dir(const char* name);
 } // blk::table
 
 #endif

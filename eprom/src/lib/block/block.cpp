@@ -149,27 +149,52 @@ namespace blk {
 		vid::clear();
 	}
 	
-	void read_cluster(int idx, void* data) {
+	void read_cluster(int idx, void* data, int size) {
 		// get cluster address
 		int addr = fat::get_cluster(cur_vbr, idx);
-
-		// read all sectors of cluster
+		
+		// read clusters until size reached 
 		uint8_t* bdata = (uint8_t*) data;	
 		for(int i = 0; i < fat::get_cluster_secs(cur_vbr); i++) {
-			uint8_t sector[sector_size];
-			read_sector(addr + i, sector);
-			str::mcpy(bdata + sector_size * i, sector, sector_size);
+			if(size >= sector_size) {
+				// read full sector
+				read_sector(addr + i, bdata);
+				bdata += sector_size;
+				size -= sector_size;
+			} else {
+				// read sector
+				uint8_t last[sector_size];
+				read_sector(addr + i, last);
+
+				// read last sector and break
+				str::mcpy(bdata, last, size);
+				break;
+			}
 		}
 	}
 
-	void write_cluster(int idx, void* data) {
+	void write_cluster(int idx, const void* data, int size) {
 		// get cluster address
 		int addr = fat::get_cluster(cur_vbr, idx);
 
 		// write all sectors of cluster
 		uint8_t* bdata = (uint8_t*) data;	
 		for(int i = 0; i < fat::get_cluster_secs(cur_vbr); i++) {
-			write_sector(addr + i, bdata + sector_size * i);
+			if(size >= sector_size) {
+				// write full sector 
+				write_sector(addr + i, bdata);
+				bdata += sector_size;
+				size -=  sector_size;
+			} else {
+				// prepare last sector
+				uint8_t last[sector_size];
+				str::mset(last, 0, sector_size);
+				str::mcpy(last, bdata, size);
+
+				// write last sector and break
+				write_sector(addr + i, last);
+				break;
+			}
 		}
 	}
 
@@ -278,52 +303,264 @@ namespace blk {
 			fat_set(beg, fat::free_cluster);
 
 			// return at end of chain
-			if(fat::is_end_of_chain(beg)) return;
+			if(fat::is_end_of_chain(next)) return;
 
 			// update beginning (current)
 			beg = next;
 		}
 	}
 
-	void read_file(fat::dir_ent entry, void* buf) { // THIS WASNT CHECKED
-		// get filesize and first cluster
-		int size = entry.filesize;
-		uint16_t cluster_idx = entry.cluster_lo;
+	uint16_t fat_creat_file(const void* buf, int size) {
+		// get fat chain of given size
+		uint16_t beg = fat_chain(size);
+		uint16_t cur = beg;
+
+		// get cluster size
 		int cluster_len = fat::get_cluster_len(cur_vbr);
 
-		// cursor in file
-		int i = 0;
+		// write into fat chain
+		const uint8_t* bbuf = (const uint8_t*) buf;
+		while(true) {
+			// write cluster
+			int to_write = size > cluster_len ? cluster_len : size;
+			write_cluster(cur, bbuf, to_write);
 
-		// copy all needed clusters
+			// advance data pointer and decrease remaining
+			bbuf += to_write;
+			size -= to_write;
+
+			// get next cluster 
+			uint16_t next = fat_lookup(cur);
+			if(fat::is_end_of_chain(next)) return beg;
+
+			// update current cluster 
+			cur = next;
+		}
+	}
+
+	uint16_t fat_read_file(uint16_t which, void* buf, int size) {
+		// remember beg
+		uint16_t cur = which;
+
+		// get cluster size
+		int cluster_len = fat::get_cluster_len(cur_vbr);
+	
+		// read from fat chain
 		uint8_t* bbuf = (uint8_t*) buf;
-		while(size - i > 0) {
+		while(true) {
 			// read cluster
-			uint8_t cluster[cluster_len];
-			read_cluster(cluster_idx, cluster);
+			int to_read = size > cluster_len ? cluster_len : size;
+			read_cluster(cur, bbuf, to_read);
+			
+			// advance data pointer and decrease remaining
+			bbuf += to_read;
+			size -= to_read;
+			
+			// get next cluster 
+			uint16_t next = fat_lookup(cur);
+			if(fat::is_end_of_chain(next)) return which;
+			
+			// update current cluster 
+			cur = next;
+		}
+	}
 
-			// copy cluster in remaining space
-			int rem = size - i;
-			if(rem >= cluster_len) rem = cluster_len;
-			str::mcpy(bbuf + i, cluster, rem);
-			i += rem;
-		
-			if(size - i > 0) {
-				// get next cluster
-				cluster_idx = fat_lookup(cluster_idx);
-				if(fat::is_end_of_chain(cluster_idx) 
-						|| cluster_idx == fat::free_cluster) {
-					utl::panic("Trovato cluster invalido nel file");
+	uint16_t fat_update_file(uint16_t which, void* buf, int size) {
+		// remove the chain
+		fat_unchain(which);
+
+		// reallocate file
+		return fat_creat_file(buf, size);	
+	}
+
+	void fat_delete_file(uint16_t which) {
+		// remove the chain
+		fat_unchain(which);
+	}
+
+	uint16_t cur_dir = ROOT_ALIAS;
+
+	/**
+	 * Helper for walking through the current directory, running a function on 
+	 * all entries (or just the first one).
+	 *
+	 * @param fun the function to run on each entry, expected to return bool
+	 * @param ctx additional data (context) pointer to send to function
+	 * @param first should the function shortcircuit on the first entry?
+	 * @param write will the function modify the entries
+	 */
+	bool walk_dir(bool (*fun)(fat::dir_ent&, void*), 
+	              void* ctx = 0, 
+	              bool first = false,
+				  bool write = false) {
+		// root directory
+		if(cur_dir == ROOT_ALIAS) {
+			// get length and base of rootdir
+			int dim = fat::get_rootdir_len(cur_vbr);
+			int base = fat::get_rootdir(cur_vbr);
+
+			// prepare directory buffer
+			int entries = sector_size / sizeof(fat::dir_ent);
+			fat::dir_ent dir[entries];
+
+			// go through each rootdir sector 
+			for(int i = 0; i < dim; i++) {
+				// read rootdir sector
+				read_sector(base + i, dir);
+
+				// go through all entries in sector
+				for(int j = 0; j < entries; j++) {
+					bool ret = fun(dir[j], ctx);
+					if(first && ret) {
+						// write if needed
+						if(write) write_sector(base + i, dir);
+						return true;
+					}
 				}
+
+				// write if needed
+				if(write) write_sector(base + i, dir);
+			}
+
+			return false;
+
+		// normal directory
+		} else {
+			// get cluster size and init cluster index 
+			int cluster_len = fat::get_cluster_len(cur_vbr);
+			uint16_t cur = cur_dir;
+
+			// prepare directory buffer
+			int entries = cluster_len / sizeof(fat::dir_ent);
+			fat::dir_ent dir[entries];
+
+			// go through each directory cluster 
+			while(true) {
+				// read rootdir sector
+				read_cluster(cur, dir, cluster_len);
+
+				// go through all entries in cluster 
+				for(int j = 0; j < entries; j++) {
+					bool ret = fun(dir[j], ctx);
+					if(first && ret) {
+						// write if needed
+						if(write) write_cluster(cur, dir, cluster_len);
+						return true;
+					}
+				}
+						
+				// write if needed
+				if(write) write_cluster(cur, dir, cluster_len);
+
+				// get next cluster 
+				uint16_t next = fat_lookup(cur);
+				if(fat::is_end_of_chain(next)) return false;
+				
+				// update current cluster 
+				cur = next;
 			}
 		}
 	}
 
-	void trunc_file(fat::dir_ent entry, void* buf) {
+	/**
+	 * Helper that lists a single directory entry.
+	 *
+	 * @param ent the directory entry
+	 * @param ctx unused
+	 * @return true if directory was listed
+	 */
+	bool list_dir_ent(fat::dir_ent& ent, void* ctx __attribute__((unused))) {
+		// get flags
+		char flag = ent.filename[0];
+		if(flag == fat::free_dir_ent || flag == '\0') return false;
 
+		// print filename
+		for(int i = 0; i < 8; i++) {
+			char c = ent.filename[i];
+			if(!c) break;
+			vid::print_char(c);
+		}
+		vid::print_char('.');
+		for(int i = 0; i < 3; i++) {
+			char c = ent.filename[8 + i];
+			if(!c) break;
+			vid::print_char(c);
+		}
+		vid::print_str(" ");
+
+		// print size
+		vid::print_int(ent.filesize);
+		vid::print_str(" bytes ");
+
+		// print dir flag if dir
+		if(ent.attrib == fat::dir_attrib) vid::print_strln("<dir>");
+		else vid::newline();
+
+		return true;
 	}
 
-	void append_file(fat::dir_ent entry, void* buf) {
-
+	void list_dir() {
+		walk_dir(list_dir_ent);
 	}
 
+	/**
+	 * Helper to check if we should change to a given directory entry. Changes
+	 * current directory as a side effect.
+	 *
+	 * @param entry entry to check
+	 * @param ctx name of targeted directory
+	 * @return true if directory was changed to
+	 */
+	bool change_dir_ent(fat::dir_ent& ent, void* ctx) {
+		// extract context
+		char* name = (char*) ctx;
+		
+		// get flags
+		char flag = ent.filename[0];
+		if(flag == fat::free_dir_ent || flag == '\0') return false;
+
+		// check if valid directory
+		if(ent.attrib != fat::dir_attrib) return false;
+
+		// check filename
+		if(str::len(name) > 8) return false;
+		for(int i = 0; i < 8; i++) {
+			if(name[i] != ent.filename[i]) return false;
+		}
+
+		// change to directory
+		cur_dir = ent.cluster_lo;
+		return true;
+	}
+
+	bool change_dir(const char* name) {
+		return walk_dir(change_dir_ent, (void*)name);
+	}
+
+	/**
+	 * Helper to make a directory at a given entry.
+	 *
+	 * @parem entry entry to try creating directory at
+	 * @param ctx name of directory to create
+	 * @return true if directory was created
+	 */
+	bool make_dir_ent(fat::dir_ent& ent, void* ctx) {
+		// extract context
+		char* name = (char*) ctx;
+		
+		// get flags
+		char flag = ent.filename[0];
+		if(flag != fat::free_dir_ent && flag != '\0') return false;
+
+		// set parameters
+		str::mset(&ent, 0, sizeof(fat::dir_ent));
+		str::mcpy(ent.filename, name, 8);
+		ent.cluster_lo = fat_chain(fat::get_cluster_len(cur_vbr));
+		ent.attrib = fat::dir_attrib;
+		return true;
+	}
+	
+	bool make_dir(const char* name) {
+		return walk_dir(make_dir_ent, (void*)name, true, true);
+	}
 } // blk::

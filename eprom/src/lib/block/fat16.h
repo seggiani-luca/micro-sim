@@ -69,9 +69,19 @@ namespace blk {
 		inline uint8_t dir_attrib = 0x10; 
 		
 		/**
+		 * Attributes for files.
+		 */
+		inline uint8_t file_attrib = 0x20; 
+		
+		/**
 		 * Attributes for volume ID.
 		 */
 		inline uint8_t vol_id_attrib = 0x08;
+
+		/**
+		 * First byte of emptied directory entry.
+		 */
+		inline uint8_t free_dir_ent = 0xe5;
 
 		/**
 		 * Returns fat table at index (counting from 0).
