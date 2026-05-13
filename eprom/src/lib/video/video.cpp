@@ -98,8 +98,7 @@ namespace vid {
 
 	void tabulate(char c = ' ') {
 		do {
-			vram[cur.get_idx()] = c;
-			
+			vram[cur.get_idx()] = c;	
 			inc_cur();
 		} while(cur.col % tab_size);
 	}

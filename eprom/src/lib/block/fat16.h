@@ -160,6 +160,18 @@ namespace blk {
 		inline bool is_end_of_chain(uint16_t val) {
 			return val >= 0xfff8;
 		}
+
+		/**
+		 * Copies a filename according to 8.3 specification.
+		 */
+		inline void copy_filename(char dest[11], const char* src) {
+			int i = 0;
+			for(; i < 11; i++) {
+				if(src[i] == '\0') break;
+				dest[i] = src[i];
+			}
+			for(; i < 11; i++) dest[i] = ' ';
+		}
 	} // fat::
 } // blk::
 

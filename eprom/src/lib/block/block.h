@@ -16,17 +16,17 @@ namespace blk {
 	/**
 	 * Size of disk sector
 	 */
-	extern int sector_size;
+	inline int sector_size = 512;
 
 	/**
 	 * Size of disk device
 	 */
-	extern int storage_size;
+	inline int storage_size = 1024 * 1024 * 16;
 
 	/**
 	 * Number of valid sectors in disk device.
 	 */
-	extern int num_sectors;
+	inline int num_sectors = storage_size / sector_size;
 
 	/**
 	* Command to begin reading from disk.
@@ -108,6 +108,13 @@ namespace blk {
 	 */
 	void write_cluster(int idx, const void* data, int size);
 
+	/**
+	 * Zeroes a single cluster. 
+	 *
+	 * @param idx index of cluster (in cluster space)
+	 */
+	void zero_cluster(int idx);
+	
 	/**
 	 * Looks up a given fat entry.
 	 *
@@ -208,7 +215,7 @@ namespace blk {
 	 *
 	 * @param name name of new directory
 	 */
-	bool make_dir(const char* name);
+	 void make_dir(const char* name);
 } // blk::table
 
 #endif

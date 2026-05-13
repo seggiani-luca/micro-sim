@@ -31,7 +31,7 @@ namespace vid {
 	/**
 	 * Size of tabulation.
 	 */
-	inline const int tab_size = 4;
+	inline int tab_size = 4;
 
 	/**
 	 * Defines coordinates on screen, allows conversion to video array index 

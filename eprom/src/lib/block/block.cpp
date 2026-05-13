@@ -6,14 +6,7 @@
 #include "fat16.h"
 
 namespace blk {
-	int storage_size = 16 * 1024 * 1024;
-	
-	int sector_size = 512;
-
-	int num_sectors = storage_size / sector_size;
-
 	int read_cmd = 0x00;
-
 	int write_cmd = 0x01;
 
 	void wait_for_disk() {
@@ -195,6 +188,14 @@ namespace blk {
 				write_sector(addr + i, last);
 				break;
 			}
+		}
+	}
+
+	void zero_cluster(int idx) {
+		// get cluster address
+		int addr = fat::get_cluster(cur_vbr, idx);
+		for(int i = 0; i < fat::get_cluster_secs(cur_vbr); i++) {
+			zero_sector(addr + i);
 		}
 	}
 
@@ -387,12 +388,10 @@ namespace blk {
 	 * @param fun the function to run on each entry, expected to return bool
 	 * @param ctx additional data (context) pointer to send to function
 	 * @param first should the function shortcircuit on the first entry?
-	 * @param write will the function modify the entries
 	 */
 	bool walk_dir(bool (*fun)(fat::dir_ent&, void*), 
 	              void* ctx = 0, 
-	              bool first = false,
-				  bool write = false) {
+	              bool first = false) {
 		// root directory
 		if(cur_dir == ROOT_ALIAS) {
 			// get length and base of rootdir
@@ -410,16 +409,14 @@ namespace blk {
 
 				// go through all entries in sector
 				for(int j = 0; j < entries; j++) {
-					bool ret = fun(dir[j], ctx);
-					if(first && ret) {
-						// write if needed
-						if(write) write_sector(base + i, dir);
-						return true;
-					}
+					// get flags
+					uint8_t flag = dir[j].filename[0];
+					if(flag == '\0') return false;
+					if(flag == fat::free_dir_ent) continue;
+					
+					// execute
+					if(fun(dir[j], ctx) && first) return true;
 				}
-
-				// write if needed
-				if(write) write_sector(base + i, dir);
 			}
 
 			return false;
@@ -441,20 +438,107 @@ namespace blk {
 
 				// go through all entries in cluster 
 				for(int j = 0; j < entries; j++) {
-					bool ret = fun(dir[j], ctx);
-					if(first && ret) {
-						// write if needed
-						if(write) write_cluster(cur, dir, cluster_len);
-						return true;
-					}
+					// get flags
+					uint8_t flag = dir[j].filename[0];
+					if(flag == '\0') return false;
+					if(flag == fat::free_dir_ent) continue;
+
+					// execute
+					if(fun(dir[j], ctx) && first) return true;
 				}
 						
-				// write if needed
-				if(write) write_cluster(cur, dir, cluster_len);
-
 				// get next cluster 
 				uint16_t next = fat_lookup(cur);
 				if(fat::is_end_of_chain(next)) return false;
+				
+				// update current cluster 
+				cur = next;
+			}
+		}
+	}
+
+	/**
+	 * Helper to allocate a new entry in a directory.
+	 *
+	 * @param fun the function to run on each entry, expected to return bool
+	 * @param ctx additional data (context) pointer to send to function
+	 */
+	void alloc_dir(void (*fun)(fat::dir_ent&, void*), void* ctx) {
+		// root directory
+		if(cur_dir == ROOT_ALIAS) {
+			// get length and base of rootdir
+			int dim = fat::get_rootdir_len(cur_vbr);
+			int base = fat::get_rootdir(cur_vbr);
+
+			// prepare directory buffer
+			int entries = sector_size / sizeof(fat::dir_ent);
+			fat::dir_ent dir[entries];
+
+			// go through each rootdir sector 
+			for(int i = 0; i < dim; i++) {
+				// read rootdir sector
+				read_sector(base + i, dir);
+
+				// go through all entries in sector
+				for(int j = 0; j < entries; j++) {
+					// get flags
+					uint8_t flag = dir[j].filename[0];
+
+					// check if can allocate
+					if(flag == fat::free_dir_ent || flag == '\0') {
+						// allocate
+						fun(dir[j], ctx);
+
+						// write entry
+						write_sector(base + i, dir);
+						return;
+					}
+				}
+			}
+
+			utl::panic("Directory di root piena!");
+
+		// normal directory
+		} else {
+			// get cluster size and init cluster index 
+			int cluster_len = fat::get_cluster_len(cur_vbr);
+			uint16_t cur = cur_dir;
+
+			// prepare directory buffer
+			int entries = cluster_len / sizeof(fat::dir_ent);
+			fat::dir_ent dir[entries];
+
+			// go through each directory cluster 
+			while(true) {
+				// read rootdir sector
+				read_cluster(cur, dir, cluster_len);
+
+				// go through all entries in cluster 
+				for(int j = 0; j < entries; j++) {
+					// get flags
+					uint8_t flag = dir[j].filename[0];
+
+					// check if can allocate
+					if(flag == fat::free_dir_ent || flag == '\0') {
+						// allocate
+						fun(dir[j], ctx);
+						
+						// write entry
+						write_cluster(cur, dir, cluster_len);
+						return;
+					}
+				}
+						
+				// get next cluster 
+				uint16_t next = fat_lookup(cur);
+				if(fat::is_end_of_chain(next)) {
+					// need to allocate more space for directory
+					next = fat_chain(cluster_len);
+					zero_cluster(next);
+
+					// append to fat table
+					fat_set(cur, next);
+				}
 				
 				// update current cluster 
 				cur = next;
@@ -470,9 +554,8 @@ namespace blk {
 	 * @return true if directory was listed
 	 */
 	bool list_dir_ent(fat::dir_ent& ent, void* ctx __attribute__((unused))) {
-		// get flags
-		char flag = ent.filename[0];
-		if(flag == fat::free_dir_ent || flag == '\0') return false;
+		int prev_tab = vid::tab_size;
+		vid::tab_size = 13;
 
 		// print filename
 		for(int i = 0; i < 8; i++) {
@@ -480,22 +563,30 @@ namespace blk {
 			if(!c) break;
 			vid::print_char(c);
 		}
-		vid::print_char('.');
-		for(int i = 0; i < 3; i++) {
-			char c = ent.filename[8 + i];
-			if(!c) break;
-			vid::print_char(c);
+
+		// file
+		if(ent.attrib != fat::dir_attrib) {
+			// print extension
+			vid::print_char('.');
+			for(int i = 0; i < 3; i++) {
+				char c = ent.filename[8 + i];
+				if(!c) break;
+				vid::print_char(c);
+			}
+
+			vid::print_char('\t');
+
+			// print size
+			vid::print_int(ent.filesize);
+			vid::print_str(" bytes ");
+	
+		// directory
+		} else {
+			vid::print_str("\t<dir>");
 		}
-		vid::print_str(" ");
 
-		// print size
-		vid::print_int(ent.filesize);
-		vid::print_str(" bytes ");
-
-		// print dir flag if dir
-		if(ent.attrib == fat::dir_attrib) vid::print_strln("<dir>");
-		else vid::newline();
-
+		vid::newline();
+		vid::tab_size = prev_tab;
 		return true;
 	}
 
@@ -515,16 +606,13 @@ namespace blk {
 		// extract context
 		char* name = (char*) ctx;
 		
-		// get flags
-		char flag = ent.filename[0];
-		if(flag == fat::free_dir_ent || flag == '\0') return false;
-
 		// check if valid directory
 		if(ent.attrib != fat::dir_attrib) return false;
 
 		// check filename
 		if(str::len(name) > 8) return false;
 		for(int i = 0; i < 8; i++) {
+			if(!name[i]) break;
 			if(name[i] != ent.filename[i]) return false;
 		}
 
@@ -534,7 +622,7 @@ namespace blk {
 	}
 
 	bool change_dir(const char* name) {
-		return walk_dir(change_dir_ent, (void*)name);
+		return walk_dir(change_dir_ent, (void*)name, true);
 	}
 
 	/**
@@ -544,23 +632,36 @@ namespace blk {
 	 * @param ctx name of directory to create
 	 * @return true if directory was created
 	 */
-	bool make_dir_ent(fat::dir_ent& ent, void* ctx) {
+	void make_dir_ent(fat::dir_ent& ent, void* ctx) {
 		// extract context
-		char* name = (char*) ctx;
-		
-		// get flags
-		char flag = ent.filename[0];
-		if(flag != fat::free_dir_ent && flag != '\0') return false;
+		char* name = (char*) ctx;	
 
 		// set parameters
 		str::mset(&ent, 0, sizeof(fat::dir_ent));
-		str::mcpy(ent.filename, name, 8);
+		fat::copy_filename(ent.filename, name);
 		ent.cluster_lo = fat_chain(fat::get_cluster_len(cur_vbr));
 		ent.attrib = fat::dir_attrib;
-		return true;
+
+		// setup default entries
+		fat::dir_ent init_entries[2];
+		str::mset(init_entries, 0, sizeof(init_entries));
+
+		// this directory 
+		fat::copy_filename(init_entries[0].filename, ".");
+		init_entries[0].attrib = fat::dir_attrib;
+		init_entries[0].cluster_lo = ent.cluster_lo;
+		
+		// previous directory 
+		fat::copy_filename(init_entries[1].filename, "..");
+		init_entries[1].attrib = fat::dir_attrib;
+		init_entries[1].cluster_lo = cur_dir;
+
+		// zero and write default entries
+		zero_cluster(ent.cluster_lo);
+		write_cluster(ent.cluster_lo, init_entries, sizeof(init_entries));
 	}
 	
-	bool make_dir(const char* name) {
-		return walk_dir(make_dir_ent, (void*)name, true, true);
+	void make_dir(const char* name) {
+		alloc_dir(make_dir_ent, (void*)name);
 	}
 } // blk::
