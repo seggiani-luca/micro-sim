@@ -6,7 +6,8 @@
 namespace blk {
 	namespace fat {
 		/**
-		 * Boot sector.
+		 * BIOS Parameter Block (BPB). Contains filesystem geometry and layout 
+		 * information.
 		 */
 		struct bpb {
 			uint16_t log_sec_len; // in bytes
@@ -22,6 +23,11 @@ namespace blk {
 			uint32_t hidden_secs;
 			uint32_t large_secs;
 		} __attribute__((packed));
+
+		/**
+		 * Extended BIOS Parameter Block (EBPB). Additional metadata for FAT 
+		 * volumes.
+		 */
 		struct ebpb {
 			uint8_t phys_drive_num;
 			uint8_t reserved;
@@ -30,6 +36,10 @@ namespace blk {
 			char label[11];
 			char fs_type[8];
 		} __attribute__((packed));
+
+		/**
+		 * Volume Boot Record (VBR). First sector of a FAT filesystem.
+		 */
 		struct vbr {
 			char jump[3];
 			char oem_name[8];
@@ -46,7 +56,8 @@ namespace blk {
 		} __attribute__((packed));
 
 		/**
-		 * Directory entry.
+		 * Directory entry (8.3 FAT format). Represents a file or directory in a 
+		 * directory listing.
 		 */
 		struct dir_ent {
 			char filename[11];
@@ -84,7 +95,46 @@ namespace blk {
 		inline uint8_t free_dir_ent = 0xe5;
 
 		/**
-		 * Returns fat table at index (counting from 0).
+		 * Checks for free directory entries.
+		 *
+		 * @param ent entry to check
+		 * @bool is the entry free?
+		 */
+		inline bool is_free(const dir_ent& ent) { return ent.filename[0] == 
+			free_dir_ent; }
+		
+		/**
+		 * Checks for end of directory entries.
+		 *
+		 * @param ent entry to check
+		 * @bool is the entry the last one?
+		 */
+		inline bool is_end(const dir_ent& ent) { return ent.filename[0] == '\0'; }
+
+		/**
+		 * Checs for directory directory entries.
+		 *
+		 * @param ent entry to check
+		 * @bool is the entry a directory? 
+		 */
+		inline bool is_dir(const dir_ent& ent) { return ent.attrib & dir_attrib; }
+		
+		/**
+		 * Checs for file directory entries.
+		 *
+		 * @param ent entry to check
+		 * @bool is the entry a file? 
+		 */
+		inline bool is_file(const dir_ent& ent) { return ent.attrib & file_attrib; 
+		}
+
+		/**
+		 * Returns fat table at index (counting from 0). Index is needed as a
+		 * single FAT filesystem might have multiple fat tables.
+		 *
+		 * @param bs VBR of current filesystem
+		 * @param fat table index
+		 * @return first sector of fat table at index 
 		 */
 		inline int get_fat(const vbr& bs, int idx) {
 			int base = bs.param.reserved_secs;
@@ -94,6 +144,9 @@ namespace blk {
 	
 		/**
 		 * Return size of fat table.
+		 *
+		 * @param bs VBR of current filesystem
+		 * @return size (in sectors) of the fat table
 		 */
 		inline int get_fat_len(const vbr& bs) {
 			return bs.param.fat_len;
@@ -101,6 +154,9 @@ namespace blk {
 
 		/**
 		 * Returns root directory. 
+		 *
+		 * @param bs VBR of current filesystem
+		 * @return first sector of root directory
 		 */
 		inline int get_rootdir(const vbr& bs) {
 			int base = bs.param.reserved_secs;
@@ -111,6 +167,9 @@ namespace blk {
 
 		/**
 		 * Returns size of root directory.
+		 *
+		 * @param bs VBR of current filesystem
+		 * @return size (in sectors) of root directory
 		 */
 		inline int get_rootdir_len(const vbr& bs) {
 			int sector_size = bs.param.log_sec_len;
@@ -121,6 +180,10 @@ namespace blk {
 
 		/**
 		 * Converts cluster to sector.
+		 * 
+		 * @param bs VBR of current filesystem
+		 * @param idx index of needed cluster
+		 * @return first sector of cluster
 		 */
 		inline int get_cluster(const vbr& bs, int idx) {
 			int cluster_size = bs.param.cluster_len;
@@ -162,16 +225,14 @@ namespace blk {
 		}
 
 		/**
-		 * Copies a filename according to 8.3 specification.
+		 * Filename for "this directory" entry.
 		 */
-		inline void copy_filename(char dest[11], const char* src) {
-			int i = 0;
-			for(; i < 11; i++) {
-				if(src[i] == '\0') break;
-				dest[i] = src[i];
-			}
-			for(; i < 11; i++) dest[i] = ' ';
-		}
+		const char dot_filename[] = ".          ";
+		
+		/**
+		 * Filename for "next directory" entry.
+		 */
+		const char ddot_filename[] = "..         ";
 	} // fat::
 } // blk::
 

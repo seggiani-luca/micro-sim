@@ -214,8 +214,18 @@ namespace blk {
 	 * Creates a new directory.
 	 *
 	 * @param name name of new directory
+	 * @return boolean representing if operation was succesful
 	 */
-	 void make_dir(const char* name);
+	 bool make_dir(const char* name);
+
+	/**
+	 * Removes an existing directory.
+	 *
+	 * @param name name of directory to remove
+	 * @return boolean representing if operation was succesful
+	 */
+	 bool remove_dir(const char* name);
+
 } // blk::table
 
 #endif
