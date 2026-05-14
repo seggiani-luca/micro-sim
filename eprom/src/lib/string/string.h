@@ -2,8 +2,7 @@
 #define STRING_H
 
 /**
- * Namespace for string handling, including cstring functions and memory 
- * functions.
+ * Namespace for string handling, including cstring functions.
  */
 namespace str {
 	/**
@@ -71,7 +70,12 @@ namespace str {
 	 * @return str1 - str2 at first different character, 0 if equal
 	 */
 	int ncmp(const char* str1, const char* str2, unsigned int n);
+} // str::
 
+/**
+ * Namespace for memory functions.
+ */
+namespace mem {
 	/**
 	 * Copies a buffer of n bytes from source to destination.
 	 *
@@ -80,7 +84,7 @@ namespace str {
 	 * @param n number of bytes to copy
 	 * @return destination buffer
 	 */
-	void* mcpy(void* dst, const void* src, unsigned int n);
+	void* cpy(void* dst, const void* src, unsigned int n);
 	
 	/**
 	 * Copies a buffer of n bytes from source to destination, allowing 
@@ -91,7 +95,7 @@ namespace str {
 	 * @param n number of bytes to copy
 	 * @return destination buffer
 	 */
-	void* mmove(void* dst, const void* src, unsigned int n);
+	void* move(void* dst, const void* src, unsigned int n);
 
 	/**
 	 * Sets a buffer of n bytes to the given data byte.
@@ -101,7 +105,7 @@ namespace str {
 	 * @param n size of buffer
 	 * @return destination buffer
 	 */
-	void* mset(void* dst, char data, unsigned int n);
+	void* set(void* dst, char data, unsigned int n);
 	
 	/**
 	 * Compares two buffers of n bytes.
@@ -111,7 +115,7 @@ namespace str {
 	 * @param n max number of bytes to compare
 	 * @return buf1 - buf2 at first different byte, 0 if equal
 	 */
-	int mcmp(const void* buf1, const void* buf2, unsigned int n);
-} // str::
+	int cmp(const void* buf1, const void* buf2, unsigned int n);
+} // mem::
 
 #endif

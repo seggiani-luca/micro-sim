@@ -41,17 +41,17 @@ namespace vid {
 
 
 	void clear() {
-		str::mset((void*) vram, '\0', video.rows * video.cols);
+		mem::set((void*) vram, '\0', video.rows * video.cols);
 		set_cursor({0, 0});
 	}
 
 	void scroll() {
 		// copy video memory back one row
-		str::mmove((void*) vram, (void*) (vram + video.cols), video.cols * 
+		mem::move((void*) vram, (void*) (vram + video.cols), video.cols * 
 				(video.rows - 1));
 		
 		// clean last line
-		str::mset((void*) (vram + (video.rows - 1) * video.cols), ' ', 
+		mem::set((void*) (vram + (video.rows - 1) * video.cols), ' ', 
 				video.cols);
 				
 		if(cur.row > 0) set_cursor({cur.row - 1, cur.col});
@@ -175,8 +175,7 @@ namespace vid {
 		if(!pos.validate() || !last_pos.validate()) {
 			utl::panic("Coordinate non valide per put_uint()");
 		}
-		str::mset((void*) (vram + pos_idx), '\0', last_pos.get_idx() - 
-				pos_idx);
+		mem::set((void*) (vram + pos_idx), '\0', last_pos.get_idx() - pos_idx);
 
 		char temp[10];
 		int i = 0;

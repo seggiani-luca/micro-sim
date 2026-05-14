@@ -71,7 +71,7 @@ namespace net {
 		pckt.dest_addr = to;
 		pckt.len = payload_size;
 
-		str::mcpy(pckt.payload, payload, payload_size);
+		mem::cpy(pckt.payload, payload, payload_size);
 	
 		return pckt;
 	}
@@ -89,7 +89,7 @@ namespace net {
 
 		from = pckt.src_addr;		
 		int size = buf_size < pckt.len ? buf_size : pckt.len;
-		str::mcpy(buf, pckt.payload, size);
+		mem::cpy(buf, pckt.payload, size);
 		return size;
 	}	
 } // net::

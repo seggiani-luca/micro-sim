@@ -63,8 +63,10 @@ namespace str {
 
 		return (unsigned char) *str1 - (unsigned char) *str2;
 	}
+} // str::
 
-	void* mcpy(void* dst, const void* src, unsigned int n) {
+namespace mem {
+	void* cpy(void* dst, const void* src, unsigned int n) {
 		uint8_t* b_dptr = (uint8_t*) dst;
 		const uint8_t* b_sptr = (const uint8_t*) src;
 
@@ -75,9 +77,9 @@ namespace str {
 		return dst;
 	}
 	
-	void* mmove(void* dst, const void* src, unsigned int n) {
+	void* move(void* dst, const void* src, unsigned int n) {
 		if((uint32_t) dst < (uint32_t) src) {
-			return mcpy(dst, src, n); // fotward copy
+			return cpy(dst, src, n); // forward copy
 		} 
 
 		// backwards copy
@@ -90,7 +92,7 @@ namespace str {
 		return dst;
 	}
 
-	void* mset(void* dst, char data, unsigned int n) {
+	void* set(void* dst, char data, unsigned int n) {
 		uint8_t b_dat = data;
 		uint8_t* b_dptr = (uint8_t*) dst;
 		
@@ -101,7 +103,7 @@ namespace str {
 		return dst;
 	}
 
-	int mcmp(const void* buf1, const void* buf2, unsigned int n) {
+	int cmp(const void* buf1, const void* buf2, unsigned int n) {
 		unsigned char* b_1ptr = (unsigned char*) buf1;		
 		unsigned char* b_2ptr = (unsigned char*) buf2;		
 
@@ -113,4 +115,4 @@ namespace str {
 
 		return 0;
 	}
-} // str::
+} // mem::
