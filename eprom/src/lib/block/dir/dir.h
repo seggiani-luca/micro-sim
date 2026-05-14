@@ -1,7 +1,7 @@
 #ifndef DIR_H
 #define DIR_H
 
-#include <cstdint>
+#include "../../string/string.h" 
 #include "../fat/fat16.h"
 
 namespace blk {

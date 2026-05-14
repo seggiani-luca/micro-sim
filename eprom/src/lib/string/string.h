@@ -1,6 +1,12 @@
 #ifndef STRING_H
 #define STRING_H
 
+#define NULL 0
+
+typedef unsigned char uint8_t;
+typedef unsigned short uint16_t ;
+typedef unsigned int uint32_t;
+
 /**
  * Namespace for string handling, including cstring functions.
  */
@@ -70,6 +76,13 @@ namespace str {
 	 * @return str1 - str2 at first different character, 0 if equal
 	 */
 	int ncmp(const char* str1, const char* str2, unsigned int n);
+
+	/**
+	 * Tokenizes a string based on a separator character.
+	 *
+	 * 
+	 */
+	char* tok(char* str, char delim = ' ');
 } // str::
 
 /**

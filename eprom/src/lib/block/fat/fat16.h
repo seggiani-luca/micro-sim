@@ -1,7 +1,7 @@
 #ifndef FAT16_H
 #define FAT16_H
 
-#include <cstdint>
+#include "../../string/string.h"
 
 namespace blk {
 	/**

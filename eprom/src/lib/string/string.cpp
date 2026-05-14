@@ -1,10 +1,9 @@
 #include "string.h"
-#include <cstdint>
 
 namespace str {
 	unsigned int len(const char* s) {
 		unsigned int i = 0;
-		while(*s++) i++;	
+		while(*s++) i++;
 		return i;
 	}
 
@@ -63,6 +62,32 @@ namespace str {
 
 		return (unsigned char) *str1 - (unsigned char) *str2;
 	}
+
+	char* tok(char* str, char delim) {
+		// remember given string
+		static char* stat;
+		if(str) stat = str;
+
+		// discard initial delimiters
+		while(*stat && *stat == delim) stat++;
+		if(!*stat) return NULL;
+
+		// go through looking for delimiters
+		int cur = 0;
+		while(stat[cur] && stat[cur] != delim) cur++;
+
+		// return token
+		if(!stat[cur]) {
+			char* temp = stat;
+			stat = NULL;
+			return temp;
+		} else {
+			stat[cur] = '\0';
+			char* temp = stat;
+			stat = &stat[cur + 1];
+			return temp;
+		}
+	}
 } // str::
 
 namespace mem {
@@ -78,7 +103,7 @@ namespace mem {
 	}
 	
 	void* move(void* dst, const void* src, unsigned int n) {
-		if((uint32_t) dst < (uint32_t) src) {
+		if(dst < src) {
 			return cpy(dst, src, n); // forward copy
 		} 
 

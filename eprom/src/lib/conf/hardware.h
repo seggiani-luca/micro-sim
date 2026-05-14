@@ -1,7 +1,7 @@
 #ifndef HARDWARE_H
 #define HARDWARE_H
 
-#include <cstdint>
+#include "../string/string.h"
 
 /**
  * Namespace for hardware definitions, including memory layout and devices.

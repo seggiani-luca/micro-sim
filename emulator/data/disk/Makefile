@@ -2,7 +2,7 @@
 
 purge:
 	@echo ">> Removing all disks"
-	rm -f -- *.img
+	@rm -f -- *.img
 
 mount:
 	sudo mount -t vfat main.img /mnt/fat
