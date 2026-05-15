@@ -67,11 +67,11 @@ public abstract class ThreadedIoDevice extends IoDevice {
   protected abstract void deviceThread();
 
   /**
-   * Spins the thread until the given time, parking it if remaining time is over a millisecond.
+   * Spins the thread for the given time, parking it if remaining time is over a millisecond.
    * Threads that want to obey the debugger's "stop the world" policy should use this method to
    * sleep.
    *
-   * @param time time to wait to
+   * @param time time to wait for, in nanoseconds
    */
   protected void smartSpin(long time) {
     // sleep if world is stopped
@@ -83,13 +83,21 @@ public abstract class ThreadedIoDevice extends IoDevice {
       }
     }
 
+    // calculate target time
+    long target = System.nanoTime() + time;
+
     // wait for time
-    if (time > 1_000_000) { // over 1 ms
-      LockSupport.parkNanos(time - 500_000);
-    }
-    while (System.nanoTime() < time) {
-      // more granular wait
-      Thread.onSpinWait();
+    while (true) {
+      long remaining = target - System.nanoTime();
+      if (remaining <= 0) {
+        return;
+      }
+
+      if (remaining > 1_000_000) {
+        LockSupport.parkNanos(remaining - 500_000);
+      } else {
+        Thread.onSpinWait();
+      }
     }
   }
 

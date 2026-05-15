@@ -112,6 +112,7 @@ namespace blk {
 						switch(mode) {
 							case WALK:  continue;
 							case FIND:  if(ret) return true;
+							case DELETE:
 							case ALLOC: if(ret) {
 							            	sec::write(base + i, dir); 
 							            	return true;
@@ -157,9 +158,10 @@ namespace blk {
 
 						switch(mode) {
 							case WALK: continue;
-							case FIND: if(ret) return true;
+							case FIND:  if(ret) return true;
+							case DELETE:
 							case ALLOC: if(ret) {
-											clu::write(cur, dir, cluster_len); 
+							            	clu::write(cur, dir, cluster_len); 
 							            	return true;
 							            }
 						}
@@ -313,9 +315,14 @@ namespace blk {
 		 *
 		 * @param ent not significant
 		 * @param ctx not significant
-		 * @return always true
+		 * @return always true for files that aren't . and ..
 		 */
-		bool check_dir_ent(fat::dir_ent& ent, void* ctx) { return true; }
+		bool check_dir_ent(fat::dir_ent& ent, void* ctx) { 
+			if(compare_filename(ent.filename, fat::dot_filename) ||
+			   compare_filename(ent.filename, fat::ddot_filename)) return false;
+
+			return true;
+		}
 
 		/**
 		 * Helper to check if a directory is empty.
@@ -359,13 +366,13 @@ namespace blk {
 
 			// remove entry
 			tab::unchain(ent.cluster_lo);
-			ent.filename[0] = fat::free_cluster;
+			ent.filename[0] = fat::free_dir_ent;
 
 			return true;
 		}
 
 		bool remove(const char* name) {
-			return walk(remove_dir_ent, ALLOC, (void*)name);
+			return walk(remove_dir_ent, DELETE, (void*)name);
 		}
 	} // dir::
 } // blk::

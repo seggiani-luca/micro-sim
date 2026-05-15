@@ -257,7 +257,8 @@ namespace kyb {
 			if(c == '\b') {
 				if(i > 0) {
 					i--;
-					vid::backspace();
+					if(buf[i] == '\t') vid::detabulate();
+					else vid::backspace();
 				}
 
 				// scrap if at the beginning of buffer

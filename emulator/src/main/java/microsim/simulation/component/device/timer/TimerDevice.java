@@ -24,7 +24,6 @@ public class TimerDevice extends ThreadedIoDevice {
    */
   public static final int NUM_CHANNELS = 3;
 
-
   /**
    * Frequency of timer clock.
    */
@@ -168,6 +167,7 @@ public class TimerDevice extends ThreadedIoDevice {
 
             // if reached max, tick
             if (info.counter == info.max) {
+
               info.ticked = true;
             }
           }

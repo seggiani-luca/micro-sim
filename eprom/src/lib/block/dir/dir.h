@@ -38,7 +38,11 @@ namespace blk {
 			 * Walks the directory, looking for a free entry, which it then 
 			 * allocates using a function.
 			 */
-			ALLOC
+			ALLOC,
+			/**
+			 * Works the same as find, only it is expected to modify the entry.
+			 */
+			DELETE
 		};
 
 		/**

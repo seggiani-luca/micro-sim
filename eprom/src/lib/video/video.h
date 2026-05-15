@@ -150,6 +150,13 @@ namespace vid {
 	 * @param c tabulation character 
 	 */
 	void tabulate(char c);
+	
+	/**
+	 * Removes enough  characters to reach the previous tab_size column multiple.
+	 *
+	 * @param c tabulation character 
+	 */
+	void detabulate();
 
 	/**
 	 * Prints a character on the screen.

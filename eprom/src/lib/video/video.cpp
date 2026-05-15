@@ -96,11 +96,25 @@ namespace vid {
 		vram[cur.get_idx()] = '\0';
 	}
 
+	/**
+	 * Keeps track of previous tabulation start point.
+	 */
+	static int prev_tab;
+
 	void tabulate(char c = ' ') {
+		prev_tab = cur.col;
+
 		do {
 			vram[cur.get_idx()] = c;	
 			inc_cur();
 		} while(cur.col % tab_size);
+	}
+	
+	void detabulate() {
+		do {
+			dec_cur();
+			vram[cur.get_idx()] = '\0';
+		} while(cur.col > prev_tab);
 	}
 
 	void print_char(char c) {
