@@ -3,7 +3,6 @@
 #include "../sector/sector.h"
 #include "../cluster/cluster.h"
 #include "../../video/video.h"
-#include "../../util/util.h"
 #include "../../string/string.h"
 
 namespace blk {
@@ -75,304 +74,369 @@ namespace blk {
 			return true;
 		}
 
-		bool walk(bool (*fun)(fat::dir_ent&, void*),
-		          traversal_mode mode,
-		          void* ctx) {
-			// root directory
-			if(cur_dir == ROOT_ALIAS) {
-				// get length and base of rootdir
-				int dim = fat::get_rootdir_len(tab::cur_vbr);
-				int base = fat::get_rootdir(tab::cur_vbr);
+		dir_iter::dir_iter(uint16_t dir) {
+			// initialize iterator
+			entry = 0;
+			valid = true;
+
+			// rootdir 
+			if(dir == ROOT_ALIAS) {
+				// setup rootdir iterator
+				root = true;
+				block.sector = fat::get_rootdir(tab::cur_vbr);
 
 				// prepare directory buffer
-				int entries = sec::size / sizeof(fat::dir_ent);
-				fat::dir_ent dir[entries];
+				entries = sec::size / sizeof(fat::dir_ent);
+				sec::read(block.sector, cache);
+				
+			// normal directory
+			} else {
+				// setup normal directory iterator
+				root = false;
+				block.cluster = dir;
 
-				// go through each rootdir sector 
-				for(int i = 0; i < dim; i++) {
-					// read rootdir sector
-					sec::read(base + i, dir);
+				// prepare directory buffer
+				int cluster_len = fat::get_cluster_bts(tab::cur_vbr);
+				entries = cluster_len / sizeof(fat::dir_ent);
+				clu::read(block.cluster, cache, cluster_len);
+			}	
+		}
+		
+		fat::dir_ent& dir_iter::get_entry() {
+			return cache[entry];
+		}
 
-					// go through all entries in sector
-					for(int j = 0; j < entries; j++) {
-						fat::dir_ent& ent = dir[j];
-
-						// check flags
-						if(mode != ALLOC) {
-							if(fat::is_free(ent)) continue;
-							if(fat::is_end(ent)) return false;
-						} else {
-							if(!fat::is_free(ent) & !fat::is_end(ent)) 
-								continue;
-						}
-
-						// execute
-						bool ret = fun(dir[j], ctx);
-
-						switch(mode) {
-							case WALK:  continue;
-							case FIND:  if(ret) return true;
-							case DELETE:
-							case ALLOC: if(ret) {
-							            	sec::write(base + i, dir); 
-							            	return true;
-							            }
-						}
-					}
-				}
-
-				if(mode == ALLOC) {
-					utl::panic("Spazio nella directory di root esaurito");
-				} else return false;
+		void dir_iter::sync() {
+			// rootdir
+			if(root) {
+				sec::write(block.sector, cache);
 
 			// normal directory
 			} else {
-				// get cluster size and init cluster index 
 				int cluster_len = fat::get_cluster_bts(tab::cur_vbr);
-				uint16_t cur = cur_dir;
-
-				// prepare directory buffer
-				int entries = cluster_len / sizeof(fat::dir_ent);
-				fat::dir_ent dir[entries];
-
-				// go through each directory cluster 
-				while(true) {
-					// read directory cluster 
-					clu::read(cur, dir, cluster_len);
-
-					// go through all entries in cluster 
-					for(int j = 0; j < entries; j++) {
-						fat::dir_ent& ent = dir[j];
-
-						// check flags
-						if(mode != ALLOC) {
-							if(fat::is_free(ent)) continue;
-							if(fat::is_end(ent)) return false;
-						} else {
-							if(!fat::is_free(ent) & !fat::is_end(ent)) 
-								continue;
-						}
-
-						// execute
-						bool ret = fun(dir[j], ctx);
-
-						switch(mode) {
-							case WALK: continue;
-							case FIND:  if(ret) return true;
-							case DELETE:
-							case ALLOC: if(ret) {
-							            	clu::write(cur, dir, cluster_len); 
-							            	return true;
-							            }
-						}
-					}
-
-					// get next cluster 
-					uint16_t next = tab::lookup(cur);
-					if(fat::is_end_of_chain(next)) {
-						if(mode == ALLOC) {
-							// need to allocate more space for directory
-							next = tab::chain(cluster_len);
-							clu::zero(next);
-
-							// append to fat table
-							tab::set(cur, next);
-						} else return false;
-					}
-					
-					// update current cluster 
-					cur = next;
-				}
+				clu::write(block.cluster, cache, cluster_len);	
 			}
+		}	
+
+		bool dir_iter::next(bool alloc) {
+			if(!valid) return false;
+
+			// advance entry
+			entry++;
+			if(entry != entries) return true;
+			// have to move to next block 
+
+			// rootdir
+			if(root) {
+				// get next sector
+				block.sector++;
+
+				// check if end reached
+				int end = fat::get_rootdir(tab::cur_vbr) +
+				          fat::get_rootdir_len(tab::cur_vbr);
+				if(block.sector >= end) {
+					entry--;
+					valid = false;
+					return false;
+				}
+				
+				// cache this sector
+				sec::read(block.sector, cache);
+
+			// normal directory
+			} else {
+				// get next cluster 
+				block.cluster = tab::lookup(block.cluster);
+
+				// check if end reached
+				if(fat::is_end_of_chain(block.cluster)) {
+					if(alloc) {
+						// need to allocate more space for directory
+						int cluster_len = fat::get_cluster_len(tab::cur_vbr);
+						int next = tab::chain(cluster_len);
+						clu::zero(next);
+
+						// append to fat table
+						tab::set(block.cluster, next);
+					} else {
+						entry--;;
+						valid = false;
+						return false;
+					}
+				}
+				
+				// cache this cluster 
+				int cluster_len = fat::get_cluster_len(tab::cur_vbr);
+				clu::read(block.cluster, cache, cluster_len);
+			}
+
+			// reset entry
+			entry = 0;
+			return true;
+		}
+		
+		bool is_empty(uint16_t dir) {
+			// create iterator on given directory
+			dir_iter itr = dir_iter(dir);
+			
+			do {
+				fat::dir_ent& ent = itr.get_entry();
+
+				// ignore dot entries
+				if(compare_filename(ent.filename, fat::dot_filename)) 
+					continue;
+				if(compare_filename(ent.filename, fat::ddot_filename)) 
+					continue;
+
+				// check that there are no filled entries
+				if(fat::is_end(ent)) return true;
+				if(!fat::is_free(ent)) return false;
+			} while(itr.next());
+
+			return true;
 		}
 
-		/**
-		 * Helper that lists a single directory entry.
-		 *
-		 * @param ent the directory entry
-		 * @param ctx unused
-		 * @return true if directory was listed
-		 */
-		bool list_dir_ent(fat::dir_ent& ent, void* ctx __attribute__((unused))) 
-		{
+		void list(uint16_t dir) {
+			// tabulate to 8.3 filenames
 			int prev_tab = vid::tab_size;
 			vid::tab_size = 13;
 
-			// basename size
-			int base_siz = 8;
-			while(ent.filename[base_siz - 1] == ' ') base_siz--;
+			// create iterator on given directory
+			dir_iter itr = dir_iter(dir);
+			
+			do {
+				fat::dir_ent& ent = itr.get_entry();
 
-			// print basename
-			for(int i = 0; i < base_siz; i++) {
-				char c = ent.filename[i];
-				vid::print_char(c);
-			}
+				// check if valid
+				if(fat::is_free(ent)) continue;
+				if(fat::is_end(ent)) break;
 
-			// directory
-			if(fat::is_dir(ent)) {
-				vid::print_str("\t<dir>");
-		
-			// file
-			} else {
-				// extension size
-				int ext_siz = 3;
-				while(ent.filename[ext_siz + 8] == ' ') ext_siz--;
-		
-				// print extension
-				vid::print_char('.');
-				for(int i = 0; i < ext_siz; i++) {
-					char c = ent.filename[8 + i];
+				// get basename size
+				int base_siz = 8;
+				while(ent.filename[base_siz - 1] == ' ') base_siz--;
+
+				// print basename
+				for(int i = 0; i < base_siz; i++) {
+					char c = ent.filename[i];
 					vid::print_char(c);
 				}
 
-				vid::print_char('\t');
+				// directory
+				if(fat::is_dir(ent)) {
+					vid::print_str("\t<dir>");
+			
+				// file
+				} else {
+					// get extension size
+					int ext_siz = 3;
+					while(ent.filename[ext_siz + 7] == ' ') ext_siz--;
+			
+					// print extension
+					vid::print_char('.');
+					for(int i = 0; i < ext_siz; i++) {
+						char c = ent.filename[8 + i];
+						vid::print_char(c);
+					}
 
-				// print size
-				vid::print_int(ent.filesize);
-				vid::print_str(" bytes ");
-			}
+					vid::print_char('\t');
 
-			vid::newline();
+					// print size
+					vid::print_int(ent.filesize);
+					vid::print_str(" bytes ");
+				}
+
+				vid::newline();
+			} while(itr.next());
+
+			// reset tabulation
 			vid::tab_size = prev_tab;
-			return true;
 		}
 
-		void list() {
-			walk(list_dir_ent, WALK);
-		}
-
-		/**
-		 * Helper to check if we should change to a given directory entry. 
-		 * Changes current directory as a side effect.
-		 *
-		 * @param entry entry to check
-		 * @param ctx name of targeted directory
-		 * @return true if directory was changed to
-		 */
-		bool change_dir_ent(fat::dir_ent& ent, void* ctx) {
-			// extract context
-			char* name = (char*) ctx;
+		bool find(const char* name, uint16_t dir, fat::dir_ent& out) {
+			// create iterator on given directory
+			dir_iter itr = dir_iter(dir);
 			
-			// check if valid directory
-			if(!fat::is_dir(ent)) return false;
+			do {
+				fat::dir_ent& ent = itr.get_entry();
 
-			// check filename
-			if(!compare_filename(ent.filename, name)) return false;
+				// check if valid
+				if(fat::is_free(ent)) continue;
+				if(fat::is_end(ent)) break;
+				if(!compare_filename(ent.filename, name)) continue; 
 
-			// change to directory
-			cur_dir = ent.cluster_lo;
-			return true;
+				// return entry
+				mem::cpy(&out, &ent, sizeof(fat::dir_ent));
+				return true;
+			} while(itr.next());
+
+			return false; 
 		}
+		
+		bool make(const char* name, uint16_t dir) {
+			// don't duplicate files
+			fat::dir_ent ent;
+			if(find(name, dir, ent)) return false;
 
-		bool change(const char* name) {
-			return walk(change_dir_ent, FIND, (void*)name);
-		}
-
-		/**
-		 * Helper to make a directory at a given entry.
-		 *
-		 * @parem entry entry to try creating directory at
-		 * @param ctx name of directory to create
-		 * @return true if directory was created
-		 */
-		bool make_dir_ent(fat::dir_ent& ent, void* ctx) {
-			// extract context
-			char* name = (char*) ctx;	
-
-			// set parameters
-			mem::set(&ent, 0, sizeof(fat::dir_ent));
-			copy_filename(ent.filename, name);
-			ent.cluster_lo = tab::chain(fat::get_cluster_bts(tab::cur_vbr));
-			ent.attrib = fat::dir_attrib;
-
-			// setup default entries
-			fat::dir_ent init_entries[2];
-			mem::set(init_entries, 0, sizeof(init_entries));
-
-			// this directory 
-			mem::cpy(init_entries[0].filename, fat::dot_filename, 11);
-			init_entries[0].attrib = fat::dir_attrib;
-			init_entries[0].cluster_lo = ent.cluster_lo;
+			// create iterator on given directory
+			dir_iter itr = dir_iter(dir);
 			
-			// previous directory 
-			mem::cpy(init_entries[1].filename, fat::ddot_filename, 11);
-			init_entries[1].attrib = fat::dir_attrib;
-			init_entries[1].cluster_lo = cur_dir;
+			do {
+				fat::dir_ent& ent = itr.get_entry();
 
-			// zero and write default entries
-			clu::zero(ent.cluster_lo);
-			clu::write(ent.cluster_lo, init_entries, sizeof(init_entries));
+				// check if valid
+				if(!fat::is_free(ent) && !fat::is_end(ent)) continue;
+
+				// set entry parameters
+				mem::set(&ent, 0, sizeof(fat::dir_ent));
+				copy_filename(ent.filename, name);
+				ent.cluster_lo 
+					= tab::chain(fat::get_cluster_bts(tab::cur_vbr));
+				ent.attrib = fat::dir_attrib;
+
+				// setup default entries
+				fat::dir_ent init_entries[2];
+				mem::set(init_entries, 0, sizeof(init_entries));
+
+				// point to this directory 
+				mem::cpy(init_entries[0].filename, fat::dot_filename, 11);
+				init_entries[0].attrib = fat::dir_attrib;
+				init_entries[0].cluster_lo = ent.cluster_lo;
+				
+				// point to previous directory 
+				mem::cpy(init_entries[1].filename, fat::ddot_filename, 11);
+				init_entries[1].attrib = fat::dir_attrib;
+				init_entries[1].cluster_lo = cur_dir;
+
+				// zero and write default entries
+				clu::zero(ent.cluster_lo);
+				clu::write(ent.cluster_lo, init_entries, sizeof(init_entries));
+	
+				// sync changes
+				itr.sync();
+
+				return true;
+			} while(itr.next(true));
+
+			return false; 
+		}
+
+		bool remove(const char* name, uint16_t dir) {
+			// create iterator on given directory
+			dir_iter itr = dir_iter(dir);
+			
+			do {
+				fat::dir_ent& ent = itr.get_entry();
+
+				// check if valid
+				if(fat::is_free(ent)) continue;
+				if(fat::is_end(ent)) break;
+				if(!compare_filename(ent.filename, name)) continue; 
+
+				// don't delete non empty directories
+				if(!is_empty(ent.cluster_lo)) return false;
+
+				// remove entry
+				tab::unchain(ent.cluster_lo);
+				ent.filename[0] = fat::free_dir_ent;
+				
+				// sync changes
+				itr.sync();
+				
+				return true;
+			} while(itr.next());
+
+			return false; 
+		}
+
+		bool create_file(const char* name, const void* buf, int size, 
+				uint16_t dir) {
+			// don't duplicate files
+			fat::dir_ent ent;
+			if(find(name, dir, ent)) return false;
+			
+			// create iterator on given directory
+			dir_iter itr = dir_iter(dir);
+			
+			do {
+				fat::dir_ent& ent = itr.get_entry();
+
+				// check if valid
+				if(!fat::is_free(ent) && !fat::is_end(ent)) continue;
+
+				// allocate FAT chain
+				uint16_t chain = tab::create_file(buf, size);
+		
+				// set parameters 
+				copy_filename(ent.filename, name);
+				ent.cluster_lo = chain;
+				ent.filesize = size;
+				ent.attrib = fat::file_attrib;
+					
+				// sync changes
+				itr.sync();
+				
+				return true;
+			} while(itr.next(true));
+
+			return false;
+		}
+
+		bool read_file(const char* name, void* buf, int size, uint16_t dir) {
+			// find file
+			fat::dir_ent ent;
+			if(!find(name, dir, ent)) return false;
+	
+			// check if valid
+			if(!fat::is_file(ent)) return false;
+
+			// extract filesize and check 
+			int fil_size = ent.filesize;
+			if(size < fil_size) return false;
+
+			// read file
+			tab::read_file(ent.cluster_lo, buf, fil_size);
 
 			return true;
 		}
 		
-		bool make(const char* name) {
-			return walk(make_dir_ent, ALLOC, (void*)name);
-		}
+		bool update_file(const char* name, void* buf, int size, uint16_t dir) {
+			// find file
+			fat::dir_ent ent;
+			if(!find(name, dir, ent)) return false;
+	
+			// check if valid
+			if(!fat::is_file(ent)) return false;
 
-		/**
-		 * Helper to check a single directory entry, used by check_dir.
-		 *
-		 * @param ent not significant
-		 * @param ctx not significant
-		 * @return always true for files that aren't . and ..
-		 */
-		bool check_dir_ent(fat::dir_ent& ent, void* ctx) { 
-			if(compare_filename(ent.filename, fat::dot_filename) ||
-			   compare_filename(ent.filename, fat::ddot_filename)) return false;
+			// update file
+			tab::update_file(ent.cluster_lo, buf, size);
 
 			return true;
 		}
-
-		/**
-		 * Helper to check if a directory is empty.
-		 *
-		 * @param dir fat index of directory to check
-		 * @return is directory empty?
-		 */
-		bool check(uint16_t dir) {
-			// move to directory
-			uint16_t temp = cur_dir;
-			cur_dir = dir;
+		
+		bool delete_file(const char* name, uint16_t dir) {
+			// create iterator on given directory
+			dir_iter itr = dir_iter(dir);
 			
-			// check all entries
-			bool ret = walk(check_dir_ent, FIND);
+			do {
+				fat::dir_ent& ent = itr.get_entry();
 
-			// reset current directory
-			cur_dir = temp;
+				// check if valid
+				if(fat::is_free(ent)) continue;
+				if(fat::is_end(ent)) break;
+				if(!fat::is_file(ent)) continue; 
+				if(!compare_filename(ent.filename, name)) continue; 
 
-			return !ret;
-		}
+				// delete file
+				tab::delete_file(ent.cluster_lo);
+				ent.filename[0] = fat::free_dir_ent;
 
-		/**
-		 * Helper for removing a directory entry.
-		 *
-		 * @param entry entry to check
-		 * @param ctx name of targeted directory
-		 * @return true if directory was removed
-		 */
-		bool remove_dir_ent(fat::dir_ent& ent, void* ctx) {
-			// extract context
-			char* name = (char*) ctx;
-			
-			// check if valid directory
-			if(!fat::is_dir(ent)) return false;
+				// sync changes
+				itr.sync();
 
-			// check filename
-			if(!compare_filename(ent.filename, name)) return false;
+				return true;
+			} while(itr.next());
 
-			// check if directory is empty
-			if(!check(ent.cluster_lo)) return false;
-
-			// remove entry
-			tab::unchain(ent.cluster_lo);
-			ent.filename[0] = fat::free_dir_ent;
-
-			return true;
-		}
-
-		bool remove(const char* name) {
-			return walk(remove_dir_ent, DELETE, (void*)name);
-		}
+			return false; 
+		} 
 	} // dir::
 } // blk::

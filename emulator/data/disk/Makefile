@@ -4,6 +4,9 @@ purge:
 	@echo ">> Removing all disks"
 	@rm -f -- *.img
 
+dump:
+	hexdump main.img -C
+
 check:
 	fsck.fat -vn main.img
 

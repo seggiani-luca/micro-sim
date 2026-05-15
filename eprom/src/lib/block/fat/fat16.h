@@ -3,6 +3,8 @@
 
 #include "../../string/string.h"
 
+#define MAX_CLUSTER_SIZE 4096
+
 namespace blk {
 	/**
 	 * Namespace for FAT16 filesystem definitions and helpers. 
@@ -59,8 +61,8 @@ namespace blk {
 		} __attribute__((packed));
 
 		/**
-		 * Directory entry (8.3 FAT format). Represents a file or directory in a 
-		 * directory listing.
+		 * Directory entry (8.3 FAT format). Represents a file or directory in 
+		 * a directory listing.
 		 */
 		struct dir_ent {
 			char filename[11];
@@ -103,8 +105,9 @@ namespace blk {
 		 * @param ent entry to check
 		 * @bool is the entry free?
 		 */
-		inline bool is_free(const dir_ent& ent) { return ent.filename[0] == 
-			free_dir_ent; }
+		inline bool is_free(const dir_ent& ent) { 
+			return ent.filename[0] == free_dir_ent; 
+		}
 		
 		/**
 		 * Checks for end of directory entries.
@@ -112,7 +115,9 @@ namespace blk {
 		 * @param ent entry to check
 		 * @bool is the entry the last one?
 		 */
-		inline bool is_end(const dir_ent& ent) { return ent.filename[0] == '\0'; }
+		inline bool is_end(const dir_ent& ent) { 
+			return ent.filename[0] == '\0'; 
+		}
 
 		/**
 		 * Checs for directory directory entries.
@@ -120,7 +125,9 @@ namespace blk {
 		 * @param ent entry to check
 		 * @bool is the entry a directory? 
 		 */
-		inline bool is_dir(const dir_ent& ent) { return ent.attrib & dir_attrib; }
+		inline bool is_dir(const dir_ent& ent) { 
+			return ent.attrib & dir_attrib; 
+		}
 		
 		/**
 		 * Checs for file directory entries.
@@ -128,7 +135,8 @@ namespace blk {
 		 * @param ent entry to check
 		 * @bool is the entry a file? 
 		 */
-		inline bool is_file(const dir_ent& ent) { return ent.attrib & file_attrib; 
+		inline bool is_file(const dir_ent& ent) {
+			return ent.attrib & file_attrib; 
 		}
 
 		/**

@@ -40,6 +40,6 @@ clean:
 	@cd $(EMULATOR) && mvn clean
 	@echo
 
-format:
+purge:
 	@echo ">> Clearing disks..."
-	@rm $(EMULATOR)/data/disk/*
+	@cd $(EMULATOR)/data/disk && $(MAKE) purge

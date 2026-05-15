@@ -152,7 +152,8 @@ namespace vid {
 	void tabulate(char c);
 	
 	/**
-	 * Removes enough  characters to reach the previous tab_size column multiple.
+	 * Removes enough characters to reach the previous tab_size column 
+	 * multiple.
 	 *
 	 * @param c tabulation character 
 	 */

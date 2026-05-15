@@ -3,6 +3,7 @@
 
 #include "../../string/string.h" 
 #include "../fat/fat16.h"
+#include "../table/table.h"
 
 namespace blk {
 	/**
@@ -19,75 +20,136 @@ namespace blk {
 		 * FAT table index of current directory.
 		 */
 		extern uint16_t cur_dir;
-
+		
 		/**
-		 * Enum for directory traversal modes.
+		 * Iterator for directory traversal.
 		 */
-		enum traversal_mode {
+		struct dir_iter {
+		private:
 			/**
-			 * Walks the directory, applying a function to each entry. Return 
-			 * value is not significant.
+			 * Is this iterator on the rootdir?
 			 */
-			WALK,
+			bool root;
+			
 			/**
-			 * Walks the directory, looking for an entry that makes a certain
-			 * boolean function true. Returns true if found, false otherwise.
+			 * Block address of iterator, can be sector (for rootdir) or 
+			 * cluster (for normal dirs).
 			 */
-			FIND,
+			union {
+				int sector;
+				uint16_t cluster;
+			} block;
+
 			/**
-			 * Walks the directory, looking for a free entry, which it then 
-			 * allocates using a function.
+			 * Current (cached) block. 
 			 */
-			ALLOC,
+			fat::dir_ent cache[MAX_CLUSTER_SIZE / sizeof(fat::dir_ent)];
+
 			/**
-			 * Works the same as find, only it is expected to modify the entry.
+			 * Entries in current block.
 			 */
-			DELETE
+			int entries;
+
+			/**
+			 * Entry in the current block.
+			 */
+			int entry;
+
+			/**
+			 * Did the iterator reach end?
+			 */
+			bool valid;
+		public:
+			/**
+			 * Returns an iterator for preorder traversal of directory.
+			 *
+			 * @param dir directory to iterate over 
+			 */
+			dir_iter(uint16_t dir);
+
+			/**
+			 * Returns the current entry.
+			 */
+			fat::dir_ent& get_entry();
+
+			/**
+			 * Syncs cached block to disk.
+			 */
+			void sync();
+
+			/**
+			 * Moves iterator to next directory entry.
+			 *
+			 * @param alloc should a new cluster be allocated if at the end of
+			 *        the directory?
+			 * @return did iterator reach end?
+			 */
+			bool next(bool alloc = false);
+			
+			/**
+			 * Moves iterator to previous directory entry. TODO
+			 *
+			 * @return did iterator reach end?
+			 */
+			bool prev();
+
+			/**
+			 * Moves iterator down into directory. TODO
+			 *
+			 * @return did iterator reach end?
+			 */
+			bool down();
+			
+			/**
+			 * Moves iterator down into previous directory. TODO
+			 *
+			 * @return did iterator reach end?
+			 */
+			bool up();
 		};
 
 		/**
-		 * Helper for walking through the current directory, in several modes.
+		 * Checks if a directory is empty.
 		 *
-		 * @param fun the function to run on each entry, should return bool
-		 * @param mode traversal mode
-		 * @param ctx additional data (context) pointer to send to function
-		 * @return meaning based on mode:
-		 *   - WALK: not significant
-		 *   - FIND: entry found
-		 *   - ALLOC: entry allocated
+		 * @param dir directory to check
+		 * @return is directory empty?
 		 */
-		bool walk(bool (*fun)(fat::dir_ent&, void*),
-		          traversal_mode mode,
-		          void* ctx = 0);
+		bool is_empty(uint16_t dir);
 
 		/**
-		 * Lists contents of current directory.
+		 * Lists contents of directory.
+		 *
+		 * @param dir directory to list
 		 */
-		void list();
+		void list(uint16_t dir);
 
 		/**
-		 * Changes current dir to directory with given filename (if found).
+		 * Finds entry with given filename (shallow).
 		 *
-		 * @param name name of directory to change to 
-		 * @return boolean representing if operation was succesful
+		 * @param name name of entry to find
+		 * @param dir directory to look into
+		 * @param out output parameter for found entry
+		 * @return was the entry found? 
 		 */
-		bool change(const char* name);
+		bool find(const char* name, uint16_t dir, fat::dir_ent& out);
 
 		/**
 		 * Creates a new directory.
 		 *
 		 * @param name name of new directory
-		 * @return boolean representing if operation was succesful
+		 * @param dir directory to create new directory into
+		 * @return was the new directory created? 
 		 */
-		bool make(const char* name);
+		bool make(const char* name, uint16_t dir);
 
 		/**
-		 * Removes an existing directory.
+		 * Removes an existing directory, matching filename (shallow).
 		 *
 		 * @param name name of directory to remove
-		 * @return boolean representing if operation was succesful
+		 * @param dir directory to look into 
+		 * @return was the directory removed? 
 		 */
-		bool remove(const char* name);
+		bool remove(const char* name, uint16_t dir);
 		
 		/**
 		 * Allocates a file and writes a buffer to it.
@@ -95,19 +157,23 @@ namespace blk {
 		 * @param name name of file to allocate 
 		 * @param buf buffer to write
 		 * @param size size of buffer
-		 * @return boolean representing if operation was succesful
+		 * @param dir directory to create file in
+		 * @return was the file created? 
 		 */
-		bool create_file(const char* name, const void* buf, int size);
+		bool create_file(const char* name, const void* buf, int size, 
+				uint16_t dir);
 
 		/**
-		 * Reads a buffer from an allocated file. 
+		 * Reads a buffer from an allocated file. Might not fill the buffer:
+		 * writes only up to filesize. 
 		 *
 		 * @param name name of allocated file 
 		 * @param buf buffer to read
 		 * @param size size of buffer
-		 * @return boolean representing if operation was succesful
+		 * @param dir directory to read file in 
+		 * @return was the file read? 
 		 */
-		bool read_file(const char* name, void* buf, int size);
+		bool read_file(const char* name, void* buf, int size, uint16_t dir);
 		
 		/**
 		 * Updates the buffer allocated in a file.
@@ -115,17 +181,19 @@ namespace blk {
 		 * @param name name of allocated file 
 		 * @param buf buffer to write 
 		 * @param size size of buffer
-		 * @return boolean representing if operation was succesful
+		 * @param dir directory to update file in
+		 * @return was the file updated? 
 		 */
-		bool update_file(const char* name, void* buf, int size);
+		bool update_file(const char* name, void* buf, int size, uint16_t dir);
 		
 		/**
 		 * Deletes a file.
 		 *
 		 * @param name name of file to delete 
-		 * @return boolean representing if operation was succesful
+		 * @param dir directory to delete file in
+		 * @return was the file deleted? 
 		 */
-		bool delete_file(const char* name); 
+		bool delete_file(const char* name, uint16_t dir); 
 	} // dir::
 } // blk::
 
