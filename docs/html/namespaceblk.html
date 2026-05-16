@@ -92,15 +92,20 @@ $(function(){initNavTree('namespaceblk.html','',''); });
 </div><!--header-->
 <div class="contents">
 <table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 id="header-namespaces" class="groupheader"><a id="namespaces" name="namespaces"></a>
+Namespaces</h2></td></tr>
+<tr class="memitem:clu" id="r_clu"><td class="memItemLeft">namespace &#160;</td><td class="memItemRight"><a class="el" href="namespaceblk_1_1clu.html">clu</a></td></tr>
+<tr class="memitem:dir" id="r_dir"><td class="memItemLeft">namespace &#160;</td><td class="memItemRight"><a class="el" href="namespaceblk_1_1dir.html">dir</a></td></tr>
+<tr class="memitem:fat" id="r_fat"><td class="memItemLeft">namespace &#160;</td><td class="memItemRight"><a class="el" href="namespaceblk_1_1fat.html">fat</a></td></tr>
+<tr class="memitem:sec" id="r_sec"><td class="memItemLeft">namespace &#160;</td><td class="memItemRight"><a class="el" href="namespaceblk_1_1sec.html">sec</a></td></tr>
+<tr class="memitem:tab" id="r_tab"><td class="memItemLeft">namespace &#160;</td><td class="memItemRight"><a class="el" href="namespaceblk_1_1tab.html">tab</a></td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-var-members" class="groupheader"><a id="var-members" name="var-members"></a>
 Variables</h2></td></tr>
-<tr class="memitem:a1418975bf9b99f1b768ef5b0f7e7c471" id="r_a1418975bf9b99f1b768ef5b0f7e7c471"><td class="memItemLeft">int&#160;</td><td class="memItemRight"><a class="el" href="#a1418975bf9b99f1b768ef5b0f7e7c471">storage_size</a> = 16 * 1024 * 1024</td></tr>
-<tr class="memitem:a883d25137dcdaaae7999a56ea7d0fcde" id="r_a883d25137dcdaaae7999a56ea7d0fcde"><td class="memItemLeft">int&#160;</td><td class="memItemRight"><a class="el" href="#a883d25137dcdaaae7999a56ea7d0fcde">read_cmd</a> = 0x00</td></tr>
-<tr class="memitem:a6693adc07a2fd82616aa58a826346660" id="r_a6693adc07a2fd82616aa58a826346660"><td class="memItemLeft">int&#160;</td><td class="memItemRight"><a class="el" href="#a6693adc07a2fd82616aa58a826346660">write_cmd</a> = 0x01</td></tr>
 <tr class="memitem:ad9614566fb7380b666875123cb236499" id="r_ad9614566fb7380b666875123cb236499"><td class="memItemLeft"><a class="el" href="structhwr_1_1dev_1_1block__device.html">hwr::dev::block_device</a> &amp;&#160;</td><td class="memItemRight"><a class="el" href="#ad9614566fb7380b666875123cb236499">disk</a> = <a class="el" href="namespacehwr_1_1dev.html#afceb398eb8559748026cca40da06f17c">hwr::dev::disk</a></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Namespace for block devices, mainly disk handling. </p>
+<div class="textblock"><p>Namespace for block devices, mainly disk handling, file system handling and file/directory CRUD operations. </p>
 </div><a name="doc-var-members" id="doc-var-members"></a><h2 id="header-doc-var-members" class="groupheader">Variable Documentation</h2>
 <a id="ad9614566fb7380b666875123cb236499" name="ad9614566fb7380b666875123cb236499"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ad9614566fb7380b666875123cb236499">&#9670;&#160;</a></span>disk</h2>
@@ -122,51 +127,6 @@ Variables</h2></td></tr>
 </table>
 </div><div class="memdoc">
 <p>Reference to disk device. </p>
-
-</div>
-</div>
-<a id="a883d25137dcdaaae7999a56ea7d0fcde" name="a883d25137dcdaaae7999a56ea7d0fcde"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a883d25137dcdaaae7999a56ea7d0fcde">&#9670;&#160;</a></span>read_cmd</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int blk::read_cmd = 0x00</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Command to begin reading from disk. </p>
-
-</div>
-</div>
-<a id="a1418975bf9b99f1b768ef5b0f7e7c471" name="a1418975bf9b99f1b768ef5b0f7e7c471"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a1418975bf9b99f1b768ef5b0f7e7c471">&#9670;&#160;</a></span>storage_size</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int blk::storage_size = 16 * 1024 * 1024</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Size of disk device </p>
-
-</div>
-</div>
-<a id="a6693adc07a2fd82616aa58a826346660" name="a6693adc07a2fd82616aa58a826346660"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6693adc07a2fd82616aa58a826346660">&#9670;&#160;</a></span>write_cmd</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int blk::write_cmd = 0x01</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Command to end reading from disk. </p>
 
 </div>
 </div>

@@ -115,7 +115,7 @@ namespace kyb {
 	char get_char();
 
 	/**
-	 * Gets an unsigned integer without echo. Terminates on '\n'. Allows to 
+	 * Gets an unsigned integer without echo. Terminates on '\\n'. Allows to 
 	 * specify the first digit to insert in the buffer (used by get_int() when 
 	 * it peeks at the first character to check for sign).
 	 *
@@ -125,14 +125,14 @@ namespace kyb {
 	unsigned get_uint(unsigned int first = 0);
 
 	/**
-	 * Gets an integer without echo. Terminates on '\n'.
+	 * Gets an integer without echo. Terminates on '\\n'.
 	 *
 	 * @return integer from keyboard
 	 */
 	int get_int();
 
 	/**
-	 * Gets a string without echo. Terminates on '\n'.
+	 * Gets a string without echo. Terminates on '\\n'.
 	 *
 	 * @param buf buffer to fill with characters 
 	 * @param n max numbers of characters to read 
@@ -140,14 +140,15 @@ namespace kyb {
 	void get_str(char* buf, int n);
 
 	/**
-	 * Reads a char with echo. Doesn't echo control characters ('\b' and '\n').
+	 * Reads a char with echo. Doesn't echo control characters ('\\b' and 
+	 * '\\n').
 	 *
 	 * @return first pressed char
 	 */
 	char read_char();
 	
 	/**
-	 * Reads an unsigned integer without echo. Terminates on '\n'. Allows same 
+	 * Reads an unsigned integer without echo. Terminates on '\\n'. Allows same 
 	 * behavoir same as get_int().
 	 *
 	 * @param first first digit to insert
@@ -156,14 +157,14 @@ namespace kyb {
 	unsigned read_uint(unsigned int first = 0);
 
 	/**
-	 * Reads an integer without echo. Terminates on '\n'.
+	 * Reads an integer without echo. Terminates on '\\n'.
 	 *
 	 * @return integer from keyboard
 	 */
 	int read_int();
 
 	/**
-	 * Reads a string with echo. Terminates on '\n'.
+	 * Reads a string with echo. Terminates on '\\n'.
 	 *
 	 * @param buf buffer to fill with characters 
 	 * @param n max numbers of characters to read 

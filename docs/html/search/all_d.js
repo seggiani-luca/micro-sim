@@ -1,17 +1,15 @@
 var searchData=
 [
-  ['pack_0',['pack',['../namespacenet.html#aed786c046fb2c66fa610ab52ae023373',1,'net']]],
-  ['packet_1',['packet',['../structnet_1_1packet.html',1,'net']]],
-  ['panic_2',['panic',['../namespaceutl.html#a7179364317532d2a80284150c445fef5',1,'utl']]],
-  ['payload_3',['payload',['../structnet_1_1packet.html#ade423de8b179dd52c62229fb35557123',1,'net::packet']]],
-  ['poll_5fchar_4',['poll_char',['../namespacekyb.html#ace60273a005f4c781377d91da10532e2',1,'kyb']]],
-  ['print_5fchar_5',['print_char',['../namespacevid.html#aee0175d3c5a19ffccba72df3010babee',1,'vid']]],
-  ['print_5fint_6',['print_int',['../namespacevid.html#a10f4cc2de5c7c23e9497d104a30c5904',1,'vid']]],
-  ['print_5fstr_7',['print_str',['../namespacevid.html#acd07a9854285034a040dfdc2e2ae4894',1,'vid']]],
-  ['print_5fstrln_8',['print_strln',['../namespacevid.html#a90fe1f15c835e153c127e10cc08ad041',1,'vid']]],
-  ['print_5fuint_9',['print_uint',['../namespacevid.html#aff7b901a5c6cbf23a2ffd4ee9bcfe029',1,'vid']]],
-  ['put_5fchar_10',['put_char',['../namespacevid.html#a0ab5b662ebde6fbe6a2d9b873d19e470',1,'vid']]],
-  ['put_5fint_11',['put_int',['../namespacevid.html#ae6a730b471e460c9ee75beaa41126c68',1,'vid']]],
-  ['put_5fstr_12',['put_str',['../namespacevid.html#add16bc157ba0d7ab77fb1295ec3c76d3',1,'vid']]],
-  ['put_5fuint_13',['put_uint',['../namespacevid.html#a5d56174503c83c19206e7c7745a421b7',1,'vid']]]
+  ['n_5ffats_0',['n_fats',['../structblk_1_1fat_1_1bpb.html#a2678ed31d9b7788b70d49cec0202a875',1,'blk::fat::bpb']]],
+  ['n_5fheads_1',['n_heads',['../structblk_1_1fat_1_1bpb.html#a3c151b54d14dcb9d7c3437d28093eeb7',1,'blk::fat::bpb']]],
+  ['n_5flog_5fsecs_2',['n_log_secs',['../structblk_1_1fat_1_1bpb.html#a3295117b682e04ffe053906834e72ca6',1,'blk::fat::bpb']]],
+  ['ncat_3',['ncat',['../namespacestr.html#a33d35aa4dc5070499a7f49fe30c88b70',1,'str']]],
+  ['ncmp_4',['ncmp',['../namespacestr.html#aac9b925f2285db9ee8533c4541a21ee3',1,'str']]],
+  ['ncpy_5',['ncpy',['../namespacestr.html#a0fbe710caa5f78ac9a583af53bc2143f',1,'str']]],
+  ['net_6',['net',['../namespacenet.html',1,'']]],
+  ['network_7',['network',['../namespacehwr_1_1dev.html#a60c219e1aa4d42cc38566432f026fb43',1,'hwr::dev::network'],['../namespacenet.html#a3c15bf5550c43042e7915ca7d5902e6d',1,'net::network']]],
+  ['network_5fdevice_8',['network_device',['../structhwr_1_1dev_1_1network__device.html',1,'hwr::dev']]],
+  ['newline_9',['newline',['../namespacevid.html#addbc550f9802ffaf4c56bfc306db6ef5',1,'vid']]],
+  ['next_10',['next',['../structblk_1_1dir_1_1dir__iter.html#a0cdcfe1cc00e2a9ebdc99b66635c8402',1,'blk::dir::dir_iter']]],
+  ['num_11',['num',['../namespaceblk_1_1sec.html#af9f5524e77ee031c0772a1b9c908adc9',1,'blk::sec']]]
 ];

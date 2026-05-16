@@ -9,7 +9,7 @@ import microsim.simulation.component.device.IoDevice;
  * sectors. Device ports are:
  * <ul>
  * <li>Data: 2 bytes;</li>
- * <li>Error: not significant for simulated device;</li>
+ * <li>Error: signals error conditions;</li>
  * <li>Address: 4 bytes (for 28 bit LBA plus HND);</li>
  * <li>Block counter;</li>
  * <li>Status / command: acts as status on reads and command on writes.</li>
@@ -190,6 +190,11 @@ public class BlockDevice extends IoDevice {
    */
   @Override
   public int getPort(int index) {
+    // wait for error to be removed
+    if (error && index != 1) {
+      return 0;
+    }
+
     switch (index) {
       case 0 -> {
         // data port
@@ -224,6 +229,11 @@ public class BlockDevice extends IoDevice {
    */
   @Override
   public void setPort(int index, int data) {
+    // wait for error to be removed
+    if (error) {
+      return;
+    }
+
     switch (index) {
       case 0 -> {
         // data port

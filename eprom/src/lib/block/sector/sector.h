@@ -42,7 +42,7 @@ namespace blk {
 		 *
 		 * @param addr address of sector
 		 * @param scn number of sectors
-		 * @parm cmd command to give
+		 * @param cmd command to give
 		 */
 		void give_disk_command(int addr, int scn, int cmd);
 

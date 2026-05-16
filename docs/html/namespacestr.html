@@ -101,13 +101,10 @@ Functions</h2></td></tr>
 <tr class="memitem:a33d35aa4dc5070499a7f49fe30c88b70" id="r_a33d35aa4dc5070499a7f49fe30c88b70"><td class="memItemLeft">char *&#160;</td><td class="memItemRight"><a class="el" href="#a33d35aa4dc5070499a7f49fe30c88b70">ncat</a> (char *dst, const char *src, unsigned int n)</td></tr>
 <tr class="memitem:a15d6525d3f12b6b02e2bc1efaf2b31ec" id="r_a15d6525d3f12b6b02e2bc1efaf2b31ec"><td class="memItemLeft">int&#160;</td><td class="memItemRight"><a class="el" href="#a15d6525d3f12b6b02e2bc1efaf2b31ec">cmp</a> (const char *str1, const char *str2)</td></tr>
 <tr class="memitem:aac9b925f2285db9ee8533c4541a21ee3" id="r_aac9b925f2285db9ee8533c4541a21ee3"><td class="memItemLeft">int&#160;</td><td class="memItemRight"><a class="el" href="#aac9b925f2285db9ee8533c4541a21ee3">ncmp</a> (const char *str1, const char *str2, unsigned int n)</td></tr>
-<tr class="memitem:adc34c45a23fca31ddb573d4cf20ff0f6" id="r_adc34c45a23fca31ddb573d4cf20ff0f6"><td class="memItemLeft">void *&#160;</td><td class="memItemRight"><a class="el" href="#adc34c45a23fca31ddb573d4cf20ff0f6">mcpy</a> (void *dst, const void *src, unsigned int n)</td></tr>
-<tr class="memitem:a046632d90a6ca735892b13a451e65df1" id="r_a046632d90a6ca735892b13a451e65df1"><td class="memItemLeft">void *&#160;</td><td class="memItemRight"><a class="el" href="#a046632d90a6ca735892b13a451e65df1">mmove</a> (void *dst, const void *src, unsigned int n)</td></tr>
-<tr class="memitem:aba91829fdce6d5c46bc8340d1ccd59a7" id="r_aba91829fdce6d5c46bc8340d1ccd59a7"><td class="memItemLeft">void *&#160;</td><td class="memItemRight"><a class="el" href="#aba91829fdce6d5c46bc8340d1ccd59a7">mset</a> (void *dst, char data, unsigned int n)</td></tr>
-<tr class="memitem:a79164bd99db0da66a5b265a0827b5af2" id="r_a79164bd99db0da66a5b265a0827b5af2"><td class="memItemLeft">int&#160;</td><td class="memItemRight"><a class="el" href="#a79164bd99db0da66a5b265a0827b5af2">mcmp</a> (const void *buf1, const void *buf2, unsigned int n)</td></tr>
+<tr class="memitem:ab86673cfb53d0fb1b9e7a1b65187f0d3" id="r_ab86673cfb53d0fb1b9e7a1b65187f0d3"><td class="memItemLeft">char *&#160;</td><td class="memItemRight"><a class="el" href="#ab86673cfb53d0fb1b9e7a1b65187f0d3">tok</a> (char *<a class="el" href="namespacestr.html">str</a>, char delim)</td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Namespace for string handling, including cstring functions and memory functions. </p>
+<div class="textblock"><p>Namespace for string handling, including cstring functions. </p>
 </div><a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Function Documentation</h2>
 <a id="a008d9440eaeae9fd7c1558e993ee7a34" name="a008d9440eaeae9fd7c1558e993ee7a34"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a008d9440eaeae9fd7c1558e993ee7a34">&#9670;&#160;</a></span>cat()</h2>
@@ -224,150 +221,6 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a79164bd99db0da66a5b265a0827b5af2" name="a79164bd99db0da66a5b265a0827b5af2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a79164bd99db0da66a5b265a0827b5af2">&#9670;&#160;</a></span>mcmp()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int str::mcmp </td>
-          <td>(</td>
-          <td class="paramtype">const void *</td>          <td class="paramname"><span class="paramname"><em>buf1</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const void *</td>          <td class="paramname"><span class="paramname"><em>buf2</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">unsigned int</td>          <td class="paramname"><span class="paramname"><em>n</em></span>&#160;)</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Compares two buffers of n bytes.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">buf1</td><td>first buffer to compare </td></tr>
-    <tr><td class="paramname">buf2</td><td>second buffer to compare </td></tr>
-    <tr><td class="paramname">n</td><td>max number of bytes to compare </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>buf1 - buf2 at first different byte, 0 if equal </dd></dl>
-
-</div>
-</div>
-<a id="adc34c45a23fca31ddb573d4cf20ff0f6" name="adc34c45a23fca31ddb573d4cf20ff0f6"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#adc34c45a23fca31ddb573d4cf20ff0f6">&#9670;&#160;</a></span>mcpy()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void * str::mcpy </td>
-          <td>(</td>
-          <td class="paramtype">void *</td>          <td class="paramname"><span class="paramname"><em>dst</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const void *</td>          <td class="paramname"><span class="paramname"><em>src</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">unsigned int</td>          <td class="paramname"><span class="paramname"><em>n</em></span>&#160;)</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Copies a buffer of n bytes from source to destination.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">dst</td><td>destination buffer </td></tr>
-    <tr><td class="paramname">src</td><td>source buffer </td></tr>
-    <tr><td class="paramname">n</td><td>number of bytes to copy </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>destination buffer </dd></dl>
-
-</div>
-</div>
-<a id="a046632d90a6ca735892b13a451e65df1" name="a046632d90a6ca735892b13a451e65df1"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a046632d90a6ca735892b13a451e65df1">&#9670;&#160;</a></span>mmove()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void * str::mmove </td>
-          <td>(</td>
-          <td class="paramtype">void *</td>          <td class="paramname"><span class="paramname"><em>dst</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const void *</td>          <td class="paramname"><span class="paramname"><em>src</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">unsigned int</td>          <td class="paramname"><span class="paramname"><em>n</em></span>&#160;)</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Copies a buffer of n bytes from source to destination, allowing overlapping buffers.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">dst</td><td>destination buffer </td></tr>
-    <tr><td class="paramname">src</td><td>source buffer </td></tr>
-    <tr><td class="paramname">n</td><td>number of bytes to copy </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>destination buffer </dd></dl>
-
-</div>
-</div>
-<a id="aba91829fdce6d5c46bc8340d1ccd59a7" name="aba91829fdce6d5c46bc8340d1ccd59a7"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aba91829fdce6d5c46bc8340d1ccd59a7">&#9670;&#160;</a></span>mset()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void * str::mset </td>
-          <td>(</td>
-          <td class="paramtype">void *</td>          <td class="paramname"><span class="paramname"><em>dst</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">char</td>          <td class="paramname"><span class="paramname"><em>data</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">unsigned int</td>          <td class="paramname"><span class="paramname"><em>n</em></span>&#160;)</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Sets a buffer of n bytes to the given data byte.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">dst</td><td>destination buffer </td></tr>
-    <tr><td class="paramname">data</td><td>data byte to set buffer bytes to </td></tr>
-    <tr><td class="paramname">n</td><td>size of buffer </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>destination buffer </dd></dl>
-
-</div>
-</div>
 <a id="a33d35aa4dc5070499a7f49fe30c88b70" name="a33d35aa4dc5070499a7f49fe30c88b70"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a33d35aa4dc5070499a7f49fe30c88b70">&#9670;&#160;</a></span>ncat()</h2>
 
@@ -473,6 +326,28 @@ Functions</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>destination string </dd></dl>
+
+</div>
+</div>
+<a id="ab86673cfb53d0fb1b9e7a1b65187f0d3" name="ab86673cfb53d0fb1b9e7a1b65187f0d3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab86673cfb53d0fb1b9e7a1b65187f0d3">&#9670;&#160;</a></span>tok()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">char * str::tok </td>
+          <td>(</td>
+          <td class="paramtype">char *</td>          <td class="paramname"><span class="paramname"><em>str</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">char</td>          <td class="paramname"><span class="paramname"><em>delim</em></span><span class="paramdefsep"> = </span><span class="paramdefval">'&#160;'</span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Tokenizes a string based on a separator character. </p>
 
 </div>
 </div>

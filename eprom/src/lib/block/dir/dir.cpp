@@ -242,7 +242,7 @@ namespace blk {
 
 					// print size
 					vid::print_int(ent.filesize);
-					vid::print_str(" bytes ");
+					vid::print_str(" byte ");
 				}
 
 				vid::newline();

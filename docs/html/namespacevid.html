@@ -106,6 +106,7 @@ Functions</h2></td></tr>
 <tr class="memitem:a239d263329518c8760ee2c7cfda671be" id="r_a239d263329518c8760ee2c7cfda671be"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a239d263329518c8760ee2c7cfda671be">dec_cur</a> ()</td></tr>
 <tr class="memitem:a521b2d28e81bc371e03118a8a0912908" id="r_a521b2d28e81bc371e03118a8a0912908"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a521b2d28e81bc371e03118a8a0912908">backspace</a> ()</td></tr>
 <tr class="memitem:a02aec266cca2bcd29ff8a4feec061339" id="r_a02aec266cca2bcd29ff8a4feec061339"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a02aec266cca2bcd29ff8a4feec061339">tabulate</a> (char c=' ')</td></tr>
+<tr class="memitem:aa806f9209e571dec99fc177e6030f524" id="r_aa806f9209e571dec99fc177e6030f524"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#aa806f9209e571dec99fc177e6030f524">detabulate</a> ()</td></tr>
 <tr class="memitem:aee0175d3c5a19ffccba72df3010babee" id="r_aee0175d3c5a19ffccba72df3010babee"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#aee0175d3c5a19ffccba72df3010babee">print_char</a> (char c)</td></tr>
 <tr class="memitem:aff7b901a5c6cbf23a2ffd4ee9bcfe029" id="r_aff7b901a5c6cbf23a2ffd4ee9bcfe029"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#aff7b901a5c6cbf23a2ffd4ee9bcfe029">print_uint</a> (unsigned int n)</td></tr>
 <tr class="memitem:a10f4cc2de5c7c23e9497d104a30c5904" id="r_a10f4cc2de5c7c23e9497d104a30c5904"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a10f4cc2de5c7c23e9497d104a30c5904">print_int</a> (int n)</td></tr>
@@ -121,9 +122,9 @@ Variables</h2></td></tr>
 <tr class="memitem:afa0a7043f8c960c655d5e27911aa1bbd" id="r_afa0a7043f8c960c655d5e27911aa1bbd"><td class="memItemLeft"><a class="el" href="structvid_1_1coords.html">coords</a>&#160;</td><td class="memItemRight"><a class="el" href="#afa0a7043f8c960c655d5e27911aa1bbd">cur</a> = {0, 0}</td></tr>
 <tr class="memitem:ad4fac66fea6a7409637ac35f1f1524fd" id="r_ad4fac66fea6a7409637ac35f1f1524fd"><td class="memItemLeft"><a class="el" href="structhwr_1_1dev_1_1video__device.html">hwr::dev::video_device</a> &amp;&#160;</td><td class="memItemRight"><a class="el" href="#ad4fac66fea6a7409637ac35f1f1524fd">video</a> = <a class="el" href="namespacehwr_1_1dev.html#aec4253a8e040342396aaa806fad90eeb">hwr::dev::video</a></td></tr>
 <tr class="memitem:a645764ba570227c9d6cf891ebb6e0e91" id="r_a645764ba570227c9d6cf891ebb6e0e91"><td class="memItemLeft">volatile uint8_t(&amp;&#160;</td><td class="memItemRight"><a class="el" href="#a645764ba570227c9d6cf891ebb6e0e91">vram</a> )[] = <a class="el" href="namespacehwr_1_1mem.html#a59b99e1476f51488b242a92833898467">hwr::mem::vram</a></td></tr>
-<tr class="memitem:a5c2f1f4e8df0fd8e2e47091cdc56ae8d" id="r_a5c2f1f4e8df0fd8e2e47091cdc56ae8d"><td class="memItemLeft">const int&#160;</td><td class="memItemRight"><a class="el" href="#a5c2f1f4e8df0fd8e2e47091cdc56ae8d">COLS</a> = hwr::dev::video.cols</td></tr>
-<tr class="memitem:a555c153ebb05384d83e66e12ec7ff56c" id="r_a555c153ebb05384d83e66e12ec7ff56c"><td class="memItemLeft">const int&#160;</td><td class="memItemRight"><a class="el" href="#a555c153ebb05384d83e66e12ec7ff56c">ROWS</a> = hwr::dev::video.rows</td></tr>
-<tr class="memitem:a24ab55debc6f845ddbd66ca84d64cb90" id="r_a24ab55debc6f845ddbd66ca84d64cb90"><td class="memItemLeft">const int&#160;</td><td class="memItemRight"><a class="el" href="#a24ab55debc6f845ddbd66ca84d64cb90">TAB_SIZE</a> = 4</td></tr>
+<tr class="memitem:af4a6317fce2ec0e42baca437c23c26b5" id="r_af4a6317fce2ec0e42baca437c23c26b5"><td class="memItemLeft">const int&#160;</td><td class="memItemRight"><a class="el" href="#af4a6317fce2ec0e42baca437c23c26b5">cols</a> = hwr::dev::video.cols</td></tr>
+<tr class="memitem:ad3ebe4f1f9d5445e8d53b6bba60fbca1" id="r_ad3ebe4f1f9d5445e8d53b6bba60fbca1"><td class="memItemLeft">const int&#160;</td><td class="memItemRight"><a class="el" href="#ad3ebe4f1f9d5445e8d53b6bba60fbca1">rows</a> = hwr::dev::video.rows</td></tr>
+<tr class="memitem:a6169463687144ea34cb248266db85c36" id="r_a6169463687144ea34cb248266db85c36"><td class="memItemLeft">int&#160;</td><td class="memItemRight"><a class="el" href="#a6169463687144ea34cb248266db85c36">tab_size</a> = 4</td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Namespace for handling console graphics, including simple character/string/int printing/putting and display cursor handling. </p>
@@ -179,6 +180,24 @@ Variables</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <p>Moves cursor backward by decreasing column, decreasing line if needed. Clamps if at the beginning of memory. </p>
+
+</div>
+</div>
+<a id="aa806f9209e571dec99fc177e6030f524" name="aa806f9209e571dec99fc177e6030f524"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa806f9209e571dec99fc177e6030f524">&#9670;&#160;</a></span>detabulate()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void vid::detabulate </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Removes enough characters to reach the previous tab_size column multiple. </p>
 
 </div>
 </div>
@@ -510,7 +529,7 @@ Variables</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Inserts enough tabulation characters to reach the next TAB_SIZE column multiple.</p>
+<p>Inserts enough tabulation characters to reach the next tab_size column multiple.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">c</td><td>tabulation character </td></tr>
@@ -521,8 +540,8 @@ Variables</h2></td></tr>
 </div>
 </div>
 <a name="doc-var-members" id="doc-var-members"></a><h2 id="header-doc-var-members" class="groupheader">Variable Documentation</h2>
-<a id="a5c2f1f4e8df0fd8e2e47091cdc56ae8d" name="a5c2f1f4e8df0fd8e2e47091cdc56ae8d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5c2f1f4e8df0fd8e2e47091cdc56ae8d">&#9670;&#160;</a></span>COLS</h2>
+<a id="af4a6317fce2ec0e42baca437c23c26b5" name="af4a6317fce2ec0e42baca437c23c26b5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af4a6317fce2ec0e42baca437c23c26b5">&#9670;&#160;</a></span>cols</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -531,7 +550,7 @@ Variables</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">const int vid::COLS = hwr::dev::video.cols</td>
+          <td class="memname">const int vid::cols = hwr::dev::video.cols</td>
         </tr>
       </table>
   </td>
@@ -559,8 +578,8 @@ Variables</h2></td></tr>
 
 </div>
 </div>
-<a id="a555c153ebb05384d83e66e12ec7ff56c" name="a555c153ebb05384d83e66e12ec7ff56c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a555c153ebb05384d83e66e12ec7ff56c">&#9670;&#160;</a></span>ROWS</h2>
+<a id="ad3ebe4f1f9d5445e8d53b6bba60fbca1" name="ad3ebe4f1f9d5445e8d53b6bba60fbca1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad3ebe4f1f9d5445e8d53b6bba60fbca1">&#9670;&#160;</a></span>rows</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -569,7 +588,7 @@ Variables</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">const int vid::ROWS = hwr::dev::video.rows</td>
+          <td class="memname">const int vid::rows = hwr::dev::video.rows</td>
         </tr>
       </table>
   </td>
@@ -582,8 +601,8 @@ Variables</h2></td></tr>
 
 </div>
 </div>
-<a id="a24ab55debc6f845ddbd66ca84d64cb90" name="a24ab55debc6f845ddbd66ca84d64cb90"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a24ab55debc6f845ddbd66ca84d64cb90">&#9670;&#160;</a></span>TAB_SIZE</h2>
+<a id="a6169463687144ea34cb248266db85c36" name="a6169463687144ea34cb248266db85c36"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6169463687144ea34cb248266db85c36">&#9670;&#160;</a></span>tab_size</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -592,7 +611,7 @@ Variables</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">const int vid::TAB_SIZE = 4</td>
+          <td class="memname">int vid::tab_size = 4</td>
         </tr>
       </table>
   </td>

@@ -48,11 +48,6 @@ public class Main {
   private static DebugShell debugShell;
 
   /**
-   * Global array of instantiated simulation instances.
-   */
-  private static final List<Simulation> simulationInstances = new ArrayList<>();
-
-  /**
    * Shows project name, version and authorship.
    */
   private static void greet() {
@@ -174,6 +169,8 @@ public class Main {
 
     // 2. instantiate simulations from simulation infos in main environment, and attach interfaces
     debugShell = DebugShell.getInstance(); // has to be unique
+
+    List<Simulation> simulationInstances = new ArrayList<>();
     for (SimulationInfo info : env.simulationInfos) {
       Simulation simulation = initSimulation(info);
       simulationInstances.add(simulation);

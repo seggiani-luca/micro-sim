@@ -95,23 +95,21 @@ $(function(){initNavTree('block_8h_source.html','',''); });
 <div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span><span class="preprocessor">#define BLOCK_H</span></div>
 <div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span> </div>
 <div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="preprocessor">#include &quot;../conf/hardware.h&quot;</span></div>
-<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span></div>
-<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span><span class="keyword">namespace </span><a class="code hl_namespace" href="namespaceblk.html">blk</a> {</div>
-<div class="line"><a id="l00013" name="l00013"></a><span class="lineno"><a class="line" href="namespaceblk.html#ad9614566fb7380b666875123cb236499">   13</a></span>    <span class="keyword">inline</span> <a class="code hl_struct" href="structhwr_1_1dev_1_1block__device.html">hwr::dev::block_device</a>&amp; <a class="code hl_variable" href="namespaceblk.html#ad9614566fb7380b666875123cb236499">disk</a> = <a class="code hl_variable" href="namespacehwr_1_1dev.html#afceb398eb8559748026cca40da06f17c">hwr::dev::disk</a>;</div>
-<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span></div>
-<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span>    <span class="keyword">extern</span> <span class="keywordtype">int</span> <a class="code hl_variable" href="namespaceblk.html#a1418975bf9b99f1b768ef5b0f7e7c471">storage_size</a>;</div>
-<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span></div>
-<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span>    <span class="keyword">extern</span> <span class="keywordtype">int</span> <a class="code hl_variable" href="namespaceblk.html#a883d25137dcdaaae7999a56ea7d0fcde">read_cmd</a>;</div>
-<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span></div>
-<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span>    <span class="keyword">extern</span> <span class="keywordtype">int</span> <a class="code hl_variable" href="namespaceblk.html#a6693adc07a2fd82616aa58a826346660">write_cmd</a>;</div>
-<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span>} <span class="comment">// blk::</span></div>
-<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span> </div>
-<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span><span class="preprocessor">#endif</span></div>
-<div class="ttc" id="anamespaceblk_html"><div class="ttname"><a href="namespaceblk.html">blk</a></div><div class="ttdef"><b>Definition</b> block.cpp:3</div></div>
-<div class="ttc" id="anamespaceblk_html_a1418975bf9b99f1b768ef5b0f7e7c471"><div class="ttname"><a href="namespaceblk.html#a1418975bf9b99f1b768ef5b0f7e7c471">blk::storage_size</a></div><div class="ttdeci">int storage_size</div><div class="ttdef"><b>Definition</b> block.cpp:4</div></div>
-<div class="ttc" id="anamespaceblk_html_a6693adc07a2fd82616aa58a826346660"><div class="ttname"><a href="namespaceblk.html#a6693adc07a2fd82616aa58a826346660">blk::write_cmd</a></div><div class="ttdeci">int write_cmd</div><div class="ttdef"><b>Definition</b> block.cpp:8</div></div>
-<div class="ttc" id="anamespaceblk_html_a883d25137dcdaaae7999a56ea7d0fcde"><div class="ttname"><a href="namespaceblk.html#a883d25137dcdaaae7999a56ea7d0fcde">blk::read_cmd</a></div><div class="ttdeci">int read_cmd</div><div class="ttdef"><b>Definition</b> block.cpp:6</div></div>
-<div class="ttc" id="anamespaceblk_html_ad9614566fb7380b666875123cb236499"><div class="ttname"><a href="namespaceblk.html#ad9614566fb7380b666875123cb236499">blk::disk</a></div><div class="ttdeci">hwr::dev::block_device &amp; disk</div><div class="ttdef"><b>Definition</b> block.h:13</div></div>
+<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="preprocessor">#include &quot;sector/sector.h&quot;</span></div>
+<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span><span class="preprocessor">#include &quot;cluster/cluster.h&quot;</span></div>
+<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span><span class="preprocessor">#include &quot;table/table.h&quot;</span></div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span><span class="preprocessor">#include &quot;dir/dir.h&quot;</span></div>
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span><span class="preprocessor">#include &quot;fat/fat16.h&quot;</span></div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span></div>
+<div class="foldopen" id="foldopen00015" data-start="{" data-end="}">
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno"><a class="line" href="namespaceblk.html">   15</a></span><span class="keyword">namespace </span><a class="code hl_namespace" href="namespaceblk.html">blk</a> {</div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno"><a class="line" href="namespaceblk.html#ad9614566fb7380b666875123cb236499">   19</a></span>    <span class="keyword">inline</span> <a class="code hl_struct" href="structhwr_1_1dev_1_1block__device.html">hwr::dev::block_device</a>&amp; <a class="code hl_variable" href="namespaceblk.html#ad9614566fb7380b666875123cb236499">disk</a> = <a class="code hl_variable" href="namespacehwr_1_1dev.html#afceb398eb8559748026cca40da06f17c">hwr::dev::disk</a>;</div>
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span>} <span class="comment">// blk::</span></div>
+</div>
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span> </div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span><span class="preprocessor">#endif</span></div>
+<div class="ttc" id="anamespaceblk_html"><div class="ttname"><a href="namespaceblk.html">blk</a></div><div class="ttdef"><b>Definition</b> block.h:15</div></div>
+<div class="ttc" id="anamespaceblk_html_ad9614566fb7380b666875123cb236499"><div class="ttname"><a href="namespaceblk.html#ad9614566fb7380b666875123cb236499">blk::disk</a></div><div class="ttdeci">hwr::dev::block_device &amp; disk</div><div class="ttdef"><b>Definition</b> block.h:19</div></div>
 <div class="ttc" id="anamespacehwr_1_1dev_html_afceb398eb8559748026cca40da06f17c"><div class="ttname"><a href="namespacehwr_1_1dev.html#afceb398eb8559748026cca40da06f17c">hwr::dev::disk</a></div><div class="ttdeci">block_device disk</div><div class="ttdef"><b>Definition</b> hardware.cpp:43</div></div>
 <div class="ttc" id="astructhwr_1_1dev_1_1block__device_html"><div class="ttname"><a href="structhwr_1_1dev_1_1block__device.html">hwr::dev::block_device</a></div><div class="ttdef"><b>Definition</b> hardware.h:187</div></div>
 </div><!-- fragment --></div><!-- contents -->

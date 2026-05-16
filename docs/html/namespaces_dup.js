@@ -1,26 +1,25 @@
 var namespaces_dup =
 [
-    [ "blk", "namespaceblk.html", [
-      [ "disk", "namespaceblk.html#ad9614566fb7380b666875123cb236499", null ],
-      [ "read_cmd", "namespaceblk.html#a883d25137dcdaaae7999a56ea7d0fcde", null ],
-      [ "storage_size", "namespaceblk.html#a1418975bf9b99f1b768ef5b0f7e7c471", null ],
-      [ "write_cmd", "namespaceblk.html#a6693adc07a2fd82616aa58a826346660", null ]
-    ] ],
+    [ "blk", "namespaceblk.html", "namespaceblk" ],
     [ "hwr", "namespacehwr.html", "namespacehwr" ],
     [ "kyb", "namespacekyb.html", "namespacekyb" ],
+    [ "mem", "namespacemem.html", [
+      [ "cmp", "namespacemem.html#adf49c24d2f7da573dad84b97f5872e36", null ],
+      [ "cpy", "namespacemem.html#a2c831bcaa3824292065c2b4896e263dd", null ],
+      [ "move", "namespacemem.html#a5d534a6deffd982b402581e0272dd805", null ],
+      [ "set", "namespacemem.html#a4b2206b442f14687ed5effa44da86be6", null ]
+    ] ],
     [ "net", "namespacenet.html", "namespacenet" ],
+    [ "shl", "namespaceshl.html", "namespaceshl" ],
     [ "str", "namespacestr.html", [
       [ "cat", "namespacestr.html#a008d9440eaeae9fd7c1558e993ee7a34", null ],
       [ "cmp", "namespacestr.html#a15d6525d3f12b6b02e2bc1efaf2b31ec", null ],
       [ "cpy", "namespacestr.html#a5b664e28a52198f31d65031931c7af4a", null ],
       [ "len", "namespacestr.html#ac79dc32fc5f567c8463597e2e5a827ed", null ],
-      [ "mcmp", "namespacestr.html#a79164bd99db0da66a5b265a0827b5af2", null ],
-      [ "mcpy", "namespacestr.html#adc34c45a23fca31ddb573d4cf20ff0f6", null ],
-      [ "mmove", "namespacestr.html#a046632d90a6ca735892b13a451e65df1", null ],
-      [ "mset", "namespacestr.html#aba91829fdce6d5c46bc8340d1ccd59a7", null ],
       [ "ncat", "namespacestr.html#a33d35aa4dc5070499a7f49fe30c88b70", null ],
       [ "ncmp", "namespacestr.html#aac9b925f2285db9ee8533c4541a21ee3", null ],
-      [ "ncpy", "namespacestr.html#a0fbe710caa5f78ac9a583af53bc2143f", null ]
+      [ "ncpy", "namespacestr.html#a0fbe710caa5f78ac9a583af53bc2143f", null ],
+      [ "tok", "namespacestr.html#ab86673cfb53d0fb1b9e7a1b65187f0d3", null ]
     ] ],
     [ "tim", "namespacetim.html", [
       [ "sleep", "namespacetim.html#a5780ccb9c0348304043b4765284d2e25", null ],

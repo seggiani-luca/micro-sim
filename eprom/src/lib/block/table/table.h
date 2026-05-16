@@ -29,7 +29,7 @@ namespace blk {
 		/**
 		 * Looks up a given FAT table entry.
 		 *
-		 * @param FAT table entry to look up (in FAT table index space)
+		 * @param entry FAT table entry to look up (in FAT table index space)
 		 * @return the FAT entry
 		 */
 		uint16_t lookup(uint16_t entry);

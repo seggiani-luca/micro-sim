@@ -1,7 +1,27 @@
 var searchData=
 [
-  ['halt_0',['halt',['../namespaceutl.html#afed85c1ab97c4ee0be15dc548aee61dd',1,'utl']]],
-  ['hwr_1',['hwr',['../namespacehwr.html',1,'']]],
-  ['hwr_3a_3adev_2',['dev',['../namespacehwr_1_1dev.html',1,'hwr']]],
-  ['hwr_3a_3amem_3',['mem',['../namespacehwr_1_1mem.html',1,'hwr']]]
+  ['gat0_5fprt_0',['gat0_prt',['../structhwr_1_1dev_1_1timer__device.html#a69e0a1f16f4bbbdc0df4c4b7eca8ecba',1,'hwr::dev::timer_device']]],
+  ['gat1_5fprt_1',['gat1_prt',['../structhwr_1_1dev_1_1timer__device.html#ae9fde4d7c62085a458b6f3dd1e930b97',1,'hwr::dev::timer_device']]],
+  ['gat2_5fprt_2',['gat2_prt',['../structhwr_1_1dev_1_1timer__device.html#a61252f483d843bee40ed951f07a7cd7a',1,'hwr::dev::timer_device']]],
+  ['get_5falt_3',['get_alt',['../namespacekyb.html#a577f724f55f2b4e1d965d54c13592b9a',1,'kyb']]],
+  ['get_5farguments_4',['get_arguments',['../namespaceshl.html#a8472ae59291f31678f6652a97cded514',1,'shl']]],
+  ['get_5fchar_5',['get_char',['../namespacekyb.html#a9b4e2cc5896f50d62531c0a3155741c6',1,'kyb']]],
+  ['get_5fcluster_6',['get_cluster',['../namespaceblk_1_1fat.html#a6e5be21052e29e217305021abf95c53b',1,'blk::fat']]],
+  ['get_5fcluster_5fbts_7',['get_cluster_bts',['../namespaceblk_1_1fat.html#abdcadec43b18d385351a42316730674b',1,'blk::fat']]],
+  ['get_5fcluster_5flen_8',['get_cluster_len',['../namespaceblk_1_1fat.html#ac396c7f5f4c29f93feb8f9aa7601d0fb',1,'blk::fat']]],
+  ['get_5fcontrol_9',['get_control',['../namespacekyb.html#a99fbab7bb91ffd5f9fc6631f0c1f5563',1,'kyb']]],
+  ['get_5fentry_10',['get_entry',['../structblk_1_1dir_1_1dir__iter.html#a4e21878e000ecc65fa7fe7a6ba4fa9a3',1,'blk::dir::dir_iter']]],
+  ['get_5ffat_11',['get_fat',['../namespaceblk_1_1fat.html#a0fe102c90ab7a3fdf43b104e32ecb4a5',1,'blk::fat']]],
+  ['get_5ffat_5flen_12',['get_fat_len',['../namespaceblk_1_1fat.html#a1494ebf427c9a40d20fb5aea733a635f',1,'blk::fat']]],
+  ['get_5fidx_13',['get_idx',['../structvid_1_1coords.html#a8929ad45d925e3455ad55276fe1e0325',1,'vid::coords']]],
+  ['get_5fint_14',['get_int',['../namespacekyb.html#ad18739d2c6622f1a6b6f10b89de0c1e9',1,'kyb']]],
+  ['get_5frootdir_15',['get_rootdir',['../namespaceblk_1_1fat.html#a294556926fa9b642e52f7beae1e4d65f',1,'blk::fat']]],
+  ['get_5frootdir_5flen_16',['get_rootdir_len',['../namespaceblk_1_1fat.html#acaee860ea98ed2ce55aa873a1f572183',1,'blk::fat']]],
+  ['get_5fshift_17',['get_shift',['../namespacekyb.html#a93429bb54374d88906e1b81d4707b1e8',1,'kyb']]],
+  ['get_5fstr_18',['get_str',['../namespacekyb.html#ac80bcb7f295c1bf74f7f37ce96f912d9',1,'kyb']]],
+  ['get_5ftype_19',['get_type',['../namespaceshl.html#a5d1419652a2f21ecdfbc4871bb65cb6b',1,'shl']]],
+  ['get_5fuint_20',['get_uint',['../namespacekyb.html#a666e69d75ad078301fe3f236060a2923',1,'kyb']]],
+  ['ghost_21',['ghost',['../structghost.html',1,'']]],
+  ['give_5fdisk_5fcommand_22',['give_disk_command',['../namespaceblk_1_1sec.html#a70e20a54f059484460d26144df1b93f1',1,'blk::sec']]],
+  ['greet_23',['greet',['../namespaceshl.html#af321af6d197dedece14f4f84363e62d2',1,'shl']]]
 ];

@@ -1,4 +1,3 @@
-#include "lib/block/dir/dir.h"
 #include "lib/lib.h"
 
 #define VER "0.0"
@@ -15,9 +14,9 @@ namespace shl {
 	 * Greets the user.
 	 */
 	void greet() {
-		vid::print_str("Shell micro-sim ");
-		vid::print_str(VER);
-		vid::print_strln(" - caricati 64 KB di RAM");
+		vid::print_str("micro-sim shell v");
+		vid::print_strln(VER);
+		vid::put_str({0, 60}, "2026 - Luca Seggiani");
 	}
 
 	/**
@@ -179,6 +178,8 @@ namespace shl {
 		}
 
 		int shutdown(int argc, char* argv[]) {
+			vid::print_strln("Arrivederci!");
+			tim::sleep(1000);
 			utl::halt();
 		}
 	}
@@ -215,7 +216,7 @@ int main() {
 			case REMOVE_DIR: ret = blt::remove_dir(argc, argv);  break;
 			case CREATE_FIL: ret = blt::create_file(argc, argv); break;
 			case READ_FIL:   ret = blt::read_file(argc, argv);   break;
-			case DELETE_FIL: ret = blt::delete_file(argc, argv);   break;
+			case DELETE_FIL: ret = blt::delete_file(argc, argv); break;
 			case SHUTDOWN:   ret = blt::shutdown(argc, argv);    break;
 			default: {
 				vid::print_strln("Comando sconosciuto");

@@ -15,17 +15,29 @@ namespace blk {
 		 * information.
 		 */
 		struct bpb {
-			uint16_t log_sec_len; // in bytes
-			uint8_t cluster_len;  // in log. sectors
+			/// length of logical sector, in bytes
+			uint16_t log_sec_len;
+			/// length of cluster, in sectors
+			uint8_t cluster_len;
+			/// reserved sectors (mainly for VBR)
 			uint16_t reserved_secs;
+			/// number of fat tables
 			uint8_t n_fats;
+			/// number of entries in the rootdir
 			uint16_t root_dir_entries;
+			/// number of logical sectors in the disk (legacy)
 			uint16_t n_log_secs;
+			/// media descriptor (floppy, hard disk, etc...)
 			uint8_t media_desc;
+			/// length of fat table
 			uint16_t fat_len;
+			/// physical sectors per track
 			uint16_t phys_sec_per_track;
+			/// number of drive heads
 			uint16_t n_heads;
+			/// number of hidden sectors (befores this partition)
 			uint32_t hidden_secs;
+			/// large number of logical sectors in the disk (for FAT16B) 
 			uint32_t large_secs;
 		} __attribute__((packed));
 
@@ -34,11 +46,17 @@ namespace blk {
 		 * volumes.
 		 */
 		struct ebpb {
+			/// number of this physical drive
 			uint8_t phys_drive_num;
+			/// reserved octet
 			uint8_t reserved;
+			/// extended boot signature (signals that EBP is used)
 			uint8_t ex_boot_sign;
+			/// serial number of this physical drive
 			uint32_t serial;
+			/// label of this drive
 			char label[11];
+			/// filesystem on this drive
 			char fs_type[8];
 		} __attribute__((packed));
 
@@ -46,10 +64,15 @@ namespace blk {
 		 * Volume Boot Record (VBR). First sector of a FAT filesystem.
 		 */
 		struct vbr {
+			/// jump code for boot drive
 			char jump[3];
+			/// OEM name of drive 
 			char oem_name[8];
+			/// BPB (BIOS Parameter Block)
 			bpb param;
+			/// EBPB (Extended BIOS Parameter Block)
 			ebpb ex_param;
+			/// boot code
 			char boot_code[
 				510 -
 				sizeof(jump) -
@@ -57,6 +80,7 @@ namespace blk {
 				sizeof(bpb) -
 				sizeof(ebpb)
 			];
+			/// magic number for VBR
 			uint16_t magic;
 		} __attribute__((packed));
 
@@ -65,18 +89,30 @@ namespace blk {
 		 * a directory listing.
 		 */
 		struct dir_ent {
+			/// name of entry
 			char filename[11];
+			/// attributes (is the entry a directory? a file?)
 			uint8_t attrib;
+			/// reserved octets
 			uint8_t reserved;
-			uint8_t creat_time_ds; // tenths of second
-			uint16_t creat_time;   // hour, minute, second 
-			uint16_t creat_date;   // year, month, day
-			uint16_t last_date;    // year, month, day
+			/// creation time in tenths of second
+			uint8_t creat_time_ds;
+			/// creation time in hour, minute, second
+			uint16_t creat_time;
+			/// creation date in year, month, day
+			uint16_t creat_date;
+			/// last access date in year, month, day
+			uint16_t last_date;
+			/// high part of FAT table index (unused in FAT16)
 			uint16_t cluster_hi_reserved;
-			uint16_t modif;        // hour, minute, second 
-			uint16_t modif_date;   // year, month, day
+			/// last modification time in hour, minute, second
+			uint16_t modif;
+			/// last modification date in year, month, day
+			uint16_t modif_date;
+			/// low part of FAT table index: points to actual file cluster
 			uint16_t cluster_lo;
-			uint32_t filesize;     // in bytes	
+			/// size of file, in bytes
+			uint32_t filesize;
 		} __attribute__((packed));
 
 		/**
@@ -103,7 +139,7 @@ namespace blk {
 		 * Checks for free directory entries.
 		 *
 		 * @param ent entry to check
-		 * @bool is the entry free?
+		 * @return is the entry free?
 		 */
 		inline bool is_free(const dir_ent& ent) { 
 			return ent.filename[0] == free_dir_ent; 
@@ -113,7 +149,7 @@ namespace blk {
 		 * Checks for end of directory entries.
 		 *
 		 * @param ent entry to check
-		 * @bool is the entry the last one?
+		 * @return is the entry the last one?
 		 */
 		inline bool is_end(const dir_ent& ent) { 
 			return ent.filename[0] == '\0'; 
@@ -123,17 +159,17 @@ namespace blk {
 		 * Checs for directory directory entries.
 		 *
 		 * @param ent entry to check
-		 * @bool is the entry a directory? 
+		 * @return is the entry a directory? 
 		 */
 		inline bool is_dir(const dir_ent& ent) { 
 			return ent.attrib & dir_attrib; 
 		}
 		
 		/**
-		 * Checs for file directory entries.
+		 * Checks for file directory entries.
 		 *
 		 * @param ent entry to check
-		 * @bool is the entry a file? 
+		 * @return is the entry a file? 
 		 */
 		inline bool is_file(const dir_ent& ent) {
 			return ent.attrib & file_attrib; 
@@ -144,7 +180,7 @@ namespace blk {
 		 * single FAT filesystem might have multiple FAT tables.
 		 *
 		 * @param bs VBR of current filesystem
-		 * @param FAT table index
+		 * @param idx FAT table index
 		 * @return first sector of FAT table at index 
 		 */
 		inline int get_fat(const vbr& bs, int idx) {
@@ -250,7 +286,7 @@ namespace blk {
 		const char dot_filename[] = ".          ";
 		
 		/**
-		 * Filename for "next directory" entry.
+		 * Filename for "prveious directory" entry.
 		 */
 		const char ddot_filename[] = "..         ";
 	} // fat::

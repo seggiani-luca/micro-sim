@@ -1,20 +1,6 @@
 var searchData=
 [
-  ['ram_0',['ram',['../namespacehwr_1_1mem.html#a0ff2ff915170539c418ceb9b491cdfc0',1,'hwr::mem']]],
-  ['ram_5fsize_1',['ram_size',['../namespacehwr_1_1mem.html#af5056e931f5f4917933527b40edf6c9e',1,'hwr::mem']]],
-  ['read_5fchar_2',['read_char',['../namespacekyb.html#aeabae4b148cbad17ebae222884bcc180',1,'kyb']]],
-  ['read_5fcmd_3',['read_cmd',['../namespaceblk.html#a883d25137dcdaaae7999a56ea7d0fcde',1,'blk']]],
-  ['read_5fint_4',['read_int',['../namespacekyb.html#afbaa0a20180c79dc08cfccbf644ef580',1,'kyb']]],
-  ['read_5fstr_5',['read_str',['../namespacekyb.html#a28e4d3d8d1889dc4f0848b2506ed44c6',1,'kyb']]],
-  ['read_5fuint_6',['read_uint',['../namespacekyb.html#a13cfdb386d834c2a1f2dc4e53e2d4ff5',1,'kyb']]],
-  ['recv_5fbyte_7',['recv_byte',['../namespacenet.html#a0158d0d013d182747fb45a85c9be2efd',1,'net']]],
-  ['recv_5fpckt_8',['recv_pckt',['../namespacenet.html#a2c4bec17964ce1e7b4b6f725d3f0aaf7',1,'net']]],
-  ['recv_5fword_9',['recv_word',['../namespacenet.html#a15fc0047228e1d9089a78afde2e941a4',1,'net']]],
-  ['recvfrom_10',['recvfrom',['../namespacenet.html#a4bbb9cdcdd348a99f241ec5b352c9b9c',1,'net']]],
-  ['row_11',['row',['../structvid_1_1coords.html#a24bcf64fed1d472d1d0c6e198ad287cd',1,'vid::coords']]],
-  ['row_5fprt_12',['row_prt',['../structhwr_1_1dev_1_1video__device.html#ae6f51ca63f6d70d03831cbd38cd9a4dc',1,'hwr::dev::video_device']]],
-  ['rows_13',['ROWS',['../namespacevid.html#a555c153ebb05384d83e66e12ec7ff56c',1,'vid']]],
-  ['rows_14',['rows',['../structhwr_1_1dev_1_1video__device.html#af2fd580acb6142127c3f6c20f7983e51',1,'hwr::dev::video_device']]],
-  ['rxb_5fprt_15',['rxb_prt',['../structhwr_1_1dev_1_1network__device.html#af88cfb5ea5decc23d512304e01e10f51',1,'hwr::dev::network_device']]],
-  ['rxr_5fprt_16',['rxr_prt',['../structhwr_1_1dev_1_1network__device.html#a4ed1e40675468259a55b56cbcc23a721',1,'hwr::dev::network_device']]]
+  ['oem_5fname_0',['oem_name',['../structblk_1_1fat_1_1vbr.html#ad85ec4457814dd511cea12ae43f49b78',1,'blk::fat::vbr']]],
+  ['operator_2b_1',['operator+',['../structvid_1_1coords.html#ac3815e49db230ae963e17745c6b21a6b',1,'vid::coords']]],
+  ['operator_3d_3d_2',['operator==',['../structvid_1_1coords.html#a7c5952d907c5b36741e4a0d277cd56cf',1,'vid::coords']]]
 ];

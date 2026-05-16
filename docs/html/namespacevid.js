@@ -4,6 +4,7 @@ var namespacevid =
     [ "backspace", "namespacevid.html#a521b2d28e81bc371e03118a8a0912908", null ],
     [ "clear", "namespacevid.html#a6dfe2c314c18207ef92fade18fe097ba", null ],
     [ "dec_cur", "namespacevid.html#a239d263329518c8760ee2c7cfda671be", null ],
+    [ "detabulate", "namespacevid.html#aa806f9209e571dec99fc177e6030f524", null ],
     [ "inc_cur", "namespacevid.html#a99ea6d895503f6f3327642c8a75ff205", null ],
     [ "newline", "namespacevid.html#addbc550f9802ffaf4c56bfc306db6ef5", null ],
     [ "print_char", "namespacevid.html#aee0175d3c5a19ffccba72df3010babee", null ],
@@ -18,10 +19,10 @@ var namespacevid =
     [ "scroll", "namespacevid.html#aa2d1aee38b269e49bc6761546b43ad42", null ],
     [ "set_cursor", "namespacevid.html#a022d7418f3fc78bf7d5af6193c9b86e5", null ],
     [ "tabulate", "namespacevid.html#a02aec266cca2bcd29ff8a4feec061339", null ],
-    [ "COLS", "namespacevid.html#a5c2f1f4e8df0fd8e2e47091cdc56ae8d", null ],
+    [ "cols", "namespacevid.html#af4a6317fce2ec0e42baca437c23c26b5", null ],
     [ "cur", "namespacevid.html#afa0a7043f8c960c655d5e27911aa1bbd", null ],
-    [ "ROWS", "namespacevid.html#a555c153ebb05384d83e66e12ec7ff56c", null ],
-    [ "TAB_SIZE", "namespacevid.html#a24ab55debc6f845ddbd66ca84d64cb90", null ],
+    [ "rows", "namespacevid.html#ad3ebe4f1f9d5445e8d53b6bba60fbca1", null ],
+    [ "tab_size", "namespacevid.html#a6169463687144ea34cb248266db85c36", null ],
     [ "video", "namespacevid.html#ad4fac66fea6a7409637ac35f1f1524fd", null ],
     [ "vram", "namespacevid.html#a645764ba570227c9d6cf891ebb6e0e91", null ]
 ];
