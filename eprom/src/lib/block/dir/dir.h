@@ -12,15 +12,10 @@ namespace blk {
 	 */
 	namespace dir {
 		/**
-		 * FAT table index of current directory. 0xffff means root.
+		 * Alias for FAT table index of rootdir. 
 		 */
 		#define ROOT_ALIAS 0 
-
-		/**
-		 * FAT table index of current directory.
-		 */
-		extern uint16_t cur_dir;
-		
+	
 		/**
 		 * Iterator for directory traversal.
 		 */
@@ -30,16 +25,16 @@ namespace blk {
 			 * Is this iterator on the rootdir?
 			 */
 			bool root;
-			
+	
 			/**
 			 * Block address of iterator, can be sector (for rootdir) or 
 			 * cluster (for normal dirs).
 			 */
 			union {
-				int sector;
+				uint32_t sector;
 				uint16_t cluster;
 			} block;
-
+			
 			/**
 			 * Current (cached) block. 
 			 */
@@ -85,27 +80,6 @@ namespace blk {
 			 * @return did iterator reach end?
 			 */
 			bool next(bool alloc = false);
-			
-			/**
-			 * Moves iterator to previous directory entry. TODO
-			 *
-			 * @return did iterator reach end?
-			 */
-			bool prev();
-
-			/**
-			 * Moves iterator down into directory. TODO
-			 *
-			 * @return did iterator reach end?
-			 */
-			bool down();
-			
-			/**
-			 * Moves iterator down into previous directory. TODO
-			 *
-			 * @return did iterator reach end?
-			 */
-			bool up();
 		};
 
 		/**

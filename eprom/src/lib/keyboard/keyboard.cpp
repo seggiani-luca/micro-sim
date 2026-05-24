@@ -191,9 +191,10 @@ namespace kyb {
 	char read_char() {
 		char c = get_char();
 
-		if(c != '\b' && c != '\n') { 
-			vid::print_char(c);
-		}	
+		if(c == '\b' || c == '\n') return c;
+
+		if(c == '\t') vid::tabulate(' ', true);
+		else vid::print_char(c);
 
 		return c;
 	}
@@ -281,7 +282,8 @@ namespace kyb {
 				break;
 			}
 		}
-				
+			
+		vid::flush_tabs();
 		buf[i] = '\0';
 	}
 } // kyb::

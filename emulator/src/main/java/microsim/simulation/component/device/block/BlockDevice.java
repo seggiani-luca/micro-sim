@@ -3,6 +3,7 @@ package microsim.simulation.component.device.block;
 import microsim.simulation.Simulation;
 import microsim.simulation.component.bus.Bus;
 import microsim.simulation.component.device.IoDevice;
+import microsim.ui.DebugShell;
 
 /**
  * Implements a block/disk device, based on Parallel ATA, with 28 bit LBA addressing of 512 byte

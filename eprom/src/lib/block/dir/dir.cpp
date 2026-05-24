@@ -7,8 +7,6 @@
 
 namespace blk {
 	namespace dir {
-		uint16_t cur_dir = ROOT_ALIAS;
-
 		/**
 		 * Converts a character to uppercase, for 8.3 naming.
 		 *
@@ -96,9 +94,9 @@ namespace blk {
 				block.cluster = dir;
 
 				// prepare directory buffer
-				int cluster_len = fat::get_cluster_bts(tab::cur_vbr);
-				entries = cluster_len / sizeof(fat::dir_ent);
-				clu::read(block.cluster, cache, cluster_len);
+				int cluster_bts = fat::get_cluster_bts(tab::cur_vbr);
+				entries = cluster_bts / sizeof(fat::dir_ent);
+				clu::read(block.cluster, cache, cluster_bts);
 			}	
 		}
 		
@@ -113,8 +111,8 @@ namespace blk {
 
 			// normal directory
 			} else {
-				int cluster_len = fat::get_cluster_bts(tab::cur_vbr);
-				clu::write(block.cluster, cache, cluster_len);	
+				int cluster_bts = fat::get_cluster_bts(tab::cur_vbr);
+				clu::write(block.cluster, cache, cluster_bts);	
 			}
 		}	
 
@@ -124,7 +122,7 @@ namespace blk {
 			// advance entry
 			entry++;
 			if(entry != entries) return true;
-			// have to move to next block 
+			// have to move to next block
 
 			// rootdir
 			if(root) {
@@ -132,8 +130,8 @@ namespace blk {
 				block.sector++;
 
 				// check if end reached
-				int end = fat::get_rootdir(tab::cur_vbr) +
-				          fat::get_rootdir_len(tab::cur_vbr);
+				uint32_t end = fat::get_rootdir(tab::cur_vbr) +
+				               fat::get_rootdir_len(tab::cur_vbr);
 				if(block.sector >= end) {
 					entry--;
 					valid = false;
@@ -146,35 +144,39 @@ namespace blk {
 			// normal directory
 			} else {
 				// get next cluster 
-				block.cluster = tab::lookup(block.cluster);
+				uint16_t next = tab::lookup(block.cluster);
+				int cluster_len = fat::get_cluster_len(tab::cur_vbr);
 
 				// check if end reached
-				if(fat::is_end_of_chain(block.cluster)) {
+				if(fat::is_end_of_chain(next)) {
 					if(alloc) {
 						// need to allocate more space for directory
-						int cluster_len = fat::get_cluster_len(tab::cur_vbr);
-						int next = tab::chain(cluster_len);
-						clu::zero(next);
+						uint16_t new_cluster = tab::chain(cluster_len);
+						clu::zero(new_cluster);
 
 						// append to fat table
-						tab::set(block.cluster, next);
+						tab::set(block.cluster, new_cluster);
+						block.cluster = new_cluster;
 					} else {
-						entry--;;
+						entry--;
 						valid = false;
 						return false;
 					}
+				} else {
+					// move to next cluster
+					block.cluster = next;
 				}
 				
-				// cache this cluster 
-				int cluster_len = fat::get_cluster_len(tab::cur_vbr);
-				clu::read(block.cluster, cache, cluster_len);
+				// cache this cluster
+				int cluster_bts = fat::get_cluster_bts(tab::cur_vbr);
+				clu::read(block.cluster, cache, cluster_bts);
 			}
 
 			// reset entry
 			entry = 0;
 			return true;
 		}
-		
+
 		bool is_empty(uint16_t dir) {
 			// create iterator on given directory
 			dir_iter itr = dir_iter(dir);
@@ -289,9 +291,11 @@ namespace blk {
 				// set entry parameters
 				mem::set(&ent, 0, sizeof(fat::dir_ent));
 				copy_filename(ent.filename, name);
+				ent.attrib = fat::dir_attrib;
+
+				// allocate
 				ent.cluster_lo 
 					= tab::chain(fat::get_cluster_bts(tab::cur_vbr));
-				ent.attrib = fat::dir_attrib;
 
 				// setup default entries
 				fat::dir_ent init_entries[2];
@@ -305,7 +309,7 @@ namespace blk {
 				// point to previous directory 
 				mem::cpy(init_entries[1].filename, fat::ddot_filename, 11);
 				init_entries[1].attrib = fat::dir_attrib;
-				init_entries[1].cluster_lo = cur_dir;
+				init_entries[1].cluster_lo = dir;
 
 				// zero and write default entries
 				clu::zero(ent.cluster_lo);
@@ -400,15 +404,30 @@ namespace blk {
 		}
 		
 		bool update_file(const char* name, void* buf, int size, uint16_t dir) {
-			// find file
-			fat::dir_ent ent;
-			if(!find(name, dir, ent)) return false;
-	
-			// check if valid
-			if(!fat::is_file(ent)) return false;
+			// create iterator on given directory
+			dir_iter itr = dir_iter(dir);
+			
+			do {
+				fat::dir_ent& ent = itr.get_entry();
 
-			// update file
-			tab::update_file(ent.cluster_lo, buf, size);
+				// check if valid
+				if(fat::is_free(ent)) continue;
+				if(fat::is_end(ent)) break;
+				if(!fat::is_file(ent)) return false;
+				if(!compare_filename(ent.filename, name)) continue; 
+			
+				// update file
+				uint16_t nu = tab::update_file(ent.cluster_lo, buf, size);
+				
+				// update entry
+				ent.cluster_lo = nu;
+				ent.filesize = size;
+
+				// sync changes
+				itr.sync();
+
+				return true;
+			} while(itr.next());
 
 			return true;
 		}

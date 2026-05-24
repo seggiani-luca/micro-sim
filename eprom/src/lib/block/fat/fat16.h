@@ -29,7 +29,7 @@ namespace blk {
 			uint16_t n_log_secs;
 			/// media descriptor (floppy, hard disk, etc...)
 			uint8_t media_desc;
-			/// length of fat table
+			/// length of fat table, in sectors
 			uint16_t fat_len;
 			/// physical sectors per track
 			uint16_t phys_sec_per_track;
@@ -183,8 +183,8 @@ namespace blk {
 		 * @param idx FAT table index
 		 * @return first sector of FAT table at index 
 		 */
-		inline int get_fat(const vbr& bs, int idx) {
-			int base = bs.param.reserved_secs;
+		inline uint32_t get_fat(const vbr& bs, int idx) {
+			uint16_t base = bs.param.reserved_secs;
 			int size = bs.param.fat_len;
 			return base + size * idx;
 		}
@@ -205,8 +205,8 @@ namespace blk {
 		 * @param bs VBR of current filesystem
 		 * @return first sector of root directory
 		 */
-		inline int get_rootdir(const vbr& bs) {
-			int base = bs.param.reserved_secs;
+		inline uint32_t get_rootdir(const vbr& bs) {
+			uint16_t base = bs.param.reserved_secs;
 			int size = bs.param.fat_len;
 			int num = bs.param.n_fats;
 			return base + size * num;
@@ -232,9 +232,9 @@ namespace blk {
 		 * @param idx index of needed cluster (in FAT table index space)
 		 * @return first sector of cluster
 		 */
-		inline int get_cluster(const vbr& bs, int idx) {
+		inline uint32_t get_cluster(const vbr& bs, uint16_t idx) {
+			uint16_t cluster_base = get_rootdir(bs) + get_rootdir_len(bs);
 			int cluster_size = bs.param.cluster_len;
-			int cluster_base = get_rootdir(bs) + get_rootdir_len(bs);
 			return cluster_base + cluster_size * (idx - 2); // 2 reserved
 		}
 

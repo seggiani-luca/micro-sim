@@ -11,9 +11,9 @@ namespace blk {
 			while(*blk::disk.ctl_prt != 1);
 		}
 
-		void give_disk_command(int addr, int scn, int cmd) {
+		void give_disk_command(uint32_t addr, int scn, int cmd) {
 			// check for valid address
-			if(addr < 0 || addr > num) {
+			if(addr < 0 || addr >= num) {
 				utl::panic("Indirizzo LBA errato");
 			}
 
@@ -23,7 +23,7 @@ namespace blk {
 			*blk::disk.ctl_prt = cmd;
 		}
 
-		void read(int addr, void* data) {
+		void read(uint32_t addr, void* data) {
 			// give command and wait
 			give_disk_command(addr, 1, read_cmd);
 			wait_for_disk();
@@ -37,7 +37,7 @@ namespace blk {
 			}
 		}
 
-		void write(int addr, void* data) {
+		void write(uint32_t addr, const void* data) {
 			// give command and wait
 			give_disk_command(addr, 1, write_cmd);
 			wait_for_disk();
@@ -50,7 +50,7 @@ namespace blk {
 			}
 		}
 
-		void zero(int addr) {
+		void zero(uint32_t addr) {
 			// give command and wait
 			give_disk_command(addr, 1, write_cmd);
 			wait_for_disk();

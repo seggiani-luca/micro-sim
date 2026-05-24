@@ -1,4 +1,8 @@
+#include "lib/block/dir/dir.h"
+#include "lib/block/fat/fat16.h"
+#include "lib/block/table/table.h"
 #include "lib/lib.h"
+#include "lib/video/video.h"
 
 #define VER "0.0"
 
@@ -75,11 +79,16 @@ namespace shl {
 	}
 
 	/**
+	 * Current directory (rootdir by default).
+	 */
+	uint16_t cur_dir = ROOT_ALIAS;
+
+	/**
 	 * Namespace for built-in shell functions.
 	 */
 	namespace blt {
 		int list_dir(int argc, char* argv[]) {
-			blk::dir::list(blk::dir::cur_dir);
+			blk::dir::list(cur_dir);
 			return 0;
 		}
 
@@ -91,7 +100,7 @@ namespace shl {
 
 			// find target directory
 			blk::fat::dir_ent ent;
-			if(!blk::dir::find(argv[1], blk::dir::cur_dir, ent)) {
+			if(!blk::dir::find(argv[1], cur_dir, ent)) {
 				vid::print_strln("Directory non trovata");
 				return 0;
 			}
@@ -104,7 +113,7 @@ namespace shl {
 
 
 			// change to directory
-			blk::dir::cur_dir = ent.cluster_lo;
+			cur_dir = ent.cluster_lo;
 			return 0;
 		}
 
@@ -113,7 +122,7 @@ namespace shl {
 				vid::print_strln("Nome directory?");
 				return 0;
 			}
-			if(!blk::dir::make(argv[1], blk::dir::cur_dir)) {
+			if(!blk::dir::make(argv[1], cur_dir)) {
 				vid::print_strln("Operazione fallita");
 			}
 
@@ -125,7 +134,7 @@ namespace shl {
 				vid::print_strln("Nome directory?");
 				return 0;
 			}
-			if(!blk::dir::remove(argv[1], blk::dir::cur_dir)) {
+			if(!blk::dir::remove(argv[1], cur_dir)) {
 				vid::print_strln("Operazione fallita");
 			}
 
@@ -137,7 +146,7 @@ namespace shl {
 				vid::print_strln("Nome file?");
 				return 0;
 			}
-			if(!blk::dir::create_file(argv[1], 0, 0, blk::dir::cur_dir)) {
+			if(!blk::dir::create_file(argv[1], 0, 0, cur_dir)) {
 				vid::print_strln("Operazione fallita");
 			}
 
@@ -154,7 +163,7 @@ namespace shl {
 			char buf[SHELL_FIL_BUF_SIZE];
 
 			if(!blk::dir::read_file(argv[1], buf, sizeof(buf), 
-						blk::dir::cur_dir)) {
+						cur_dir)) {
 				vid::print_strln("Operazione fallita");
 				return 0;
 			}
@@ -170,7 +179,7 @@ namespace shl {
 				vid::print_strln("Nome file?");
 				return 0;
 			}
-			if(!blk::dir::delete_file(argv[1], blk::dir::cur_dir)) {
+			if(!blk::dir::delete_file(argv[1], cur_dir)) {
 				vid::print_strln("Operazione fallita");
 			}
 

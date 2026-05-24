@@ -5,10 +5,10 @@ purge:
 	@rm -f -- *.img
 
 dump:
-	hexdump main.img -C
+	@hexdump main.img -C
 
 check:
-	fsck.fat -vn main.img
+	@fsck.fat -vn main.img
 
 mount:
 	sudo mount -t vfat main.img /mnt/fat

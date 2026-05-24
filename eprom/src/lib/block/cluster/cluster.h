@@ -1,6 +1,8 @@
 #ifndef CLUSTER_H
 #define CLUSTER_H
 
+#include "../../string/string.h"
+
 namespace blk {
 	/**
 	 * Namespace for filesystem cluster handling, including writing/reading 
@@ -14,7 +16,7 @@ namespace blk {
 		 * @param data buffer to write into
 		 * @param size size of buffer
 		 */
-		void read(int idx, void* data, int size);
+		void read(uint16_t idx, void* data, int size);
 
 		/**
 		 * Writes a single cluster from a buffer.
@@ -23,14 +25,14 @@ namespace blk {
 		 * @param data buffer to read from
 		 * @param size size of buffer
 		 */
-		void write(int idx, const void* data, int size);
+		void write(uint16_t idx, const void* data, int size);
 
 		/**
 		 * Zeroes a single cluster. 
 		 *
 		 * @param idx index of cluster (in cluster space)
 		 */
-		void zero(int idx);
+		void zero(uint16_t idx);
 	} // clu::
 } // blk::
 

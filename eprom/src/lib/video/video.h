@@ -147,15 +147,20 @@ namespace vid {
 	 * Inserts enough tabulation characters to reach the next tab_size column 
 	 * multiple.
 	 *
-	 * @param c tabulation character 
+	 * @param c tabulation character
+	 * @param inter should the tab introduced by this call be reversible?
 	 */
-	void tabulate(char c);
+	void tabulate(char c, bool inter = false);
 	
 	/**
-	 * Removes enough characters to reach the previous tab_size column 
-	 * multiple.
+	 * Removes enough characters to undo the previous tabulate.
 	 */
 	void detabulate();
+
+	/**
+	 * Clears tab history.
+	 */
+	void flush_tabs();
 
 	/**
 	 * Prints a character on the screen.

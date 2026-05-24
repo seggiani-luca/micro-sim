@@ -53,7 +53,7 @@ namespace blk {
 			sec::write(0, &def_vbr);
 
 			// get fat beginning
-			int fat_beg = fat::get_fat(def_vbr, 0);
+			uint32_t fat_beg = fat::get_fat(def_vbr, 0);
 
 			// create fat (fill first sector) 
 			uint16_t fat_sector[sec::size / 2];
@@ -68,13 +68,17 @@ namespace blk {
 			}
 			
 			// get fat beginning
-			int rootdir_beg = fat::get_rootdir(def_vbr);
+			uint32_t rootdir_beg = fat::get_rootdir(def_vbr);
 
-			// create rootdir (fill sector)
+			// create rootdir (empty first sector) 
 			fat::dir_ent rootdir[def_vbr.param.root_dir_entries];
 			mem::set(rootdir, 0, sec::size);
+
+			// create volume id
 			mem::cpy(rootdir[0].filename, def_vbr.ex_param.label, 11);
 			rootdir[0].attrib = fat::vol_id_attrib;
+		
+			// write rootdir
 			sec::write(rootdir_beg, rootdir);
 
 			// zero following sectors
@@ -90,11 +94,11 @@ namespace blk {
 		
 		uint16_t lookup(uint16_t entry) {
 			// get fat beginning
-			int beg = fat::get_fat(cur_vbr, 0);
+			uint32_t beg = fat::get_fat(cur_vbr, 0);
 
 			// get sector from beginning entry is in, and entry in sector
 			int sec_entries = sec::size / 2;
-			int sec_addr = entry / sec_entries + beg;
+			uint32_t sec_addr = entry / sec_entries + beg;
 			entry = entry % sec_entries;
 
 			// read sector
@@ -107,7 +111,7 @@ namespace blk {
 		
 		uint16_t find(uint16_t ignore) {
 			// get fat beginning
-			int beg = fat::get_fat(cur_vbr, 0);
+			uint32_t beg = fat::get_fat(cur_vbr, 0);
 
 			// go through each fat sector
 			int sec_entries = sec::size / 2;
@@ -127,16 +131,16 @@ namespace blk {
 			}
 
 			// no suitable sectors found
-			return false;
+			return 0;
 		}
 
 		void set(uint16_t entry, uint16_t val) {
 			// get fat beginning
-			int beg = fat::get_fat(cur_vbr, 0);
+			uint32_t beg = fat::get_fat(cur_vbr, 0);
 
 			// get sector from beginning entry is in, and entry in sector
 			int sec_entries = sec::size / 2;
-			int sec_addr = entry / sec_entries + beg;
+			uint32_t sec_addr = entry / sec_entries + beg;
 			entry = entry % sec_entries;
 			
 			// read sector
@@ -151,6 +155,9 @@ namespace blk {
 		}
 
 		uint16_t chain(int size) {
+			// don't create empty chains
+			if(size == 0) return 0;
+
 			// get number of clusters
 			int cluster_len = fat::get_cluster_bts(cur_vbr);
 			int n_clusters = (size + cluster_len - 1) / cluster_len;
@@ -181,9 +188,6 @@ namespace blk {
 		}
 
 		void unchain(uint16_t beg) {
-			// get fat beginning
-			int fat_beg = fat::get_fat(cur_vbr, 0);
-
 			// unroll chain to end
 			while(true) {
 				// get next cluster

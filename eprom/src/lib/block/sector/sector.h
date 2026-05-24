@@ -1,6 +1,8 @@
 #ifndef SECTOR_H
 #define SECTOR_H
 
+#include "../../string/string.h"
+
 namespace blk {
 	/**
 	 * Namespace for raw block device handling, including writing/reading 
@@ -44,30 +46,30 @@ namespace blk {
 		 * @param scn number of sectors
 		 * @param cmd command to give
 		 */
-		void give_disk_command(int addr, int scn, int cmd);
+		void give_disk_command(uint32_t addr, int scn, int cmd);
 
 		/**
 		 * Reads a single sector into a buffer.
 		 *
 		 * @param addr address of sector
-		 * @param data buffer to write into
+		 * @param data buffer to write into, must be size to at least 512 bytes
 		 */
-		void read(int addr, void* data);
+		void read(uint32_t addr, void* data);
 
 		/**
 		 * Writes a single sector from a buffer.
 		 *
 		 * @param addr address of sector
-		 * @param data buffer to read from 
+		 * @param data buffer to read from, must be sized to at least 512 btyes
 		 */
-		void write(int addr, void* data);
+		void write(uint32_t addr, const void* data);
 
 		/**
 		 * Zeroes a single sector. 
 		 *
 		 * @param addr address of sector
 		 */
-		void zero(int addr);
+		void zero(uint32_t addr);
 	} // sec::
 } // blk::
 

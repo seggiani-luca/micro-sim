@@ -97,12 +97,19 @@ namespace vid {
 	}
 
 	/**
-	 * Keeps track of previous tabulation start point.
+	 * Keeps track of previous tabulation start points.
 	 */
-	static int prev_tab;
+	#define TAB_HIST_SIZE 16
+	struct {
+		int idx[TAB_HIST_SIZE];
+		int end = 0;
+	} tab_hist;
 
-	void tabulate(char c = ' ') {
-		prev_tab = cur.col;
+	void tabulate(char c = ' ', bool inter) {
+		if(inter) {
+			if(tab_hist.end >= TAB_HIST_SIZE) return;
+			tab_hist.idx[tab_hist.end++] = cur.col;
+		}
 
 		do {
 			vram[cur.get_idx()] = c;	
@@ -111,10 +118,17 @@ namespace vid {
 	}
 	
 	void detabulate() {
+		if(tab_hist.end <= 0) return;
+		int prev = tab_hist.idx[--tab_hist.end];
+
 		do {
 			dec_cur();
 			vram[cur.get_idx()] = '\0';
-		} while(cur.col > prev_tab);
+		} while(cur.col > prev);
+	}
+
+	void flush_tabs() {
+		tab_hist.end = 0;
 	}
 
 	void print_char(char c) {

@@ -6,9 +6,9 @@
 
 namespace blk {
 	namespace clu {
-		void read(int idx, void* data, int size) {
+		void read(uint16_t idx, void* data, int size) {
 			// get cluster address
-			int addr = fat::get_cluster(tab::cur_vbr, idx);
+			uint32_t addr = fat::get_cluster(tab::cur_vbr, idx);
 			
 			// read clusters until size reached 
 			uint8_t* bdata = (uint8_t*) data;	
@@ -32,9 +32,9 @@ namespace blk {
 			}
 		}
 
-		void write(int idx, const void* data, int size) {
+		void write(uint16_t idx, const void* data, int size) {
 			// get cluster address
-			int addr = fat::get_cluster(tab::cur_vbr, idx);
+			uint32_t addr = fat::get_cluster(tab::cur_vbr, idx);
 
 			// write all sectors of cluster
 			uint8_t* bdata = (uint8_t*) data;	
@@ -59,9 +59,9 @@ namespace blk {
 			}
 		}
 
-		void zero(int idx) {
+		void zero(uint16_t idx) {
 			// get cluster address
-			int addr = fat::get_cluster(tab::cur_vbr, idx);
+			uint32_t addr = fat::get_cluster(tab::cur_vbr, idx);
 			
 			// zero all sectors
 			for(int i = 0; i < fat::get_cluster_len(tab::cur_vbr); i++) {
