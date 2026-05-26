@@ -368,7 +368,7 @@ namespace blk {
 				if(!fat::is_free(ent) && !fat::is_end(ent)) continue;
 
 				// allocate FAT chain
-				uint16_t chain = tab::create_file(buf, size);
+				uint16_t chain = tab::create_file(buf, size);			
 		
 				// set parameters 
 				copy_filename(ent.filename, name);

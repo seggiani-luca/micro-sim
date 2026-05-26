@@ -3,16 +3,23 @@ SRC := src
 
 EPROM_SRC := $(shell find $(SRC) -maxdepth 1 -name "*.cpp")
 
-LIB_SRC := $(SRC)/lib
 MEM_MAP := $(LIB_SRC)/conf/memory_map.ld
+
+LIB_SRC := $(SRC)/lib
 LIB_SRC_C := $(shell find $(LIB_SRC) -name "*.cpp")
 LIB_SRC_S := $(shell find $(LIB_SRC) -name "*.s")
+
+APP_SRC := $(SRC)/app
+APP_SRC_C := $(shell find $(APP_SRC) -name "*.cpp")
 
 OUT := out
 
 LIB_OUT := $(OUT)/lib
 LIB_OUT_C := $(subst $(LIB_SRC), $(LIB_OUT), $(LIB_SRC_C:.cpp=.o))
 LIB_OUT_S := $(subst $(LIB_SRC), $(LIB_OUT), $(LIB_SRC_S:.s=.o))
+
+APP_OUT := $(OUT)/app
+APP_OUT_C := $(subst $(APP_SRC), $(APP_OUT), $(APP_SRC_C:.cpp=.o))
 
 EPROM_OUT := ../emulator/data/eprom
 EPROM_ELF := $(patsubst $(SRC)/%.cpp,$(EPROM_OUT)/%.elf,$(EPROM_SRC))
@@ -48,8 +55,16 @@ $(LIB_OUT)/%.o: $(LIB_SRC)/%.s | $(LIB_OUT)
 	@mkdir -p $(dir $@)
 	@$(RISCV_S) $(SFLAGS) $< -o $@
 
+$(APP_OUT)/%.o: $(APP_SRC)/%.cpp | $(APP_OUT)
+	@echo "Compiling app source $<"
+	@mkdir -p $(dir $@)
+	@$(RISCV_C) $(CFLAGS) -c $< -o $@
+
 $(LIB_OUT):
 	@mkdir -p $(LIB_OUT)
+
+$(APP_OUT):
+	@mkdir -p $(APP_OUT)
 
 clean:
 	@echo "Cleaning EPROM build files"

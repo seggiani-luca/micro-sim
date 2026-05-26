@@ -6,7 +6,7 @@ EXECUTABLE := target/micro-sim-app.jar
 EPROM := eprom
 DOCS := docs
 
-SCALE := 2
+SCALE := 1
 
 all: emulator eprom 
 

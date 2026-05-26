@@ -155,12 +155,10 @@ namespace blk {
 		}
 
 		uint16_t chain(int size) {
-			// don't create empty chains
-			if(size == 0) return 0;
-
 			// get number of clusters
 			int cluster_len = fat::get_cluster_bts(cur_vbr);
 			int n_clusters = (size + cluster_len - 1) / cluster_len;
+			if(n_clusters < 1) n_clusters = 1; 
 
 			// init pointers
 			uint16_t first;
