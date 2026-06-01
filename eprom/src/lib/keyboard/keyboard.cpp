@@ -43,7 +43,7 @@ namespace kyb {
 		{0x0B, '0', '='},
 		// whitespace
 		{0x1C, '\n', '\n'},
-		{0x01, 0x18, 0x18},
+		{0x01, ESC, ESC},
 		{0x0E, '\b', '\b'},
 		{0x0F, '\t', '\t'},
 		{0x39, ' ', ' '},

@@ -1,193 +1,337 @@
-#include "lib/lib.h"
-#include "lib/video/video.h"
-
-// memory buffer
-#define BUF_SIZE 512
-char buf[BUF_SIZE];
-int cursor = 0;
-
-#define BLOCK_ADDR 0
+#include "../lib/lib.h"
 
 /**
- * Saves buffer to block.
+ * Text editor implementation.
  */
-void save() {
-	// give command and wait
-	give_disk_command(BLOCK_ADDR, 1, blk::write_cmd);
-	wait_for_disk();
+namespace edt {
+	/**
+	 * Size constants-
+	 */
+	#define FILE_BUF_SIZE 4096
 
-	// write to disk
-	for(int i = 0; i < BUF_SIZE; i += 2) {
-		short dat = (0xff & buf[i]) | (buf[i + 1] << 8);
-		*blk::disk.buf_prt = dat;
-	}
-}
+	/**
+	 * Represents a piece of a line (fixed size element of a rope).
+	 */
+	#define PIECE_SIZE 32
+	struct piece {
+		char buf[PIECE_SIZE];
+		piece* next;
+	};
+	
+	/**
+	 * Path of current file.
+	 */
+	char* file;
 
-/**
- * Loads buffer from block.
- */
-void load() {
-	// give command and wait
-	give_disk_command(BLOCK_ADDR, 1, blk::read_cmd);
-	wait_for_disk();
+	/**
+	 * Array of pieces, handled with a list allocator.
+	 */
+	#define MAX_PIECES 1024
+	piece* pieces;
 
-	// read from disk
-	for(int i = 0; i < BUF_SIZE; i += 2) {
-		short dat = *blk::disk.buf_prt;
-		buf[i] = dat;
-		buf[i + 1] = dat >> 8;
-	}
+	/**
+	 * First piece of free piece list.
+	 */
+	piece* pieces_free;
 
-	// reset cursor
-	cursor = str::len(buf);
-}
-
-/**
- * Enum of modifiers.
- */
-enum modif {
-	SAVE,
-	LOAD,
-	REFRESH,
-	QUIT,
-	NONE
-};
-
-/**
- * Converts char to modifier.
- *
- * @param c key pressed alongside modifier key
- * @return corresponding modifier
- */
-modif get_modifier(char c) {
-	switch(c) {
-		case 's': return SAVE;
-		case 'l': return LOAD;
-		case 'r': return REFRESH;
-		case 'q': return QUIT;
+	/**
+	 * Allocates a new piece.
+	 *
+	 * @return an allocated piece
+	 */
+	piece* alloc_piece() {
+		piece* piece = pieces_free;
+		if(piece == NULL) utl::panic("Memoria esaurita");
+		pieces_free = pieces_free->next;
+		piece->next = NULL;
+		mem::set(piece->buf, 0, PIECE_SIZE);
+		return piece;
 	}
 
-	return NONE;
-}
-
-/**
- * Increment buffer cursor.
- */
-void inc_cursor() {
-	cursor++;
-	if(cursor >= BUF_SIZE) {
-		cursor = BUF_SIZE - 1;
+	/**
+	 * Frees an allocated piece.
+	 *
+	 * @param piece the piece to free
+	 */
+	void free_piece(piece* piece) {
+		piece->next = pieces_free;
+		pieces_free = piece;
 	}
-}
 
-/**
- * Decrement buffer cursor.
- */
-void dec_cursor() {
-	cursor--;
-	if(cursor < 0) {
-		cursor = 0;
-	}
-}
+	/**
+	 * Array of lines, handled as a static array.
+	 */
+	#define MAX_LINES 1024
+	piece** lines;
 
-#define MAX_ROWS 512
+	/**
+	 * Number of lines in the file.
+	 */
+	int n_lines;
 
-/**
- * Gets pointers to at most MAX_ROWS rows in the buffer.
- */
-void get_rows(int* rows, int& n_rows) {
-	n_rows = 1;
-	for(int i = 0; i < BUF_SIZE; i++) {
-		if(buf[i] == '\n') {
-			rows[n_rows] = i + 1;
-			n_rows++;
+	/**
+	 * Beginning of line window.
+	 */
+	int window_line;
+	
+	/**
+	 * Size of line window.
+	 */
+	int window_size = vid::rows - 1;
+
+	/**
+	 * Enum for editor status.
+	 */
+	enum editor_status {
+		COMMAND,
+		INSERT
+	};
+
+	/**
+	 * Current editor status.
+	 */
+	editor_status stat;
+
+	/**
+	 * Returns current status as a string.
+	 */
+	const char* status_str() {
+		switch(stat) {
+			case COMMAND: return "comando";
+			case INSERT: return "inserisci";
+			default: return NULL;
 		}
 	}
-}
 
-/**
- * Cleans row j.
- */
-void clean_row(int i) {
-	for(int j = 0; j < vid::cols; j += 4) { 
-		*(uint32_t*) (hwr::mem::vram + j + i * vid::cols) = 0; 
-	}
-}
-
-/**
- * Refreshes video with buffer.
- */
-void refresh_vid() {
-	// reset video cursor
-	vid::set_cursor({0, 0});
-
-	// get row pointers
-	static int rows[MAX_ROWS];
-	static int n_rows;
-	get_rows(rows, n_rows);
-
-	// get rows to draw
-	int beg = 0;
-	while(n_rows - beg > vid::rows) {
-		beg += vid::rows;
+	/**
+	 * Current line.
+	 */
+	int cur_line;
+	
+	/**
+	 * Current character in line.
+	 */
+	int cur_char;
+	
+	/**
+	 * Decrements current line.
+	 */
+	void dec_cur_line() {
+		if(cur_line > 0) cur_line--;
+		char* line = lines[cur_line]->buf;
+		while(line[cur_char] == '\0' && cur_char != 0) cur_char--;
 	}
 
-	// actually draw rows
-	for(int i = beg; i < n_rows; i++) {
-		if(i != beg) vid::newline();
+	/**
+	 * Advances current line.
+	 */
+	void adv_cur_line() {
+		if(cur_line < n_lines - 1) cur_line++;
+		char* line = lines[cur_line]->buf;
+		while(line[cur_char] == '\0' && cur_char != 0) cur_char--;
+	}
 
-		// print line number
-		vid::print_int(i);
-		vid::print_char(' ');
+	/**
+	 * Decrements current character.
+	 */
+	void dec_cur_char() {
+		if(cur_char > 0) cur_char--;
+	}
+
+	/**
+	 * Advances current character.
+	 */
+	void adv_cur_char() {
+		if(cur_char >= PIECE_SIZE - 1) return;
+		char* line = lines[cur_line]->buf;
+		if(line[cur_char + 1] != '\0') cur_char++;
+	}
+
+	/**
+	 * Opens the current file.
+	 *
+	 * @return was the operation succesful?
+	 */
+	bool open_file() {
+		// read file from disk 
+		char fbuf[FILE_BUF_SIZE];
+		int fsiz = blk::dir::read_file(file, fbuf, FILE_BUF_SIZE, 
+				blk::dir::cur);
+		if(fsiz == -1) {
+			vid::print_strln("Errore lettura file");
+			return 0;
+		}
+	
+		// initialize first piece 
+		piece* p = alloc_piece();
+		int n_chars = 0;
+
+		// initialize first line
+		lines[n_lines] = p; 
+
+		// go through file allocating pieces and lines
+		for(int i = 0; i < fsiz; i++) {
+			char c = fbuf[i];
+			
+			// next line
+			if(c == '\n') {
+				if(n_lines == MAX_LINES - 1) return 0;
+				p = alloc_piece();
+				n_chars = 0;
+				lines[++n_lines] = p;
+				continue;
+			}
+
+			// append to piece
+			p->buf[n_chars++] = c;
+
+			// piece full
+			if(n_chars == PIECE_SIZE) {
+				piece* next = alloc_piece();
+				n_chars = 0;
+				p->next = next;
+			}
+		}
+		n_lines++;
+
+		return 1;
+	}
+
+	/**
+	 * Closes current file.
+	 *
+	 * @return was the operation succesful?
+	 */
+	bool close_file() {
+		// initialize file buffer
+		char fbuf[FILE_BUF_SIZE];
+		str::cpy(fbuf, "Scemo chi legge\nDoppio scemo chi rilegge\n");
+		int fsiz = str::len(fbuf);
+
+		// write file to disk
+		if(!blk::dir::update_file(file, fbuf, fsiz, blk::dir::cur)) {
+			vid::print_strln("Errore scrittura file");
+		}
+
+		return 1;
+	}
+
+	/**
+	 * Displays editor screen.
+	 */
+	void print_screen() {
+		// clear screen
+		vid::clear();
+
+		// print file lines
+		int act_lines = window_line + window_size;
+		if(act_lines > n_lines) act_lines = n_lines;
+		for(int i = window_line; i < act_lines; i++) {
+			piece* p = lines[i];
+
+			// print line buffers
+			do {
+				for(int j = 0; j < PIECE_SIZE; j++) {
+					char c = p->buf[j];
+					if(c == '\0') break;
+					vid::print_char(c);
+				}
+
+				// new line
+				vid::newline();
+			} while((p = p->next));
+		}
+
+		// move cursor
+		vid::set_cursor({cur_line - window_line, cur_char});
+
+		// print status
+		vid::put_str({vid::rows - 1, 0}, status_str());
+		vid::put_str({vid::rows - 1, 10}, "ln: ");
+		vid::put_uint({vid::rows - 1, 14}, cur_line);
+		vid::put_str({vid::rows - 1, 20}, "ch: ");
+		vid::put_uint({vid::rows - 1, 24}, cur_char);
+	}
+
+	/**
+	 * Main editor loop.
+	 *
+	 * @return should the editor exit?
+	 */
+	bool loop() {
+		// print screen
+		print_screen();
 		
-		// print line
-		int j = rows[i];
-		while(char c = buf[j++]) {
-			if(c == '\n') break;
-			vid::print_char(c);
-		}
-	}
-}
-
-void main() {
-	while(1) {
-		// get char and modifier key
+		// get input
 		char c = kyb::get_char();
-		bool ctl = kyb::get_control();
 
-		if(ctl) {
-			// get modifier if modifier key was pressed
-			modif mod = get_modifier(c);
-			switch(mod) {
-				case SAVE: save(); break;
-				case LOAD: 
-					load();
-					refresh_vid();
-					break;
-				case REFRESH:
-					refresh_vid();
-					break;
-				case QUIT:
-					utl::halt();
-					break;
-				default: continue;
+		// update status
+		switch(stat) {
+			case COMMAND: {
+				switch(c) {
+					case ESC: vid::clear(); return 1;
+					case 'i': stat = INSERT; break;
+					case 'h': dec_cur_char(); break;
+					case 'l': adv_cur_char(); break;
+					case 'j': dec_cur_line(); break;
+					case 'k': adv_cur_line(); break;
+				}
+				break;
 			}
-		} else {
-			// decrement cursor on backspace 
-			if(c == '\b') {
-				dec_cursor();
-				buf[cursor] = '\0';
-			} 
-			// increment cursor filling buffer
-			else {
-				buf[cursor] = c;
-				inc_cursor();
+			case INSERT: {
+				if(c == ESC) {
+					stat = COMMAND;
+					break;
+				}
+				break;
 			}
-
-			// draw screen
-			refresh_vid();	
 		}
-	}
 
-	utl::wait();
-}
+		return 0;
+	}
+	
+} // edt::
+
+using namespace edt;
+namespace app {
+	ENTRY(editor) {
+		// grab memory
+		piece _pieces[MAX_PIECES];
+		pieces = _pieces;
+		piece* _lines[MAX_LINES];
+		lines = _lines;
+
+		// initialize pieces list allocator 
+		for(int i = 0; i < MAX_PIECES - 1; i++) {
+			pieces[i].next = &pieces[i + 1];
+		}
+		pieces[MAX_PIECES - 1].next = NULL;
+		pieces_free = &pieces[0];		
+
+		// initialize lines
+		n_lines = 0;
+	
+		// initialize editor
+		stat = COMMAND;
+		cur_line = 0;
+		cur_char = 0;
+
+		// get requested file path
+		if(argc < 2) {
+			vid::print_strln("Nome file?");
+			return 1;
+		}
+		file = argv[1];
+
+		// try opening file 
+		if(!edt::open_file()) return 2;
+
+		// enter editor loop
+		while(!edt::loop());
+
+		// close file (syncing changes)
+		if(!edt::close_file()) return 3;
+
+		return 0;
+	}
+} // app::

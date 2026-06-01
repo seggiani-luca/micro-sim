@@ -1,4 +1,4 @@
-#include "lib/lib.h"
+#include "../lib/lib.h"
 
 #define VER "0.0"
 
@@ -284,7 +284,7 @@ bool get_str(const char* wr, int len, token* tok) {
 
 bool tokenize_wr(const char* wr, token* tok) {
 	// clear token
-	str::mset((void*) tok, 0, sizeof(token));
+	mem::set((void*) tok, 0, sizeof(token));
 
 	int len = str::len(wr);
 
@@ -806,7 +806,7 @@ void greet() {
 	vid::put_str({0, 60}, "2025 - Luca Seggiani");
 }
 
-void main() {
+ENTRY(basic) {
 	greet();
 
 	// init lines

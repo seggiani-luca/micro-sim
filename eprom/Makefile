@@ -1,9 +1,7 @@
-# -- directories --
+# -- sources --
 SRC := src
 
 EPROM_SRC := $(shell find $(SRC) -maxdepth 1 -name "*.cpp")
-
-MEM_MAP := $(LIB_SRC)/conf/memory_map.ld
 
 LIB_SRC := $(SRC)/lib
 LIB_SRC_C := $(shell find $(LIB_SRC) -name "*.cpp")
@@ -11,6 +9,10 @@ LIB_SRC_S := $(shell find $(LIB_SRC) -name "*.s")
 
 APP_SRC := $(SRC)/app
 APP_SRC_C := $(shell find $(APP_SRC) -name "*.cpp")
+
+MEM_MAP := $(LIB_SRC)/conf/memory_map.ld
+
+# -- objects --
 
 OUT := out
 
@@ -38,12 +40,12 @@ CFLAGS := -march=rv32i -mabi=ilp32 -O2 -ffreestanding -nostdlib -fno-exceptions 
 SFLAGS := -march=rv32i -mabi=ilp32
 
 # -- targets --
-all: $(LIB_OUT_C) $(LIB_OUT_S) $(EPROM_ELF)
+all: $(LIB_OUT_C) $(LIB_OUT_S) $(APP_OUT_C) $(EPROM_ELF)
 
 $(EPROM_OUT)/%.elf: $(SRC)/%.cpp $(LIB_OUT_C) $(LIB_OUT_S) | $(EPROM_OUT)
 	@echo "Compiling and linking EPROM source $@"
 	@$(RISCV_C) $(CFLAGS) -c $< -o $(OUT)/$*.o
-	@$(RISCV_L) -T $(MEM_MAP) $(OUT)/$*.o $(LIB_OUT_C) $(LIB_OUT_S) -o $@
+	@$(RISCV_L) -T $(MEM_MAP) $(OUT)/$*.o $(LIB_OUT_C) $(LIB_OUT_S) $(APP_OUT_C) -o $@
 
 $(LIB_OUT)/%.o: $(LIB_SRC)/%.cpp | $(LIB_OUT)
 	@echo "Compiling lib source $<"

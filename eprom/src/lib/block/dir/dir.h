@@ -15,6 +15,27 @@ namespace blk {
 		 * Alias for FAT table index of rootdir. 
 		 */
 		#define ROOT_ALIAS 0 
+
+		/**
+		 * Current directory (rootdir by default).
+		 */
+		extern uint16_t cur;
+		
+		/**
+		 * Copies a filename according to 8.3 specification.
+		 *
+		 * @param dest array to write resulting 8.3 filename into
+		 * @param src presentation filename
+		 */
+		void copy_filename(char dest[11], const char* src);
+		
+		/**
+		 * Compares filenames according to 8.3 specification.
+		 *
+		 * @param dest original 8.3 filename
+		 * @param src presentation filename to compare 
+		 */
+		bool compare_filename(char dest[11], const char* src);
 	
 		/**
 		 * Iterator for directory traversal.
@@ -145,9 +166,9 @@ namespace blk {
 		 * @param buf buffer to read
 		 * @param size size of buffer
 		 * @param dir directory to read file in 
-		 * @return was the file read? 
+		 * @return size of file read, -1 means error
 		 */
-		bool read_file(const char* name, void* buf, int size, uint16_t dir);
+		int read_file(const char* name, void* buf, int size, uint16_t dir);
 		
 		/**
 		 * Updates the buffer allocated in a file.

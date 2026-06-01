@@ -14,6 +14,11 @@ namespace kyb {
 	inline hwr::dev::keyboard_device& keyboard = hwr::dev::keyboard;
 	
 	/**
+	 * Escape key code.
+	 */
+	#define ESC 0x18
+
+	/**
 	 * Struct for make code translations.
 	 */
 	struct code_trans {

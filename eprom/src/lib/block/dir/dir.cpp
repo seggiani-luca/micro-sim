@@ -7,6 +7,8 @@
 
 namespace blk {
 	namespace dir {
+		uint16_t cur = ROOT_ALIAS;
+
 		/**
 		 * Converts a character to uppercase, for 8.3 naming.
 		 *
@@ -18,13 +20,7 @@ namespace blk {
 			return c;
 		}
 
-		/**
-		 * Copies a filename according to 8.3 specification.
-		 *
-		 * @param dest array to write resulting 8.3 filename into
-		 * @param src presentation filename
-		 */
-		inline void copy_filename(char dest[11], const char* src) {
+		void copy_filename(char dest[11], const char* src) {
 			// fill with spaces
 			for(int i = 0; i < 11; i++) dest[i] = ' ';
 
@@ -39,13 +35,7 @@ namespace blk {
 			while(*src && i < 11) dest[i++] = to_upper(*src++);
 		}
 
-		/**
-		 * Compares filenames according to 8.3 specification.
-		 *
-		 * @param dest original 8.3 filename
-		 * @param src presentation filename to compare 
-		 */
-		inline bool compare_filename(char dest[11], const char* src) {
+		bool compare_filename(char dest[11], const char* src) {
 			// shortcut for . filenames
 			if(src[0] == '.') {
 				for(int i = 0; i < 11; i++) {
@@ -385,22 +375,22 @@ namespace blk {
 			return false;
 		}
 
-		bool read_file(const char* name, void* buf, int size, uint16_t dir) {
+		int read_file(const char* name, void* buf, int size, uint16_t dir) {
 			// find file
 			fat::dir_ent ent;
-			if(!find(name, dir, ent)) return false;
+			if(!find(name, dir, ent)) return -1; 
 	
 			// check if valid
-			if(!fat::is_file(ent)) return false;
+			if(!fat::is_file(ent)) return -1;
 
 			// extract filesize and check 
 			int fil_size = ent.filesize;
-			if(size < fil_size) return false;
+			if(size < fil_size) return -1;
 
 			// read file
 			tab::read_file(ent.cluster_lo, buf, fil_size);
 
-			return true;
+			return fil_size; 
 		}
 		
 		bool update_file(const char* name, void* buf, int size, uint16_t dir) {
@@ -413,7 +403,7 @@ namespace blk {
 				// check if valid
 				if(fat::is_free(ent)) continue;
 				if(fat::is_end(ent)) break;
-				if(!fat::is_file(ent)) return false;
+				if(!fat::is_file(ent)) continue; 
 				if(!compare_filename(ent.filename, name)) continue; 
 			
 				// update file
@@ -429,7 +419,7 @@ namespace blk {
 				return true;
 			} while(itr.next());
 
-			return true;
+			return false;
 		}
 		
 		bool delete_file(const char* name, uint16_t dir) {
