@@ -5,14 +5,21 @@
  */
 namespace edt {
 	/**
-	 * Size constants-
+	 * Size constants.
 	 */
 	#define FILE_BUF_SIZE 4096
+	#define LINE_BUF_SIZE 256
+
+	/**
+	 * Status strings.
+	 */
+	#define COMMAND "comando"
+	#define INSERT  "inserisci"
 
 	/**
 	 * Represents a piece of a line (fixed size element of a rope).
 	 */
-	#define PIECE_SIZE 32
+	#define PIECE_SIZE 16
 	struct piece {
 		char buf[PIECE_SIZE];
 		piece* next;
@@ -40,11 +47,15 @@ namespace edt {
 	 * @return an allocated piece
 	 */
 	piece* alloc_piece() {
+		// get new piece
 		piece* piece = pieces_free;
 		if(piece == NULL) utl::panic("Memoria esaurita");
+
+		// clean up piece
 		pieces_free = pieces_free->next;
 		piece->next = NULL;
 		mem::set(piece->buf, 0, PIECE_SIZE);
+
 		return piece;
 	}
 
@@ -65,14 +76,9 @@ namespace edt {
 	piece** lines;
 
 	/**
-	 * Number of lines in the file.
-	 */
-	int n_lines;
-
-	/**
 	 * Beginning of line window.
 	 */
-	int window_line;
+	int window_first;
 	
 	/**
 	 * Size of line window.
@@ -80,71 +86,82 @@ namespace edt {
 	int window_size = vid::rows - 1;
 
 	/**
-	 * Enum for editor status.
-	 */
-	enum editor_status {
-		COMMAND,
-		INSERT
-	};
-
-	/**
-	 * Current editor status.
-	 */
-	editor_status stat;
-
-	/**
-	 * Returns current status as a string.
-	 */
-	const char* status_str() {
-		switch(stat) {
-			case COMMAND: return "comando";
-			case INSERT: return "inserisci";
-			default: return NULL;
-		}
-	}
-
-	/**
 	 * Current line.
 	 */
 	int cur_line;
-	
-	/**
-	 * Current character in line.
-	 */
-	int cur_char;
-	
+		
 	/**
 	 * Decrements current line.
 	 */
 	void dec_cur_line() {
 		if(cur_line > 0) cur_line--;
-		char* line = lines[cur_line]->buf;
-		while(line[cur_char] == '\0' && cur_char != 0) cur_char--;
+		if(cur_line - window_first < 0) window_first -= window_size;
 	}
 
 	/**
 	 * Advances current line.
 	 */
 	void adv_cur_line() {
-		if(cur_line < n_lines - 1) cur_line++;
-		char* line = lines[cur_line]->buf;
-		while(line[cur_char] == '\0' && cur_char != 0) cur_char--;
+		if(cur_line < MAX_LINES - 1) cur_line++;
+		if(cur_line - window_first >= window_size) window_first += window_size;
 	}
 
 	/**
-	 * Decrements current character.
+	 * Converts a '\0' or '\n' terminated buffer into the pieces that make up a 
+	 * line.
+	 *
+	 * @param buf buffer to convert
+	 * @return first piece of the line
 	 */
-	void dec_cur_char() {
-		if(cur_char > 0) cur_char--;
+	piece* piece_line(char* buf) {
+		// don't return anything for empty lines
+		if(*buf == '\n' || *buf == '\0') return NULL;
+
+		int j = 0; // index in piece
+
+		// allocate first piece
+		piece* p = alloc_piece();
+		piece* first = p;
+
+		// go through all characters in buffer
+		while(true) {
+			char c = *(buf++);
+			
+			// next line
+			if(c == '\n' || c == '\0') break; 
+
+			// append to piece
+			p->buf[j++] = c;
+
+			// piece full
+			if(j == PIECE_SIZE) {
+				piece* next = alloc_piece();
+				j = 0;
+				p->next = next;
+				p = next;
+			}
+		}
+
+		return first;
 	}
 
 	/**
-	 * Advances current character.
+	 * Clears a line (freeing all pieces).
+	 *
+	 * @param line first piece of the line to clear
 	 */
-	void adv_cur_char() {
-		if(cur_char >= PIECE_SIZE - 1) return;
-		char* line = lines[cur_line]->buf;
-		if(line[cur_char + 1] != '\0') cur_char++;
+	void clear_line(piece*& first) {
+		piece* cur = first;
+
+		// go through all pieces, freeing
+		while (cur) {
+			piece* next = cur->next;
+			free_piece(cur);
+			cur = next;
+		}
+
+		// also free first reference
+		first = NULL;
 	}
 
 	/**
@@ -155,44 +172,23 @@ namespace edt {
 	bool open_file() {
 		// read file from disk 
 		char fbuf[FILE_BUF_SIZE];
-		int fsiz = blk::dir::read_file(file, fbuf, FILE_BUF_SIZE, 
-				blk::dir::cur);
+		int fsiz = blk::dir::read_file(file, fbuf, FILE_BUF_SIZE, blk::dir::cur);
 		if(fsiz == -1) {
 			vid::print_strln("Errore lettura file");
 			return 0;
 		}
+
+		int i = 0; // index in buffer
+		int j = 0; // current line
 	
-		// initialize first piece 
-		piece* p = alloc_piece();
-		int n_chars = 0;
-
-		// initialize first line
-		lines[n_lines] = p; 
-
-		// go through file allocating pieces and lines
-		for(int i = 0; i < fsiz; i++) {
-			char c = fbuf[i];
+		// write file into line array
+		while (i < fsiz && j < MAX_LINES) {
+			lines[j++] = piece_line(&fbuf[i]);
 			
-			// next line
-			if(c == '\n') {
-				if(n_lines == MAX_LINES - 1) return 0;
-				p = alloc_piece();
-				n_chars = 0;
-				lines[++n_lines] = p;
-				continue;
-			}
-
-			// append to piece
-			p->buf[n_chars++] = c;
-
-			// piece full
-			if(n_chars == PIECE_SIZE) {
-				piece* next = alloc_piece();
-				n_chars = 0;
-				p->next = next;
-			}
+			// advance to next line
+			while (i < fsiz && fbuf[i] != '\n') i++;
+			i++; // skip '\\n'
 		}
-		n_lines++;
 
 		return 1;
 	}
@@ -217,40 +213,63 @@ namespace edt {
 	}
 
 	/**
+	 * Prints a single line.
+	 * 
+	 * @param first first piece of line to print
+	 */
+	void print_line(piece* first) {
+			// print line buffers
+			do {
+				for(int j = 0; j < PIECE_SIZE; j++) {
+					char c = first->buf[j];
+					if(c == '\0') break;
+					vid::print_char(c);
+				}
+			} while((first = first->next));
+	}
+	
+	/**
 	 * Displays editor screen.
 	 */
-	void print_screen() {
+	void print_screen(const char* status) {
 		// clear screen
 		vid::clear();
 
 		// print file lines
-		int act_lines = window_line + window_size;
-		if(act_lines > n_lines) act_lines = n_lines;
-		for(int i = window_line; i < act_lines; i++) {
+		int window_last = window_first + window_size;
+		if(window_last > MAX_LINES) window_last = MAX_LINES;
+		for(int i = window_first; i < window_last; i++) {
+			// get line and print if valid
 			piece* p = lines[i];
-
-			// print line buffers
-			do {
-				for(int j = 0; j < PIECE_SIZE; j++) {
-					char c = p->buf[j];
-					if(c == '\0') break;
-					vid::print_char(c);
-				}
-
-				// new line
-				vid::newline();
-			} while((p = p->next));
+			if(p) print_line(p);
+			
+			// move to next line
+			vid::newline();
 		}
 
 		// move cursor
-		vid::set_cursor({cur_line - window_line, cur_char});
+		vid::set_cursor({cur_line - window_first, 0});
 
 		// print status
-		vid::put_str({vid::rows - 1, 0}, status_str());
-		vid::put_str({vid::rows - 1, 10}, "ln: ");
-		vid::put_uint({vid::rows - 1, 14}, cur_line);
-		vid::put_str({vid::rows - 1, 20}, "ch: ");
-		vid::put_uint({vid::rows - 1, 24}, cur_char);
+		vid::put_str({vid::rows - 1, 0}, "linea: ");
+		vid::put_uint({vid::rows - 1, 7}, cur_line);
+		vid::put_str({vid::rows - 1, vid::cols - 10}, status);
+	}
+	
+	/**
+	 * Inserts on the current line.
+	 */
+	void insert() {
+		// clear line
+		clear_line(lines[cur_line]);
+
+		// print screen
+		print_screen(INSERT);
+
+		// get next line
+		char new_line[LINE_BUF_SIZE];
+		kyb::read_str(new_line, LINE_BUF_SIZE);
+		lines[cur_line] = piece_line(new_line);
 	}
 
 	/**
@@ -260,31 +279,17 @@ namespace edt {
 	 */
 	bool loop() {
 		// print screen
-		print_screen();
+		print_screen(COMMAND);
 		
 		// get input
 		char c = kyb::get_char();
 
-		// update status
-		switch(stat) {
-			case COMMAND: {
-				switch(c) {
-					case ESC: vid::clear(); return 1;
-					case 'i': stat = INSERT; break;
-					case 'h': dec_cur_char(); break;
-					case 'l': adv_cur_char(); break;
-					case 'j': dec_cur_line(); break;
-					case 'k': adv_cur_line(); break;
-				}
-				break;
-			}
-			case INSERT: {
-				if(c == ESC) {
-					stat = COMMAND;
-					break;
-				}
-				break;
-			}
+		// edit
+		switch(c) {
+			case ESC: vid::clear(); return 1;
+			case 'i': insert(); break;
+			case 'w': dec_cur_line(); break;
+			case 's': adv_cur_line(); break;
 		}
 
 		return 0;
@@ -309,12 +314,10 @@ namespace app {
 		pieces_free = &pieces[0];		
 
 		// initialize lines
-		n_lines = 0;
-	
+		for(int i = 0; i < MAX_LINES; i++) lines[i] = NULL;
+
 		// initialize editor
-		stat = COMMAND;
 		cur_line = 0;
-		cur_char = 0;
 
 		// get requested file path
 		if(argc < 2) {
