@@ -64,6 +64,7 @@ namespace bas {
 		T_KEY,
 		T_STR,
 		T_NOP,
+		T_LABEL,
 		T_MARK
 	};
 
@@ -101,7 +102,7 @@ namespace bas {
 			key_type key;
 			
 			/**
-			 * Pointer to value if string literal.
+			 * Pointer to value if string literal of label pointer.
 			 */
 			char* str;
 		} payload;
@@ -153,6 +154,10 @@ namespace bas {
 
 				case T_NOP:
 					vid::print_strln("NOP");
+					break;
+				
+				case T_LABEL:
+					vid::print_str(payload.str);
 					break;
 
 				case T_MARK:
@@ -427,7 +432,7 @@ namespace bas {
 				return false;
 			}
 
-			// populate label
+			// populate label definition
 			label* lab = alloc_label();
 			lab->str = n_wr;
 			str::ncpy(n_wr, wr, len - 1);
@@ -439,22 +444,21 @@ namespace bas {
 			return true;
 		}
 			
-		// get label name 
+		// allocate string 
 		if(len >= MAX_STRLEN) return false;
-		char temp[MAX_STRLEN];
-		mem::cpy(temp, wr, len);
-		temp[len] = '\0';
-
-		// resolve label
-		label* lab = resolve_label(temp);
-		if(lab == NULL) {
-			vid::print_str("Etichetta sconosciuta ");
-			vid::print_strln(temp);
+		char* n_wr = alloc_string();
+		if(n_wr == NULL) {
+			vid::print_strln("Spazio stringhe esaurito");
+			return false;
 		}
-		tok->payload.num = lab->line;
+		
+		// populate label
+		tok->payload.str = n_wr;
+		str::ncpy(n_wr, wr, len);
+		n_wr[len] = '\0';
 
 		// set type last
-		tok->type = T_NUM;
+		tok->type = T_LABEL;
 		return true;
 	}
 
@@ -871,7 +875,7 @@ namespace bas {
 
 		// if through, expect a statement to follow and execute it
 		if(through) {
-			exec_statement(toks + 1, line);
+			return exec_statement(toks + 1, line);
 		}
 
 		// otherwise move on
@@ -886,19 +890,25 @@ namespace bas {
 	 * @return should execution continue?
 	 */
 	bool exec_goto(token* toks, int* line) {
-		// expect expression and get line number
-		int res;
-		if(!eval_expr(toks, res, false)) {
+		// expect label
+		if(toks[0].type != T_LABEL) {
 			return false;
 		}
 
-		if(res < 0 | res >= MAX_LINES) {
-			vid::print_strln("GOTO fuori campo");
+		if(toks[1].type != T_MARK) {
+			vid::print_strln("Spazzatura dopo INPUT");
 			return false;
+		}
+		
+		// resolve label
+		label* lab = resolve_label(toks[0].payload.str);
+		if(lab == NULL) {
+			vid::print_str("Etichetta sconosciuta ");
+			vid::print_strln(toks[0].payload.str);
 		}
 
 		// jump to line number
-		if(line) *line = res - 1;
+		if(line) *line = lab->line;
 
 		return true;
 	}
