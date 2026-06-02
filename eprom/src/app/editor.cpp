@@ -1,5 +1,7 @@
 #include "../lib/lib.h"
 
+#define VER "0.0"
+
 /**
  * Text editor implementation.
  */
@@ -13,13 +15,15 @@ namespace edt {
 	/**
 	 * Status strings.
 	 */
-	#define COMMAND "comando"
-	#define INSERT  "inserisci"
+	#define COMMAND "COMANDO"
+	#define REPLACE "RIMPIAZZA"
+	#define INSERT  "INSERISCI"
+	#define HELP    "AIUTO"
 
 	/**
 	 * Represents a piece of a line (fixed size element of a rope).
 	 */
-	#define PIECE_SIZE 16
+	#define PIECE_SIZE 32
 	struct piece {
 		char buf[PIECE_SIZE];
 		piece* next;
@@ -42,6 +46,11 @@ namespace edt {
 	piece* pieces_free;
 
 	/**
+	 * Counter of used pieces.
+	 */
+	int used_pieces;
+
+	/**
 	 * Allocates a new piece.
 	 *
 	 * @return an allocated piece
@@ -56,6 +65,9 @@ namespace edt {
 		piece->next = NULL;
 		mem::set(piece->buf, 0, PIECE_SIZE);
 
+		// keep track
+		used_pieces++;
+
 		return piece;
 	}
 
@@ -65,8 +77,12 @@ namespace edt {
 	 * @param piece the piece to free
 	 */
 	void free_piece(piece* piece) {
+		// insert into free list
 		piece->next = pieces_free;
 		pieces_free = piece;
+		
+		// keep track
+		used_pieces--;
 	}
 
 	/**
@@ -93,17 +109,17 @@ namespace edt {
 	/**
 	 * Decrements current line.
 	 */
-	void dec_cur_line() {
+	void dec_line() {
 		if(cur_line > 0) cur_line--;
-		if(cur_line - window_first < 0) window_first -= window_size;
+		if(cur_line - window_first < 0) window_first--;;
 	}
 
 	/**
 	 * Advances current line.
 	 */
-	void adv_cur_line() {
+	void adv_line() {
 		if(cur_line < MAX_LINES - 1) cur_line++;
-		if(cur_line - window_first >= window_size) window_first += window_size;
+		if(cur_line - window_first >= window_size) window_first++;;
 	}
 
 	/**
@@ -160,7 +176,7 @@ namespace edt {
 			cur = next;
 		}
 
-		// also free first reference
+		// also make first reference NULL
 		first = NULL;
 	}
 
@@ -170,9 +186,17 @@ namespace edt {
 	 * @return was the operation succesful?
 	 */
 	bool open_file() {
-		// read file from disk 
+		// show intent
+		vid::print_str("Leggo file ");
+		vid::print_strln(file);
+		tim::sleep(500);
+
+		// initialize file buffer 
 		char fbuf[FILE_BUF_SIZE];
-		int fsiz = blk::dir::read_file(file, fbuf, FILE_BUF_SIZE, blk::dir::cur);
+
+		// read file from disk
+		int fsiz = blk::dir::read_file(file, fbuf, FILE_BUF_SIZE, 
+				blk::dir::cur);
 		if(fsiz == -1) {
 			vid::print_strln("Errore lettura file");
 			return 0;
@@ -183,6 +207,7 @@ namespace edt {
 	
 		// write file into line array
 		while (i < fsiz && j < MAX_LINES) {
+			// get line
 			lines[j++] = piece_line(&fbuf[i]);
 			
 			// advance to next line
@@ -194,20 +219,73 @@ namespace edt {
 	}
 
 	/**
+	 * Writes a line to a buffer.
+	 *
+	 * @param line first piece of the line to write
+	 * @param buf buffer to fill
+	 * @param size of buffer to fill
+	 * @return characters written
+	 */
+	int write_line(piece* first, char* buf, int siz) {
+		int i = 0; // current index
+
+		// print line buffers
+		do {
+			for(int j = 0; j < PIECE_SIZE; j++) {
+				char c = first->buf[j];
+				if(c == '\0') break;
+				buf[i++] = c;
+				
+				// don't overflow
+				if(i >= siz) break;
+			}
+		} while((first = first->next));
+
+		return i;
+	}
+
+	/**
 	 * Closes current file.
 	 *
 	 * @return was the operation succesful?
 	 */
 	bool close_file() {
+		// show intent
+		vid::print_str("Scrivo file ");
+		vid::print_strln(file);
+		tim::sleep(500);
+		
 		// initialize file buffer
 		char fbuf[FILE_BUF_SIZE];
-		str::cpy(fbuf, "Scemo chi legge\nDoppio scemo chi rilegge\n");
-		int fsiz = str::len(fbuf);
+
+		int fsiz = 0; // index in file
+		int prev = 0; // previous lines
+
+		// write line array into file
+		for(int i = 0; i < MAX_LINES; i++) {
+			piece* p = lines[i];
+
+			// if empty, increase empty lines
+			if(!p) {
+				prev++;
+				continue;
+			}
+
+			// if not empty, print empty lines
+			while(prev > 0) {
+				fbuf[fsiz++] = '\n';
+				if(fsiz >= FILE_BUF_SIZE) return 0;
+				prev--;
+			}
+
+			// and write actual line
+			fsiz += write_line(lines[i], fbuf + fsiz, FILE_BUF_SIZE - fsiz);
+			fbuf[fsiz++] = '\n';
+			if(fsiz >= FILE_BUF_SIZE) return 0;
+		}
 
 		// write file to disk
-		if(!blk::dir::update_file(file, fbuf, fsiz, blk::dir::cur)) {
-			vid::print_strln("Errore scrittura file");
-		}
+		blk::dir::update_file(file, fbuf, fsiz, blk::dir::cur);
 
 		return 1;
 	}
@@ -218,16 +296,42 @@ namespace edt {
 	 * @param first first piece of line to print
 	 */
 	void print_line(piece* first) {
-			// print line buffers
-			do {
-				for(int j = 0; j < PIECE_SIZE; j++) {
-					char c = first->buf[j];
-					if(c == '\0') break;
-					vid::print_char(c);
-				}
-			} while((first = first->next));
+		int cur = 0; // current index
+
+		// print line buffers
+		do {
+			for(int j = 0; j < PIECE_SIZE; j++) {
+				char c = first->buf[j];
+				if(c == '\0') break;
+				vid::print_char(c);
+
+				// don't fill more than one line
+				cur++;
+				if(cur >= vid::cols - 1) break;
+			}
+		} while((first = first->next));
 	}
-	
+
+	/**
+	 * Prints the status screen and other information.
+	 */
+	void print_status(const char* status) {
+		int lrow = vid::rows - 1;
+
+		// current line
+		vid::put_str({lrow, 0}, "Linea: ");
+		vid::put_uint({lrow, 7}, cur_line);
+
+		// free pieces
+		vid::put_str({lrow, 20}, "Blocchi usati: ");
+		vid::put_uint({lrow, 35}, used_pieces);
+		vid::put_str({lrow, 45}, "/");
+		vid::put_uint({lrow, 46}, MAX_PIECES);
+
+		// current status
+		vid::put_str({lrow, vid::cols - 10}, status);
+	}
+
 	/**
 	 * Displays editor screen.
 	 */
@@ -251,17 +355,39 @@ namespace edt {
 		vid::set_cursor({cur_line - window_first, 0});
 
 		// print status
-		vid::put_str({vid::rows - 1, 0}, "linea: ");
-		vid::put_uint({vid::rows - 1, 7}, cur_line);
-		vid::put_str({vid::rows - 1, vid::cols - 10}, status);
+		print_status(status);
 	}
 	
 	/**
 	 * Inserts on the current line.
 	 */
-	void insert() {
+	void replace() {
 		// clear line
 		clear_line(lines[cur_line]);
+
+		// print screen
+		print_screen(REPLACE);
+
+		// get next line
+		char new_line[LINE_BUF_SIZE];
+		kyb::read_str(new_line, LINE_BUF_SIZE);
+		lines[cur_line] = piece_line(new_line);
+	}
+
+	/**
+	 * Shifts all lines forwards and inserts on the current line. 
+	 */
+	void insert() {
+		// move lines from current forward 
+		for(int i = MAX_LINES - 1; i >= cur_line + 1; i--) {
+			// free last line if needed
+			if(i == MAX_LINES - 1 && lines[i] != NULL) 
+				clear_line(lines[i]); 
+			lines[i] = lines[i - 1];
+		}
+
+		// empty line (don't clear, referenced by next)
+		lines[cur_line] = NULL;
 
 		// print screen
 		print_screen(INSERT);
@@ -270,6 +396,61 @@ namespace edt {
 		char new_line[LINE_BUF_SIZE];
 		kyb::read_str(new_line, LINE_BUF_SIZE);
 		lines[cur_line] = piece_line(new_line);
+	}
+
+	/**
+	 * Removes the current line.
+	 */
+	void del() {
+		// clear line
+		clear_line(lines[cur_line]);
+
+		// move lines from current backward
+		for(int i = cur_line; i < MAX_LINES - 1; i++) {
+			lines[i] = lines[i + 1];
+		}
+		lines[MAX_LINES - 1] = NULL;
+	}
+
+	/**
+	 * Shows help.
+	 */
+	void help() {
+		vid::clear();
+
+		// list modes 
+		vid::print_strln("Modalita' editor:");
+		vid::print_str("- ");
+		vid::print_str(COMMAND);
+		vid::print_strln(": permette di inserire comandi (ESC esce)");
+		vid::print_str("- ");
+		vid::print_str(REPLACE);
+		vid::print_strln(": rimpiazza la linea attuale (INVIO esce)");
+		vid::print_str("- ");
+		vid::print_str(INSERT);
+		vid::print_strln(": inserisce prima della linea attuale (INVIO esce)");
+		vid::print_str(HELP);
+		vid::print_strln(": questa schermata");
+		vid::newline();
+
+		// list commands
+		vid::print_str("Comandi disponibili in modalita'");
+		vid::print_str(COMMAND);
+		vid::print_strln(":");
+		vid::print_strln("- w: va alla linea precedente");
+		vid::print_strln("- s: va alla prossima linea");
+		vid::print_str("- r: entra in modalita' ");
+		vid::print_strln(REPLACE);
+		vid::print_str("- i: entra in modalita' ");
+		vid::print_strln(INSERT);
+		vid::print_strln("- d: rimuove la linea attuale");
+		vid::print_strln("- h: mostra questa schermata");
+		vid::newline();
+		
+		// print status
+		print_status(HELP);
+
+		utl::wait();
 	}
 
 	/**
@@ -287,9 +468,12 @@ namespace edt {
 		// edit
 		switch(c) {
 			case ESC: vid::clear(); return 1;
+			case 'r': replace(); break;
 			case 'i': insert(); break;
-			case 'w': dec_cur_line(); break;
-			case 's': adv_cur_line(); break;
+			case 'd': del(); break;
+			case 'h': help(); break;
+			case 'w': dec_line(); break;
+			case 's': adv_line(); break;
 		}
 
 		return 0;
@@ -317,7 +501,9 @@ namespace app {
 		for(int i = 0; i < MAX_LINES; i++) lines[i] = NULL;
 
 		// initialize editor
+		window_first = 0;
 		cur_line = 0;
+		used_pieces = 0;
 
 		// get requested file path
 		if(argc < 2) {
@@ -327,13 +513,13 @@ namespace app {
 		file = argv[1];
 
 		// try opening file 
-		if(!edt::open_file()) return 2;
+		if(!open_file()) return 2;
 
 		// enter editor loop
-		while(!edt::loop());
+		while(!loop());
 
 		// close file (syncing changes)
-		if(!edt::close_file()) return 3;
+		if(!close_file()) return 3;
 
 		return 0;
 	}

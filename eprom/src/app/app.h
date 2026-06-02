@@ -17,6 +17,7 @@ namespace app {
 	 */
 	extern ENTRY(pacman);
 	extern ENTRY(editor);
+	extern ENTRY(basic);
 
 	/**
 	 * Global application table entry, not to be confused with exe::entry 
@@ -57,6 +58,11 @@ namespace app {
 			"ed",
 			"editor di testo",
 			editor
+		},
+		{
+			"bas",
+			"interprete del TinyBASIC",
+			basic	
 		}
 	};
 	#define APP_TABLE_SIZE (sizeof(::app::table) / sizeof(::app::entry))

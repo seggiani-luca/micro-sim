@@ -3,15 +3,18 @@
 
 #define VER "0.0"
 
-#define SHELL_BUF_SIZE 512
-#define SHELL_MAX_ARGS 16
-#define SHELL_FIL_BUF_SIZE 2048
-
 /**
  * Implements a simple shell with built-in functions and application execution
  * (via the global application table).
  */
 namespace shl {
+	/**
+	 * Sizing constants for shell.
+	 */
+	#define SHELL_BUF_SIZE 512
+	#define SHELL_MAX_ARGS 16
+	#define SHELL_FIL_BUF_SIZE 4096
+
 	/**
 	 * Greets the user.
 	 */
@@ -171,10 +174,18 @@ namespace shl {
 				vid::print_strln("Operazione fallita");
 				return 0;
 			}
-			buf[siz] = '\0';
 
-			// read file
-			vid::print_str(buf);
+			// read file, paging
+			int line = 0;
+			for(int i = 0; i < siz; i++) {
+				char c = buf[i];
+				vid::print_char(c);
+				if(c == '\n') line++;
+				if(line == vid::rows - 1 && i != siz - 1) {
+					utl::wait();
+					line = 0;
+				}
+			}
 
 			return 0;
 		}
@@ -227,7 +238,7 @@ namespace shl {
 			vid::print_strln("- rd: rimuovi una directory");
 			vid::print_strln("- cf: crea un nuovo file vuoto");
 			vid::print_strln("- rf: mostra un file");
-			vid::print_strln("- df: rimuovi un file");
+			vid::print_strln("- df: rimuove un file");
 			vid::print_strln("- shutdown: spegne il sistema");
 			vid::print_strln("- help: mostra questo messaggio");
 			vid::print_strln("- clear: ripulisce lo schermo");

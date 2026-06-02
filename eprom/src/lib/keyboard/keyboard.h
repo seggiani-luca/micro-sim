@@ -25,17 +25,17 @@ namespace kyb {
 		/**
 		 * Make code to translate.
 		 */
-		unsigned char code;
+		uint8_t code;
 		
 		/**
 		 * Lowercase translation.
 		 */
-		char lower;
+		uint8_t lower;
 		
 		/**
 		 * Uppercase translation.
 		 */
-		char upper;
+		uint8_t upper;
 	};
 	
 	/**
@@ -55,7 +55,7 @@ namespace kyb {
 		/**
 		 * Control make code.
 		 */
-		unsigned char code;
+		uint8_t code;
 		
 		/**
 		 * Control status.

@@ -1,10 +1,11 @@
 #include "../lib/lib.h"
 
+#define VER "0.0"
+
 /**
  * Namespace for PACMAN clone implementation. 
  */
 namespace pac {
-
 	/**
 	 * Characters used to draw screen. 
 	 */
@@ -446,12 +447,12 @@ namespace pac {
 		vid::put_str({1, 56}, "Pellet: ");
 		vid::put_uint({1, 66}, num_pellets);
 		
-		vid::put_str({2, 1}, "X giocatore: ");
+		vid::put_str({2, 1}, "X Risc-man: ");
 		vid::put_int({2, 14}, player.pos.row);
-		vid::put_str({3, 1}, "Y Giocatore: ");
+		vid::put_str({3, 1}, "Y Risc-man: ");
 		vid::put_int({3, 14}, player.pos.col);
-		vid::put_str({4, 1}, "Riscman diretto a ");
-		print_heading({4, 19}, player.dir);
+		vid::put_str({4, 1}, "Risc-man diretto a ");
+		print_heading({4, 20}, player.dir);
 		
 		vid::put_str({2, 56}, "X Fantasma 0: ");
 		vid::put_int({2, 70}, ghosts[0].pos.row);

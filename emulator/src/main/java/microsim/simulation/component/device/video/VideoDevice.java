@@ -20,7 +20,7 @@ public class VideoDevice extends ThreadedIoDevice {
   /**
    * Frequency of video updates.
    */
-  public static final long FRAME_FREQ = 25; // in hz
+  public static final long FRAME_FREQ = 20; // in hz
 
   /**
    * Period of video updates.
