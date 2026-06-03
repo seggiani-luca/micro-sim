@@ -11,6 +11,11 @@ namespace blk {
 			while(*blk::disk.ctl_prt != 1);
 		}
 
+		/**
+		 * LBA constant.
+		 */
+		#define LBA 0xe
+
 		void give_disk_command(uint32_t addr, int scn, int cmd) {
 			// check for valid address
 			if(addr < 0 || addr >= num) {
@@ -18,9 +23,14 @@ namespace blk {
 			}
 
 			// give command
-			*blk::disk.lba_prt = addr;
+			*blk::disk.lba_prt = (LBA << 28) | (addr & 0x0FFFFFFF);
 			*blk::disk.scn_prt = scn;
 			*blk::disk.ctl_prt = cmd;
+
+			// check for error
+			if(*blk::disk.err_prt) {
+				utl::panic("Errore disco");
+			}
 		}
 
 		void read(uint32_t addr, void* data) {

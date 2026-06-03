@@ -3,7 +3,6 @@ package microsim.simulation.component.device.block;
 import microsim.simulation.Simulation;
 import microsim.simulation.component.bus.Bus;
 import microsim.simulation.component.device.IoDevice;
-import microsim.ui.DebugShell;
 
 /**
  * Implements a block/disk device, based on Parallel ATA, with 28 bit LBA addressing of 512 byte
@@ -27,6 +26,11 @@ public class BlockDevice extends IoDevice {
    * Size of block (in bytes).
    */
   public static final int BLOCK_SIZE = 512;
+
+  /**
+   * LBA constant.
+   */
+  public static final int LBA_CONSTANT = 0xe;
 
   /**
    * Block device storage byte array.
@@ -144,7 +148,16 @@ public class BlockDevice extends IoDevice {
       return;
     }
 
-    // validate operation bounds
+    // validate address LBA
+    if (((nextOp.blockAddress >> 28) & 0xf) != LBA_CONSTANT) {
+      error = true;
+      return;
+    }
+
+    // trim to 28 bit LBA
+    nextOp.blockAddress &= 0x0fffffff;
+
+    // validate address bounds
     long base = (long) nextOp.blockAddress * BLOCK_SIZE;
     long max = base + (long) nextOp.blockNumber * BLOCK_SIZE;
     if (base < 0 || max > STORAGE_SIZE || max <= base) {
@@ -246,8 +259,7 @@ public class BlockDevice extends IoDevice {
       }
       case 2 -> {
         // address port
-        int address = data & 0x0fffffff; // trim to 28 bit LBA
-        nextOp.blockAddress = address;
+        nextOp.blockAddress = data;
       }
       case 3 -> {
         // block counter port
