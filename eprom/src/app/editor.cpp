@@ -97,6 +97,11 @@ namespace edt {
 	int window_first;
 	
 	/**
+	 * Should screen be redrawn? 
+	 */
+	bool dirty;	
+	
+	/**
 	 * Size of line window.
 	 */
 	int window_size = vid::rows - 1;
@@ -111,7 +116,10 @@ namespace edt {
 	 */
 	void dec_line() {
 		if(cur_line > 0) cur_line--;
-		if(cur_line - window_first < 0) window_first--;;
+		if(cur_line - window_first < 0) {
+			window_first -= window_size;
+			dirty = true;
+		}
 	}
 
 	/**
@@ -119,7 +127,10 @@ namespace edt {
 	 */
 	void adv_line() {
 		if(cur_line < MAX_LINES - 1) cur_line++;
-		if(cur_line - window_first >= window_size) window_first++;;
+		if(cur_line - window_first >= window_size) {
+			window_first += window_size;
+			dirty = true;
+		}
 	}
 
 	/**
@@ -316,7 +327,11 @@ namespace edt {
 	 * Prints the status screen and other information.
 	 */
 	void print_status(const char* status) {
+		// last row
 		int lrow = vid::rows - 1;
+
+		// clear rast row
+		mem::set((void*)(vid::vram + vid::cols * lrow), 0, vid::cols);
 
 		// current line
 		vid::put_str({lrow, 0}, "Linea: ");
@@ -336,20 +351,24 @@ namespace edt {
 	 * Displays editor screen.
 	 */
 	void print_screen(const char* status) {
-		// clear screen
-		vid::clear();
+		// redraw only when needed
+		if(dirty) {
+			// clear screen
+			vid::clear();
 
-		// print file lines
-		int window_last = window_first + window_size;
-		if(window_last > MAX_LINES) window_last = MAX_LINES;
-		for(int i = window_first; i < window_last; i++) {
-			// get line and print if valid
-			piece* p = lines[i];
-			if(p) print_line(p);
-			
-			// move to next line
-			vid::newline();
+			// print file lines
+			int window_last = window_first + window_size;
+			if(window_last > MAX_LINES) window_last = MAX_LINES;
+			for(int i = window_first; i < window_last; i++) {
+				// get line and print if valid
+				piece* p = lines[i];
+				if(p) print_line(p);
+				
+				// move to next line
+				vid::newline();
+			}
 		}
+		dirty = false;
 
 		// move cursor
 		vid::set_cursor({cur_line - window_first, 0});
@@ -366,6 +385,7 @@ namespace edt {
 		clear_line(lines[cur_line]);
 
 		// print screen
+		dirty = true;
 		print_screen(REPLACE);
 
 		// get next line
@@ -390,12 +410,13 @@ namespace edt {
 		lines[cur_line] = NULL;
 
 		// print screen
+		dirty = true;
 		print_screen(INSERT);
 
 		// get next line
 		char new_line[LINE_BUF_SIZE];
 		kyb::read_str(new_line, LINE_BUF_SIZE);
-		lines[cur_line] = piece_line(new_line);
+		lines[cur_line] = piece_line(new_line);	
 	}
 
 	/**
@@ -410,6 +431,8 @@ namespace edt {
 			lines[i] = lines[i + 1];
 		}
 		lines[MAX_LINES - 1] = NULL;
+		
+		dirty = true;
 	}
 
 	/**
@@ -451,6 +474,8 @@ namespace edt {
 		print_status(HELP);
 
 		utl::wait();
+		
+		dirty = true;
 	}
 
 	/**
@@ -502,6 +527,7 @@ namespace app {
 
 		// initialize editor
 		window_first = 0;
+		dirty = true; // force first draw
 		cur_line = 0;
 		used_pieces = 0;
 
