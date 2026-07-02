@@ -90,7 +90,6 @@ public class Simulation extends SimulationComponent implements SimulationListene
    */
   public final BlockDevice disk;
 
-
   /**
    * Is the simulation running?
    */

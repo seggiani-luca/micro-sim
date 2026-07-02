@@ -1077,6 +1077,7 @@ namespace app {
 		// grab memory
 		char _strings[MAX_STRINGS][MAX_STRLEN];
 		strings = _strings;
+		cur_string = 0;
 		int _vars[NUM_VARS];
 		vars = _vars;
 		bool _vars_set[NUM_VARS];
@@ -1085,6 +1086,7 @@ namespace app {
 		lines = _lines;
 		label _labels[MAX_LABELS];
 		labels = _labels;
+		cur_label = 0;
 
 		// init lines
 		for(int i = 0; i < MAX_LINES; i++) {
