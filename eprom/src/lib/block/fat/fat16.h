@@ -116,6 +116,26 @@ namespace blk {
 		} __attribute__((packed));
 
 		/**
+		 * Attributes for read-only files 
+		 */
+		inline uint8_t ronly_attrib = 0x01;
+		
+		/**
+		 * Attributes for hidden files 
+		 */
+		inline uint8_t hidden_attrib = 0x02;
+		
+		/**
+		 * Attributes for system files 
+		 */
+		inline uint8_t system_attrib = 0x04;
+	
+		/**
+		 * Attributes for volume ID.
+		 */
+		inline uint8_t vol_id_attrib = 0x08;
+
+		/**
 		 * Attributes for directory.
 		 */
 		inline uint8_t dir_attrib = 0x10; 
@@ -125,11 +145,6 @@ namespace blk {
 		 */
 		inline uint8_t file_attrib = 0x20; 
 		
-		/**
-		 * Attributes for volume ID.
-		 */
-		inline uint8_t vol_id_attrib = 0x08;
-
 		/**
 		 * First byte of emptied directory entry.
 		 */
@@ -173,6 +188,26 @@ namespace blk {
 		 */
 		inline bool is_file(const dir_ent& ent) {
 			return ent.attrib & file_attrib; 
+		}
+		
+		/**
+		 * Checks if file is read-only.
+		 *
+		 * @param ent entry to check
+		 * @return is the entry a file? 
+		 */
+		inline bool is_ronly(const dir_ent& ent) {
+			return ent.attrib & ronly_attrib; 
+		}
+		
+		/**
+		 * Checks if directory entry is hidden.
+		 *
+		 * @param ent entry to check
+		 * @return is the entry a file? 
+		 */
+		inline bool is_hidden(const dir_ent& ent) {
+			return ent.attrib & hidden_attrib; 
 		}
 
 		/**

@@ -33,6 +33,21 @@ namespace blk {
 		* Command to end reading from disk.
 		*/
 		extern int write_cmd;
+		
+		/**
+		 * Error bit.
+		 */
+		extern int err_bit;
+
+		/**
+		 * Data request bit.
+		 */
+		extern int drq_bit;
+
+		/**
+		 * Busy bit.
+		 */
+		extern int bsy_bit;
 
 		/**
 		 * Waits for disk.

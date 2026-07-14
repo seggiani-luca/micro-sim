@@ -49,12 +49,27 @@ public class BlockDevice extends IoDevice {
   /**
    * Command to begin reading from disk.
    */
-  public static final int READ_COMMAND = 0x00;
+  public static final int READ_COMMAND = 0x20;
 
   /**
    * Command to begin writing to disk.
    */
-  public static final int WRITE_COMMAND = 0x01;
+  public static final int WRITE_COMMAND = 0x30;
+
+  /**
+   * Error bit in status port.
+   */
+  public static final int ERR_BIT = 0x01;
+
+  /**
+   * Ready bit in status port.
+   */
+  public static final int DRQ_BIT = 0x08;
+
+  /**
+   * Busy bit in status port.
+   */
+  public static final int BSY_BIT = 0x80;
 
   /**
    * Enum for disk operation types.
@@ -228,7 +243,8 @@ public class BlockDevice extends IoDevice {
       }
       case 4 -> {
         // status port
-        return (currentOp != null) ? 1 : 0;
+        return ((currentOp != null) ? DRQ_BIT : 0)
+                | (error ? ERR_BIT : 0);
       }
     }
 

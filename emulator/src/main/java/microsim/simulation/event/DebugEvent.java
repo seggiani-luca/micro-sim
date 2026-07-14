@@ -78,7 +78,7 @@ public class DebugEvent extends SimulationEvent {
 
     // lazy concatenate ints
     if (int0 != null) {
-      ret += " " + DebugShell.int32ToString(int1);
+      ret += " " + DebugShell.int32ToString(int0);
     }
     if (int1 != null) {
       ret += ", " + DebugShell.int32ToString(int1);

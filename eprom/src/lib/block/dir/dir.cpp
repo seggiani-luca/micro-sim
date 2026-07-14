@@ -202,6 +202,7 @@ namespace blk {
 				// check if valid
 				if(fat::is_free(ent)) continue;
 				if(fat::is_end(ent)) break;
+				if(fat::is_hidden(ent)) continue;
 
 				// get basename size
 				int base_siz = 8;
@@ -404,7 +405,8 @@ namespace blk {
 				if(fat::is_free(ent)) continue;
 				if(fat::is_end(ent)) break;
 				if(!fat::is_file(ent)) continue; 
-				if(!compare_filename(ent.filename, name)) continue; 
+				if(fat::is_ronly(ent)) continue;
+				if(!compare_filename(ent.filename, name)) continue;
 			
 				// update file
 				uint16_t nu = tab::update_file(ent.cluster_lo, buf, size);
@@ -433,6 +435,7 @@ namespace blk {
 				if(fat::is_free(ent)) continue;
 				if(fat::is_end(ent)) break;
 				if(!fat::is_file(ent)) continue; 
+				if(fat::is_ronly(ent)) continue;
 				if(!compare_filename(ent.filename, name)) continue; 
 
 				// delete file

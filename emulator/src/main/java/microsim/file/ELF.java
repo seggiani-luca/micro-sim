@@ -72,7 +72,7 @@ public class ELF {
       throw new IOException("Expected data section (2) is not writable");
     }
     if (!data.isReadable()) {
-      throw new IOException("Expected rodata section (2) is not readable");
+      throw new IOException("Expected data section (2) is not readable");
     }
   }
 

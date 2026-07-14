@@ -4,11 +4,14 @@
 
 namespace blk {
 	namespace sec {
-		int read_cmd = 0x00;
-		int write_cmd = 0x01;
+		int read_cmd = 0x20;
+		int write_cmd = 0x30;
+		int err_bit = 0x01;
+		int drq_bit = 0x08;
+		int bsy_bit = 0x80;
 
 		void wait_for_disk() {
-			while(*blk::disk.ctl_prt != 1);
+			while((*blk::disk.ctl_prt & (drq_bit | bsy_bit)) != drq_bit);
 		}
 
 		/**
@@ -28,7 +31,7 @@ namespace blk {
 			*blk::disk.ctl_prt = cmd;
 
 			// check for error
-			if(*blk::disk.err_prt) {
+			if(*blk::disk.ctl_prt & err_bit) {
 				utl::panic("Errore disco");
 			}
 		}
@@ -39,11 +42,9 @@ namespace blk {
 			wait_for_disk();
 
 			// read sector
-			uint8_t* bdata = (uint8_t*) data;
-			for(int i = 0; i < size; i += 2) {
-				uint16_t dat = *blk::disk.buf_prt;
-				bdata[i] = dat;
-				bdata[i + 1] = dat >> 8;
+			uint16_t* bdata = (uint16_t*) data;
+			for(int i = 0; i < size / 2; i++) {
+				bdata[i] = *blk::disk.buf_prt;
 			}
 		}
 
@@ -53,10 +54,9 @@ namespace blk {
 			wait_for_disk();
 
 			// write sector
-			uint8_t* bdata = (uint8_t*) data;
-			for(int i = 0; i < size; i += 2) {
-				uint16_t dat = (0xff & bdata[i]) | (bdata[i + 1] << 8);
-				*blk::disk.buf_prt = dat;
+			uint16_t* bdata = (uint16_t*) data;
+			for(int i = 0; i < size / 2; i++) {
+				*blk::disk.buf_prt = bdata[i];
 			}
 		}
 
@@ -66,7 +66,7 @@ namespace blk {
 			wait_for_disk();
 
 			// zero sector
-			for(int i = 0; i < size; i += 2) {
+			for(int i = 0; i < size / 2; i++) {
 				*blk::disk.buf_prt = 0;
 			}
 		}
