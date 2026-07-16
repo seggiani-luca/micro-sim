@@ -25,7 +25,14 @@ namespace edt {
 	 */
 	#define PIECE_SIZE 32
 	struct piece {
+		/**
+		 * Buffer of piece.
+		 */
 		char buf[PIECE_SIZE];
+
+		/**
+		 * Pointer to next piece in rope.
+		 */
 		piece* next;
 	};
 	
